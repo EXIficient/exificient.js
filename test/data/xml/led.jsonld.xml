@@ -1,0 +1,68 @@
+<map xmlns="http://www.w3.org/2015/EXI/json">
+    <map key="metadata">
+        <array key="encodings">
+            <string>JSON</string>
+        </array>
+        <string key="name">MyLED</string>
+        <map key="protocols">
+            <map key="HTTP">
+                <number key="priority">2</number>
+                <string key="uri">http://localhost:8080/thingsMyLED</string>
+            </map>
+            <map key="CoAP">
+                <number key="priority">1</number>
+                <string key="uri">coap://localhost:5683/thingsMyLED</string>
+            </map>
+        </map>
+    </map>
+    <string key="@context">http://w3c.github.io/wot/w3c-wot-td-context.jsonld</string>
+    <array key="interactions">
+        <map>
+            <string key="outputData">xsd:unsignedShort</string>
+            <string key="@type">Property</string>
+            <string key="name">colorTemperature</string>
+            <boolean key="writable">true</boolean>
+        </map>
+        <map>
+            <string key="outputData">xsd:unsignedByte</string>
+            <string key="@type">Property</string>
+            <string key="name">rgbValueRed</string>
+            <boolean key="writable">false</boolean>
+        </map>
+        <map>
+            <string key="outputData">xsd:unsignedByte</string>
+            <string key="@type">Property</string>
+            <string key="name">rgbValueGreen</string>
+            <boolean key="writable">false</boolean>
+        </map>
+        <map>
+            <string key="outputData">xsd:unsignedByte</string>
+            <string key="@type">Property</string>
+            <string key="name">rgbValueBlue</string>
+            <boolean key="writable">false</boolean>
+        </map>
+        <map>
+            <string key="outputData"/>
+            <string key="inputData">xsd:boolean</string>
+            <string key="@type">Action</string>
+            <string key="name">ledOnOff</string>
+        </map>
+        <map>
+            <string key="outputData"/>
+            <string key="inputData">xsd:unsignedByte</string>
+            <string key="@type">Action</string>
+            <string key="name">fadeIn</string>
+        </map>
+        <map>
+            <string key="outputData"/>
+            <string key="inputData">xsd:unsignedByte</string>
+            <string key="@type">Action</string>
+            <string key="name">fadeOut</string>
+        </map>
+        <map>
+            <string key="outputData">xsd:unsignedShort</string>
+            <string key="@type">Event</string>
+            <string key="name">colorTemperatureChanged</string>
+        </map>
+    </array>
+</map>
