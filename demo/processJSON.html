@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-<script type="text/javascript" src="exificient.js"></script>
-<script type="text/javascript" src="exificient4json.js"></script>  
+<script type="text/javascript" src="../exificient.js"></script>
+<script type="text/javascript" src="../exificient4json.js"></script>
+<script type="text/javascript" src="demo.js"></script>
 
 <!-- CodeMirror - normal stuff -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/codemirror.min.css">
@@ -28,23 +29,6 @@
 
 <script>
 
-
-function writeUint18ArrayBufferToEXIEditor(uint8Array, uint8ArrayLength) {
-	var hex = "";
-	for(var i=0; i<uint8ArrayLength; i++) {
-		var sh = uint8Array[i].toString(16); // base 16 (hex)
-		if(sh.length == 1) {
-			sh = "0" + sh;
-		}
-		// hex +=	"0x" + sh + " ";
-		hex +=	sh + " ";			
-		if((i+1) % 16 == 0) {
-			hex += "\n"
-		}
-	}
-	// editorEXI.setValue("len = " + uint8ArrayLength + "\n" + hex);
-	editorEXI.setValue(hex);
-}
 
 //shared strings
 // var sharedStrings = ["@context","@id","@value","@type","xsd:string","xsd:boolean","xsd:unsignedShort","xsd:unsignedByte", "xsd:float","http://w3c.github.io/wot/w3c-wot-td-context.jsonld","metadata","name","protocols","uri","priority","encodings","interactions","outputData","inputData","writable","Property","Action","Event","CoAP","HTTP","JSON","EXI", "WS"];
@@ -82,7 +66,8 @@ function encodeJSON() {
 		writeUint18ArrayBufferToEXIEditor(uint8Array, uint8ArrayLength);
 		
 		// alert("Encoded JSON (" + textJSON.length +" Bytes) into EXI (" + uint8ArrayLength + " Bytes)");
-		var c = document.getElementById('container');
+		// show encoding information
+		var c = document.getElementById('pieContainer');
 		while(c.hasChildNodes()) {
 			c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
 		}
@@ -121,7 +106,8 @@ function decodeEXI4JSON() {
 		editorJSON.setValue(jsonText);
 		
 		// alert("Decoded EXI (" + sp.length +" Bytes) into JSON (" + jsonText.length + " Bytes)");
-		var c = document.getElementById('container');
+		// show decoding information
+		var c = document.getElementById('pieContainer');
 		while(c.hasChildNodes()) {
 			c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
 		}
@@ -133,7 +119,7 @@ function decodeEXI4JSON() {
 
 
 
-function readXMLFile() {
+function readJSONFile() {
 	var file = document.getElementById('jsonInput').files[0];
 	if(file == null || file === undefined) {
 		alert("No JSON File selected");
@@ -182,71 +168,26 @@ function readEXI4JSONFile() {
 
 <h1>JSON/EXI processing</h1>
 
-
-<div id="container" style="height: 70px">
-</div>
-
-<script>
-function pieChart(percentage, size, color) {
-    var svgns = "http://www.w3.org/2000/svg";
-    var chart = document.createElementNS(svgns, "svg:svg");
-    chart.setAttribute("width", size);
-    chart.setAttribute("height", size);
-    chart.setAttribute("viewBox", "0 0 " + size + " " + size);
-    // Background circle
-    var back = document.createElementNS(svgns, "circle");
-    back.setAttributeNS(null, "cx", size / 2);
-    back.setAttributeNS(null, "cy", size / 2);
-    back.setAttributeNS(null, "r",  size / 2);
-    var color = "#d0d0d0";
-    if (size > 50) { 
-        color = "#ebebeb";
-    }
-    back.setAttributeNS(null, "fill", color);
-    chart.appendChild(back);
-    // primary wedge
-    var path = document.createElementNS(svgns, "path");
-    var unit = (Math.PI *2) / 100;    
-    var startangle = 0;
-    var endangle = percentage * unit - 0.001;
-    var x1 = (size / 2) + (size / 2) * Math.sin(startangle);
-    var y1 = (size / 2) - (size / 2) * Math.cos(startangle);
-    var x2 = (size / 2) + (size / 2) * Math.sin(endangle);
-    var y2 = (size / 2) - (size / 2) * Math.cos(endangle);
-    var big = 0;
-    if (endangle - startangle > Math.PI) {
-        big = 1;
-    }
-    var d = "M " + (size / 2) + "," + (size / 2) +  // Start at circle center
-        " L " + x1 + "," + y1 +     // Draw line to (x1,y1)
-        " A " + (size / 2) + "," + (size / 2) +       // Draw an arc of radius r
-        " 0 " + big + " 1 " +       // Arc details...
-        x2 + "," + y2 +             // Arc goes to to (x2,y2)
-        " Z";                       // Close path back to (cx,cy)
-    path.setAttribute("d", d); // Set this path 
-    path.setAttribute("fill", '#f05f3b');
-    chart.appendChild(path); // Add wedge to chart
-    // foreground circle
-    var front = document.createElementNS(svgns, "circle");
-    front.setAttributeNS(null, "cx", (size / 2));
-    front.setAttributeNS(null, "cy", (size / 2));
-    front.setAttributeNS(null, "r",  (size * 0.17)); //about 34% as big as back circle 
-    front.setAttributeNS(null, "fill", "#fff");
-    chart.appendChild(front);
-    return chart;
-}
-</script>
-
-
+<fieldset style="width:95%;">
+<legend>Processing Performance Visualization</legend>
+<div id="pieContainer" style="height: 70px;"></div>
+</fieldset>
+<fieldset style="width:95%;">
+<legend>SharedStrings (a.k.a. shared vocabulary). Note: delete if not needed</legend>
+<textarea id="sharedStrings" rows="3" style="width:100%" >
+"@context","@id","@value","@type","xsd:string","xsd:boolean","xsd:unsignedShort","xsd:unsignedByte", "xsd:float","http://w3c.github.io/wot/w3c-wot-td-context.jsonld","metadata","name","protocols","uri","priority","encodings","interactions","outputData","inputData","writable","Property","Action","Event","CoAP","HTTP","JSON","EXI", "WS"</textarea>
+</fieldset>
 
 <br />
-<table style="width:95%; border:none" >
-	<tr>
+
+<table style="width:95%;border:none" ><!--  -->
+	<!-- <tr>
 		<td colspan="3">SharedStrings (a.k.a. shared vocabulary). Note: delete if not needed: 
 		<textarea id="sharedStrings" rows="3" style="width:100%" >
 "@context","@id","@value","@type","xsd:string","xsd:boolean","xsd:unsignedShort","xsd:unsignedByte", "xsd:float","http://w3c.github.io/wot/w3c-wot-td-context.jsonld","metadata","name","protocols","uri","priority","encodings","interactions","outputData","inputData","writable","Property","Action","Event","CoAP","HTTP","JSON","EXI", "WS"</textarea>
 		</td>
-	</tr>
+	</tr>-->
+	
 	<tr>
 		<td>JSON</td>
 		<td></td>
@@ -257,8 +198,7 @@ function pieChart(percentage, size, color) {
 			<!-- readonly="readonly"  -->
 			<textarea id="codeJSON" name="codeJSON">{
 	"test": true
-}
-</textarea>
+}</textarea>
 		</td>
 		<td>
 			<button type="button" onclick="javascript:encodeJSON()">Encode &rarr;</button>
@@ -274,12 +214,12 @@ function pieChart(percentage, size, color) {
 		</td>
 	</tr>
 	<!-- -->
-	<tr id="myOptionsRow">
+	<tr id="myOptionsRow" >
 		<td>
 			<input type="file" id="jsonInput" />
 			<label for="jsonInput">Choose or drag an XML file</label>
 			<br />
-			<button type="button" onclick="javascript:readXMLFile()">Parse selected XML file into editor</button>
+			<button type="button" onclick="javascript:readJSONFile()">Parse selected XML file into editor</button>
 		</td>
 		<td>
 		</td>
@@ -293,18 +233,8 @@ function pieChart(percentage, size, color) {
 </table>
 
 
-<button type="button" onclick="javascript:switchOptionsOnOff()">Options on/off</button>
+<button type="button" onclick="javascript:switchOptionsOnOff()">File options on/off</button>
 <script  type="text/javascript">
-function switchOptionsOnOff() {
-	var id = "myOptionsRow";
-	if( document.getElementById(id).style.display == 'none') {
-		document.getElementById(id).style.display='block'; 
-	} else {
-		document.getElementById(id).style.display='none'; 
-	}
-	// document.getElementById(id).style.display='none';
-	// document.getElementById(id).style.display='block';  
-}
 // default: make it unvisible
 switchOptionsOnOff();
 </script>

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript" src="../exificient.js"></script>
+<script type="text/javascript" src="demo.js"></script>
+
+<!-- CodeMirror - normal stuff -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/codemirror.min.css">
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/codemirror.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/mode/xml/xml.min.js"></script>
+
+<!-- CodeMirror - foldable -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/addon/fold/foldgutter.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/addon/fold/foldcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/addon/fold/foldgutter.min.js"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/addon/fold/brace-fold.min.js"></script>-->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/addon/fold/xml-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/addon/fold/comment-fold.min.js"></script>
+
+<!-- CodeMirror - formatting removed after version 2 ? -->
+<script src="http://codemirror.net/2/lib/util/formatting.js"></script>
+</head>
+<body>
+<p style="font-size:x-small"><a href="index.html">Home</a> | <span style="color: Gray;">Process XML</span> </p>
+
+
+<script>
+
+
+function readJSONGrammars(callback) {
+	var file = document.getElementById('grammarsInput').files[0];
+	if(file == null || file === undefined) {
+		alert("No JSON Grammars File selected");
+		return;
+	}
+	
+	var reader = new FileReader();
+	
+	reader.onload = function(event) {
+		var jsonText = event.target.result;
+		// console.log("JSON File contents: " + jsonText);
+		
+		// Note: the idea would be to have this json grammars file (e.g., minified schema-for-json.xsd.grs) in a an EXI-encoded fashion
+		var grammars = JSON.parse(jsonText);
+		
+		callback(grammars);
+	};
+
+	reader.onerror = function(event) {
+		console.error("File could not be read! Code " + event.target.error.code);
+	};
+
+	// reader.readAsArrayBuffer(file);
+	reader.readAsText(file);
+}
+
+
+function encodeXML(grammars) {
+	var textXML = editorXML.getValue();
+	if(textXML.trim().length == 0) {
+		alert("No XML provided");
+	} else {
+		// console.log("JSON Grammars: " + grammars);
+		var exiEncoder = new EXIEncoder(grammars);	
+		
+		// TODO full encode
+		exiEncoder.encodeXmlText(textXML);
+		
+		var uint8ArrayLength = exiEncoder.getUint8ArrayLength();
+		var uint8Array = exiEncoder.getUint8Array();
+		writeUint18ArrayBufferToEXIEditor(uint8Array, uint8ArrayLength);
+		
+		// show encoding information
+		var c = document.getElementById('pieContainer');
+		while(c.hasChildNodes()) {
+			c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
+		}
+		c.appendChild( pieChart(((uint8ArrayLength/textXML.length)*100), 70 ) );
+		var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Encoded XML (" + textXML.length +" Bytes) into EXI (" + uint8ArrayLength + " Bytes)"); 
+		c.appendChild(textnode); 
+	}
+}
+
+function decodeEXI(grammars) {
+	var textEXI = editorEXI.getValue();
+	textEXI = textEXI.trim();
+	if(textEXI.length == 0) {
+		alert("No EXI provided");
+	} else {
+		// remove multiple spaces
+		textEXI = textEXI.replace(/ +(?= )/g,'');
+		var sp = textEXI.split(" "); 
+		var arrayBuffer = new ArrayBuffer(sp.length);
+		var arrayBufferView = new Uint8Array(arrayBuffer);
+		// alert("TODO EXI " + sp.length + ": " + sp);
+		for(var i=0; i<sp.length; i++) {
+			arrayBufferView[i] = parseInt(sp[i], 16);
+		}
+		
+		var exiDecoder = new EXIDecoder(arrayBuffer, grammars);
+		
+		// register XML handler
+		var xmlHandler = new XMLEventHandler();
+		exiDecoder.registerEventHandler(xmlHandler);
+		exiDecoder.decode();
+		editorXML.setValue(xmlHandler.getXML());
+		// pretty-print XML
+		autoFormat(); 
+		
+		// show decoding information
+		var c = document.getElementById('pieContainer');
+		while(c.hasChildNodes()) {
+			c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
+		}
+		c.appendChild( pieChart(((sp.length/xmlHandler.getXML().length)*100), 70 ) );
+		var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Decoded EXI (" + sp.length +" Bytes) into XML (" + xmlHandler.getXML().length + " Bytes)"); 
+		c.appendChild(textnode); 
+	}
+}
+
+
+function encodeXMLFile() {
+	readJSONGrammars(encodeXML);
+}
+
+function decodeEXIFile() {
+	readJSONGrammars(decodeEXI);
+}
+
+
+
+function readXMLFile() {
+	var file = document.getElementById('xmlInput').files[0];
+	if(file == null || file === undefined) {
+		alert("No XML File selected");
+		return;
+	}
+	var reader = new FileReader();
+	
+	reader.onload = function(event) {
+		var buffer = event.target.result;
+		editorXML.setValue(buffer);
+	};
+
+	reader.onerror = function(event) {
+		console.error("File could not be read! Code " + event.target.error.code);
+	};
+
+	// reader.readAsArrayBuffer(file);
+	reader.readAsText(file);
+}
+
+function readEXIFile() {
+	var file = document.getElementById('exiInput').files[0];
+	if(file == null || file === undefined) {
+		alert("No EXI File selected");
+		return;
+	}
+	var reader = new FileReader();
+	
+	reader.onload = function(event) {
+		var buffer = event.target.result;
+		var uint8Array = new Uint8Array(buffer);
+		writeUint18ArrayBufferToEXIEditor(uint8Array, uint8Array.length);
+		// editorEXI.setValue(buffer);
+	};
+
+	reader.onerror = function(event) {
+		console.error("File could not be read! Code " + event.target.error.code);
+	};
+
+	reader.readAsArrayBuffer(file);
+	// reader.readAsText(file);
+}
+
+</script> 
+
+
+<h1>XML/EXI processing</h1>
+
+<fieldset style="width:95%;">
+<legend>Processing Performance Visualization</legend>
+<div id="pieContainer" style="height: 70px"></div>
+</fieldset>
+
+<br />
+<input type="file" id="grammarsInput" />
+<label for="exiInput">Choose or drag a JSON grammars file (e.g., grammars/notebook.xsd.grs)</label>
+
+<br />
+
+
+<br />
+<br />
+
+
+<table style="width:95%; border:none" >
+	<tr>
+		<td>XML</td>
+		<td></td>
+		<td>EXI (binary)</td>
+	</tr>
+	<tr>
+		<td style="width:50%">
+			<!-- readonly="readonly"  -->
+			<textarea id="codeXML" name="codeXML"  ></textarea>
+		</td>
+		<td>
+			<button type="button" onclick="javascript:encodeXMLFile()">Encode &rarr;</button>
+			<br />
+			<br />
+			<br />
+			<br />
+			<button type="button" onclick="javascript:decodeEXIFile()">&larr; Decode</button>
+		</td>
+		<td style="width:50%">
+			<!-- readonly="readonly" -->
+			<textarea id="codeEXI" name="codeEXI"  ></textarea>
+		</td>
+	</tr>
+	<tr id="myOptionsRow" >
+		<td>
+			<input type="file" id="xmlInput" />
+			<label for="xmlInput">Choose or drag an XML file</label>
+			<br />
+			<button type="button" onclick="javascript:readXMLFile()">Parse selected XML file into editor</button>
+		</td>
+		<td>
+		</td>
+		<td>
+			<input type="file" id="exiInput" />
+			<label for="exiInput">Choose or drag an EXI file</label>
+			<br />
+			<button type="button" onclick="javascript:readEXIFile()">Parse selected EXI file into editor</button>
+		</td>
+	</tr>
+</table>
+
+<button type="button" onclick="javascript:switchOptionsOnOff()">File options on/off</button>
+<script  type="text/javascript">
+// default: make it unvisible
+switchOptionsOnOff();
+</script>
+
+
+ <script  type="text/javascript">
+//<![CDATA[
+	var editorXML = CodeMirror.fromTextArea(document.getElementById("codeXML"), {
+	  mode: "application/xml",
+	  styleActiveLine: true,
+	  foldGutter: true,
+	  gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+	  lineNumbers: true,
+	  lineWrapping: true,
+	  readOnly: false
+	});
+	
+	// editorXML.setSize("99%", "200px"); // null possible
+	
+	var editorEXI = CodeMirror.fromTextArea(document.getElementById("codeEXI"), {
+	  mode: "application/octet-stream",
+	  styleActiveLine: true,
+	  foldGutter: true,
+	  gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+	  lineNumbers: true,
+	  lineWrapping: true,
+	  readOnly: false
+	});
+	
+   function autoFormat() {
+	// autoformat
+	var totalLines = editorXML.lineCount();
+    var totalChars = editorXML.getTextArea().value.length;
+	editorXML.autoFormatRange({line:0, ch:0}, {line:totalLines, ch:totalChars});
+	// editorXML.autoFormatRange({line:0, ch:0}, {line:0, ch:0}); // re-set cursor ?
+	editorXML.setCursor(0, 0);
+  }
+//]]>
+</script> 
+ 
+
+</body>
+</html> 

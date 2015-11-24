@@ -1,7 +1,8 @@
 /*! exificient4json.js v0.0.1 | (c) 2015 Siemens AG | The MIT License (MIT) */
 /*! JSON components for exificient.js */
 
-const exiForJsonUri = "http://www.w3.org/2015/EXI/json";
+//const
+exiForJsonUri = "http://www.w3.org/2015/EXI/json";
 
 Inheritance_Manager.extend(EXI4JSONDecoder, EXIDecoder);
 
