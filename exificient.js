@@ -94,7 +94,6 @@ function AbtractEXICoder(grammars) {
 	// WARNING: not specified in EXI 1.0 core (is extension)
 	AbtractEXICoder.prototype.initSharedStrings = function(sharedStrings) {
 		if (sharedStrings != null && sharedStrings instanceof Array) {
-			// alert(grammars.sharedStrings);
 			console.log("SharedStrings: " + sharedStrings);
 			for (var i = 0; i < sharedStrings.length; i++) {
 				this.stringTable.addValue(-1, sharedStrings[i]);
@@ -106,7 +105,7 @@ function AbtractEXICoder(grammars) {
 	AbtractEXICoder.prototype.getCodeLength = function(characteristics) {
 		if (characteristics < 0) {
 			// TODO: set error msg
-			alert("Error: Code length for " + characteristics + " not possible");
+			throw new Error("Error: Code length for " + characteristics + " not possible");
 			return -1;
 		} else if (characteristics < 2) {
 			// 0 .. 1
@@ -193,6 +192,7 @@ function AbtractEXICoder(grammars) {
 			}
 		} else {
 			// unknown grammar type
+			throw new Error("Unknown grammar type: " + grammar.type);
 			return -1;
 		}
 	}
@@ -253,7 +253,7 @@ function BitInputStream(arrayBuffer) {
 	 */
 	BitInputStream.prototype.decodeNBitUnsignedInteger = function(nbits) {
 		if (nbits < 0) {
-			alert("Error in decodeNBitUnsignedInteger, nbits = " + nbits);
+			throw new Error("Error in decodeNBitUnsignedInteger, nbits = " + nbits);
 			this.errn = -1;
 			return -1;
 		} else if (nbits == 0) {
@@ -379,11 +379,11 @@ Inheritance_Manager.extend(EXIDecoder, AbtractEXICoder);
 
 // arrayBuffer EXI ArrayBuffer
 // grammars JSON
-function EXIDecoder(arrayBuffer, grammars) {
+function EXIDecoder(grammars) {
 
 	EXIDecoder.baseConstructor.call(this, grammars);
 
-	this.bitStream = new BitInputStream(arrayBuffer);
+	this.bitStream;
 
 	this.eventHandler = [];
 
@@ -396,7 +396,7 @@ function EXIDecoder(arrayBuffer, grammars) {
 		var distBits = this.bitStream.decodeNBitUnsignedInteger(2); // Distinguishing
 		// Bits
 		if (distBits != 2) {
-			alert("Error: Distinguishing Bits are " + distBits);
+			throw new Error("Distinguishing Bits are " + distBits);
 			return -1;
 		}
 		var presBit = this.bitStream.decodeNBitUnsignedInteger(1); // Presence
@@ -404,14 +404,14 @@ function EXIDecoder(arrayBuffer, grammars) {
 		// EXI
 		// Options
 		if (presBit != 0) {
-			alert("Error: Do not support EXI Options in header");
+			throw new Error("Do not support EXI Options in header");
 			return -1;
 		}
 		// TODO continuos e.g., Final version 16 == 0 1111 0000
 		var formatVersion = this.bitStream.decodeNBitUnsignedInteger(5); // Format
 		// Version
 		if (formatVersion != 0) {
-			alert("Error: Do not support format version " + formatVersion);
+			throw new Error("Do not support format version " + formatVersion);
 			return -1;
 		}
 
@@ -518,7 +518,7 @@ function EXIDecoder(arrayBuffer, grammars) {
 				var day = monthDay - (month * 32);
 				sDatetime += "-" + day;
 			} else {
-				alert("Unsupported datetime type: " + datatype.datetimeType);
+				throw new Error("Unsupported datetime type: " + datatype.datetimeType);
 			}
 			var presenceTimezone = this.bitStream.decodeNBitUnsignedInteger(1) == 0 ? false
 					: true;
@@ -539,7 +539,6 @@ function EXIDecoder(arrayBuffer, grammars) {
 			}
 
 		} else {
-			alert("Unsupported datatype: " + datatype.type);
 			throw new Error("Unsupported datatype: " + datatype.type);
 		}
 	}
@@ -632,7 +631,7 @@ function EXIDecoder(arrayBuffer, grammars) {
 				break;
 			default:
 				console.log("\t" + "Unknown event " + prod.event);
-				alert("Unknown event " + prod.event);
+				throw new Error("Unknown event " + prod.event);
 				// TODO error!
 				popStack = true;
 			}
@@ -644,7 +643,9 @@ function EXIDecoder(arrayBuffer, grammars) {
 
 	}
 
-	EXIDecoder.prototype.decode = function() {
+	EXIDecoder.prototype.decode = function(arrayBuffer) {
+		
+		this.bitStream = new BitInputStream(arrayBuffer)
 
 		console.log("JSON Grammars: " + grammars);
 		console.log("\t" + "Number of NamespaceContexts"
@@ -656,6 +657,8 @@ function EXIDecoder(arrayBuffer, grammars) {
 
 		console.log("EXI: " + arrayBuffer + " len=" + arrayBuffer.byteLength);
 
+		
+		
 		// process header
 		var errn = this.decodeHeader();
 
@@ -955,8 +958,6 @@ function EXIEncoder(grammars) {
 	}
 
 	EXIEncoder.prototype.encodeXmlDocument = function(xmlDoc) {
-		// alert(xmlDoc.documentElement.nodeName);
-
 		this.startDocument();
 		// documentElement always represents the root node
 		this.processXMLElement(xmlDoc.documentElement);
@@ -1402,7 +1403,6 @@ function EXIEncoder(grammars) {
 				this.bitStream.encodeNBitUnsignedInteger(
 						dateTimeValue.monthDay, 9);
 			} else {
-				alert("Unsupported datetime type: " + datatype.datetimeType);
 				throw new Error("Unsupported datetime type: "
 						+ datatype.datetimeType);
 			}
@@ -1417,7 +1417,6 @@ function EXIEncoder(grammars) {
 			// console.log("\t" + " presenceTimezone = " + presenceTimezone);
 			console.log("\t" + " datetime = " + sDatetime);
 		} else {
-			alert("Unsupported datatype: " + datatype.type);
 			throw new Error("Unsupported datatype: " + datatype.type);
 		}
 	}

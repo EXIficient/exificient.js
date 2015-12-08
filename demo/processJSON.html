@@ -93,7 +93,7 @@ function decodeEXI4JSON() {
 			arrayBufferView[i] = parseInt(sp[i], 16);
 		}
 		
-		var exiDecoder = new EXI4JSONDecoder(arrayBuffer);
+		var exiDecoder = new EXI4JSONDecoder();
 		
 		// shared strings
 		exiDecoder.initSharedStrings(getSharedStrings());
@@ -101,7 +101,7 @@ function decodeEXI4JSON() {
 		// register XML handler
 		var jsonHandler = new JSONEventHandler();
 		exiDecoder.registerEventHandler(jsonHandler);
-		exiDecoder.decode();
+		exiDecoder.decode(arrayBuffer);
 		var jsonText = JSON.stringify(jsonHandler.getJSON(), null, "\t");
 		editorJSON.setValue(jsonText);
 		

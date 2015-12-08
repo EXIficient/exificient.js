@@ -8,8 +8,8 @@ Inheritance_Manager.extend(EXI4JSONDecoder, EXIDecoder);
 
 // arrayBuffer EXI ArrayBuffer
 // Note: JSON grammars (see variable jsonGrammars) is implicit
-function EXI4JSONDecoder(arrayBuffer) {
-	EXI4JSONDecoder.baseConstructor.call(this, arrayBuffer, JSON.parse(jsonGrammars));
+function EXI4JSONDecoder() {
+	EXI4JSONDecoder.baseConstructor.call(this, JSON.parse(jsonGrammars));
 }
 
 Inheritance_Manager.extend(EXI4JSONEncoder, EXIEncoder);
@@ -35,7 +35,7 @@ function EXI4JSONEncoder() {
 			this.processJSONObject(jsonObj);
 			this.endElement();
 		} else {
-			alert("Neither array nor object root");
+			throw new Error("Neither array nor object root");
 		}
 		
 		this.endDocument();
@@ -61,14 +61,21 @@ function EXI4JSONEncoder() {
 				this.startElement(exiForJsonUri, "number");
 				this.characters(val);
 				this.endElement();
+			} else if (typeof val === "boolean") {
+				this.startElement(exiForJsonUri, "boolean");
+				this.characters(val);
+				this.endElement();
+			} else if (val == null) {
+				this.startElement(exiForJsonUri, "null");
+				// this.characters(val);
+				this.endElement();
 			} else {
-				alert("not supported array type: " + (typeof val));
+				throw new Error("Not supported object type: " + (typeof val));
 			}
 		}
 	}
 	
 	EXI4JSONEncoder.prototype.processJSONObject = function(jsonObj){
-		// alert(Object.keys(jsonObj));
 		var keys = Object.keys(jsonObj);
 		
 		for (var key in jsonObj) {
@@ -108,7 +115,7 @@ function EXI4JSONEncoder() {
 					// this.characters(val);
 					this.endElement();
 				} else {
-					alert("not supported object type: " + (typeof val));
+					throw new Error("Not supported object type: " + (typeof val));
 				}
 			}
 		}
@@ -244,7 +251,6 @@ function JSONEventHandler() {
 			}
 		} else {
 			throw new Error("Unsupported characters type: " + this.openTag);
-			
 		}
 	}
 

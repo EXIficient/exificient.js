@@ -97,12 +97,12 @@ function decodeEXI(grammars) {
 			arrayBufferView[i] = parseInt(sp[i], 16);
 		}
 		
-		var exiDecoder = new EXIDecoder(arrayBuffer, grammars);
+		var exiDecoder = new EXIDecoder(grammars);
 		
 		// register XML handler
 		var xmlHandler = new XMLEventHandler();
 		exiDecoder.registerEventHandler(xmlHandler);
-		exiDecoder.decode();
+		exiDecoder.decode(arrayBuffer);
 		editorXML.setValue(xmlHandler.getXML());
 		// pretty-print XML
 		autoFormat(); 
