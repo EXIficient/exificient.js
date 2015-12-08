@@ -172,22 +172,26 @@ function readEXI4JSONFile() {
 <legend>Processing Performance Visualization</legend>
 <div id="pieContainer" style="height: 70px;"></div>
 </fieldset>
-<fieldset style="width:95%;">
-<legend>SharedStrings (a.k.a. shared vocabulary). Note: delete if not needed</legend>
+<fieldset id="sharedStringsFieldset" style="width:95%;">
+<legend>SharedStrings (a.k.a. shared vocabulary). Note: delete/update if needed</legend>
 <textarea id="sharedStrings" rows="3" style="width:100%" >
 "@context","@id","@value","@type","xsd:string","xsd:boolean","xsd:unsignedShort","xsd:unsignedByte", "xsd:float","http://w3c.github.io/wot/w3c-wot-td-context.jsonld","metadata","name","protocols","uri","priority","encodings","interactions","outputData","inputData","writable","Property","Action","Event","CoAP","HTTP","JSON","EXI", "WS"</textarea>
 </fieldset>
+<script>
+if (gup('SharedStrings', null)) {
+	// show it
+} else {
+	// make it invisible
+	sharedStringsFieldset.style.visibility='hidden';
+	sharedStringsFieldset.style.display = 'none'; // hide
+	// sharedStringsFieldset.visible = false;
+	document.getElementById('sharedStrings').value = ""; // unset values
+}
+</script>
 
 <br />
 
-<table style="width:95%;border:none" ><!--  -->
-	<!-- <tr>
-		<td colspan="3">SharedStrings (a.k.a. shared vocabulary). Note: delete if not needed: 
-		<textarea id="sharedStrings" rows="3" style="width:100%" >
-"@context","@id","@value","@type","xsd:string","xsd:boolean","xsd:unsignedShort","xsd:unsignedByte", "xsd:float","http://w3c.github.io/wot/w3c-wot-td-context.jsonld","metadata","name","protocols","uri","priority","encodings","interactions","outputData","inputData","writable","Property","Action","Event","CoAP","HTTP","JSON","EXI", "WS"</textarea>
-		</td>
-	</tr>-->
-	
+<table style="width:95%;border:none" >	
 	<tr>
 		<td>JSON</td>
 		<td></td>
