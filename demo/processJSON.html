@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
+<title>Process EXI for JSON</title>
 <script type="text/javascript" src="../exificient.js"></script>
 <script type="text/javascript" src="../exificient-for-json.js"></script>
 <script type="text/javascript" src="demo.js"></script>
+<link rel="stylesheet" href="demo.css" />
 
 <!-- CodeMirror - normal stuff -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/codemirror.min.css">
@@ -53,27 +55,32 @@ function encodeJSON() {
 	if(textJSON.trim().length == 0) {
 		alert("No JSON provided");
 	} else {
-		var exiEncoder = new EXI4JSONEncoder();	
-		
-		// shared strings
-		exiEncoder.initSharedStrings(getSharedStrings());
-		
-		// encode
-		exiEncoder.encodeJsonText(textJSON);
-		
-		var uint8ArrayLength = exiEncoder.getUint8ArrayLength();
-		var uint8Array = exiEncoder.getUint8Array();
-		writeUint18ArrayBufferToEXIEditor(uint8Array, uint8ArrayLength);
-		
-		// alert("Encoded JSON (" + textJSON.length +" Bytes) into EXI (" + uint8ArrayLength + " Bytes)");
-		// show encoding information
-		var c = document.getElementById('pieContainer');
-		while(c.hasChildNodes()) {
-			c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
+		try {
+			var exiEncoder = new EXI4JSONEncoder();	
+			
+			// shared strings
+			exiEncoder.initSharedStrings(getSharedStrings());
+			
+			// encode
+			exiEncoder.encodeJsonText(textJSON);
+			
+			var uint8ArrayLength = exiEncoder.getUint8ArrayLength();
+			var uint8Array = exiEncoder.getUint8Array();
+			writeUint18ArrayBufferToEXIEditor(uint8Array, uint8ArrayLength);
+			
+			// alert("Encoded JSON (" + textJSON.length +" Bytes) into EXI (" + uint8ArrayLength + " Bytes)");
+			// show encoding information
+			var c = document.getElementById('pieContainer');
+			while(c.hasChildNodes()) {
+				c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
+			}
+			c.appendChild( pieChart(((uint8ArrayLength/textJSON.length)*100), 70 ) );
+			var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Encoded JSON (" + textJSON.length +" Bytes) into EXI (" + uint8ArrayLength + " Bytes)"); 
+			c.appendChild(textnode); 
+		} catch(err) {
+			alert("Error while encoding JSON. " + err);
 		}
-		c.appendChild( pieChart(((uint8ArrayLength/textJSON.length)*100), 70 ) );
-		var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Encoded JSON (" + textJSON.length +" Bytes) into EXI (" + uint8ArrayLength + " Bytes)"); 
-		c.appendChild(textnode); 
+
 	}
 }
 
@@ -83,37 +90,41 @@ function decodeEXI4JSON() {
 	if(textEXI.length == 0) {
 		alert("No EXI provided");
 	} else {
-		// remove multiple spaces
-		textEXI = textEXI.replace(/ +(?= )/g,'');
-		var sp = textEXI.split(" "); 
-		var arrayBuffer = new ArrayBuffer(sp.length);
-		var arrayBufferView = new Uint8Array(arrayBuffer);
-		// alert("TODO EXI " + sp.length + ": " + sp);
-		for(var i=0; i<sp.length; i++) {
-			arrayBufferView[i] = parseInt(sp[i], 16);
+		try {
+			// remove multiple spaces
+			textEXI = textEXI.replace(/ +(?= )/g,'');
+			var sp = textEXI.split(" "); 
+			var arrayBuffer = new ArrayBuffer(sp.length);
+			var arrayBufferView = new Uint8Array(arrayBuffer);
+			// alert("TODO EXI " + sp.length + ": " + sp);
+			for(var i=0; i<sp.length; i++) {
+				arrayBufferView[i] = parseInt(sp[i], 16);
+			}
+			
+			var exiDecoder = new EXI4JSONDecoder();
+			
+			// shared strings
+			exiDecoder.initSharedStrings(getSharedStrings());
+			
+			// register XML handler
+			var jsonHandler = new JSONEventHandler();
+			exiDecoder.registerEventHandler(jsonHandler);
+			exiDecoder.decode(arrayBuffer);
+			var jsonText = JSON.stringify(jsonHandler.getJSON(), null, "\t");
+			editorJSON.setValue(jsonText);
+			
+			// alert("Decoded EXI (" + sp.length +" Bytes) into JSON (" + jsonText.length + " Bytes)");
+			// show decoding information
+			var c = document.getElementById('pieContainer');
+			while(c.hasChildNodes()) {
+				c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
+			}
+			c.appendChild( pieChart(((sp.length/jsonText.length)*100), 70 ) );
+			var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Decoded EXI (" + sp.length +" Bytes) into JSON (" + jsonText.length + " Bytes)"); 
+			c.appendChild(textnode); 
+		} catch(err) {
+			alert("Error while decoding EXI. " + err);
 		}
-		
-		var exiDecoder = new EXI4JSONDecoder();
-		
-		// shared strings
-		exiDecoder.initSharedStrings(getSharedStrings());
-		
-		// register XML handler
-		var jsonHandler = new JSONEventHandler();
-		exiDecoder.registerEventHandler(jsonHandler);
-		exiDecoder.decode(arrayBuffer);
-		var jsonText = JSON.stringify(jsonHandler.getJSON(), null, "\t");
-		editorJSON.setValue(jsonText);
-		
-		// alert("Decoded EXI (" + sp.length +" Bytes) into JSON (" + jsonText.length + " Bytes)");
-		// show decoding information
-		var c = document.getElementById('pieContainer');
-		while(c.hasChildNodes()) {
-			c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
-		}
-		c.appendChild( pieChart(((sp.length/jsonText.length)*100), 70 ) );
-		var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Decoded EXI (" + sp.length +" Bytes) into JSON (" + jsonText.length + " Bytes)"); 
-		c.appendChild(textnode); 
 	}
 }
 

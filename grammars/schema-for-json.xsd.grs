@@ -228,7 +228,7 @@
 						"localNameID" : "19" ,
 						"localName" : "decimal"
 						,
-						"globalTypeGrammarID" : 18 
+						"globalTypeGrammarID" : 19 
 					}
 					, 
 					{
@@ -308,7 +308,7 @@
 						"localNameID" : "29" ,
 						"localName" : "int"
 						,
-						"globalTypeGrammarID" : 19 
+						"globalTypeGrammarID" : 18 
 					}
 					, 
 					{
@@ -316,7 +316,7 @@
 						"localNameID" : "30" ,
 						"localName" : "integer"
 						,
-						"globalTypeGrammarID" : 19 
+						"globalTypeGrammarID" : 18 
 					}
 					, 
 					{
@@ -332,7 +332,7 @@
 						"localNameID" : "32" ,
 						"localName" : "long"
 						,
-						"globalTypeGrammarID" : 19 
+						"globalTypeGrammarID" : 18 
 					}
 					, 
 					{
@@ -340,7 +340,7 @@
 						"localNameID" : "33" ,
 						"localName" : "negativeInteger"
 						,
-						"globalTypeGrammarID" : 19 
+						"globalTypeGrammarID" : 18 
 					}
 					, 
 					{
@@ -356,7 +356,7 @@
 						"localNameID" : "35" ,
 						"localName" : "nonPositiveInteger"
 						,
-						"globalTypeGrammarID" : 19 
+						"globalTypeGrammarID" : 18 
 					}
 					, 
 					{
@@ -380,7 +380,7 @@
 						"localNameID" : "38" ,
 						"localName" : "short"
 						,
-						"globalTypeGrammarID" : 19 
+						"globalTypeGrammarID" : 18 
 					}
 					, 
 					{
@@ -659,12 +659,12 @@
 		, 
 		{
 			"simpleDatatypeId" : 11,
-			"type": "DECIMAL"
+			"type": "INTEGER"
 		}
 		, 
 		{
 			"simpleDatatypeId" : 12,
-			"type": "INTEGER"
+			"type": "DECIMAL"
 		}
 		, 
 		{
@@ -883,14 +883,14 @@
 					{
 						"event" : "startElement" ,
 						"startElementQNameID" : "60" ,
-						"startElementGrammarID" : "18" ,
+						"startElementGrammarID" : "19" ,
 						"nextGrammarID" : "4"
 					}
 					, 
 					{
 						"event" : "startElement" ,
 						"startElementQNameID" : "61" ,
-						"startElementGrammarID" : "19" ,
+						"startElementGrammarID" : "18" ,
 						"nextGrammarID" : "4"
 					}
 					, 
@@ -1301,14 +1301,14 @@
 					, 
 					{
 						"event" : "startElement" ,
-						"startElementQNameID" : "60" ,
+						"startElementQNameID" : "61" ,
 						"startElementGrammarID" : "18" ,
 						"nextGrammarID" : "46"
 					}
 					, 
 					{
 						"event" : "startElement" ,
-						"startElementQNameID" : "61" ,
+						"startElementQNameID" : "60" ,
 						"startElementGrammarID" : "19" ,
 						"nextGrammarID" : "46"
 					}
@@ -1525,14 +1525,14 @@
 					, 
 					{
 						"event" : "startElement" ,
-						"startElementQNameID" : "60" ,
+						"startElementQNameID" : "61" ,
 						"startElementGrammarID" : "18" ,
 						"nextGrammarID" : "46"
 					}
 					, 
 					{
 						"event" : "startElement" ,
-						"startElementQNameID" : "61" ,
+						"startElementQNameID" : "60" ,
 						"startElementGrammarID" : "19" ,
 						"nextGrammarID" : "46"
 					}
@@ -1595,14 +1595,14 @@
 					{
 						"event" : "startElement" ,
 						"startElementQNameID" : "60" ,
-						"startElementGrammarID" : "18" ,
+						"startElementGrammarID" : "19" ,
 						"nextGrammarID" : "48"
 					}
 					, 
 					{
 						"event" : "startElement" ,
 						"startElementQNameID" : "61" ,
-						"startElementGrammarID" : "19" ,
+						"startElementGrammarID" : "18" ,
 						"nextGrammarID" : "48"
 					}
 					, 
@@ -2034,14 +2034,14 @@
 					, 
 					{
 						"event" : "startElement" ,
-						"startElementQNameID" : "60" ,
+						"startElementQNameID" : "61" ,
 						"startElementGrammarID" : "18" ,
 						"nextGrammarID" : "46"
 					}
 					, 
 					{
 						"event" : "startElement" ,
-						"startElementQNameID" : "61" ,
+						"startElementQNameID" : "60" ,
 						"startElementGrammarID" : "19" ,
 						"nextGrammarID" : "46"
 					}
@@ -2228,14 +2228,14 @@
 					{
 						"event" : "startElement" ,
 						"startElementQNameID" : "60" ,
-						"startElementGrammarID" : "18" ,
+						"startElementGrammarID" : "19" ,
 						"nextGrammarID" : "48"
 					}
 					, 
 					{
 						"event" : "startElement" ,
 						"startElementQNameID" : "61" ,
-						"startElementGrammarID" : "19" ,
+						"startElementGrammarID" : "18" ,
 						"nextGrammarID" : "48"
 					}
 					, 

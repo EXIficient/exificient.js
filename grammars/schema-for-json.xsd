@@ -155,14 +155,14 @@
                     <xs:restriction base="xs:date"/>
                 </xs:simpleType>
             </xs:element>
-            <xs:element name="decimal">
-                <xs:simpleType>
-                    <xs:restriction base="xs:decimal"/>
-                </xs:simpleType>
-            </xs:element>
             <xs:element name="integer">
                 <xs:simpleType>
                     <xs:restriction base="xs:integer"/>
+                </xs:simpleType>
+            </xs:element>
+            <xs:element name="decimal">
+                <xs:simpleType>
+                    <xs:restriction base="xs:decimal"/>
                 </xs:simpleType>
             </xs:element>
         </xs:choice>

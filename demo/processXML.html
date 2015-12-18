@@ -1,8 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
+<title>Process XML</title>
 <script type="text/javascript" src="../exificient.js"></script>
 <script type="text/javascript" src="demo.js"></script>
+<link rel="stylesheet" href="demo.css" />
 
 <!-- CodeMirror - normal stuff -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/codemirror.min.css">
@@ -37,13 +39,18 @@ function readJSONGrammars(callback) {
 	var reader = new FileReader();
 	
 	reader.onload = function(event) {
-		var jsonText = event.target.result;
-		// console.log("JSON File contents: " + jsonText);
-		
-		// Note: the idea would be to have this json grammars file (e.g., minified schema-for-json.xsd.grs) in a an EXI-encoded fashion
-		var grammars = JSON.parse(jsonText);
-		
-		callback(grammars);
+		try {
+			var jsonText = event.target.result;
+			// console.log("JSON File contents: " + jsonText);
+			
+			// Note: the idea would be to have this json grammars file (e.g., minified schema-for-json.xsd.grs) in a an EXI-encoded fashion
+			var grammars = JSON.parse(jsonText);
+			
+			callback(grammars);			
+		} catch(err) {
+			alert("Error while parsing JSON grammars. " + err);
+		}
+
 	};
 
 	reader.onerror = function(event) {
@@ -60,24 +67,28 @@ function encodeXML(grammars) {
 	if(textXML.trim().length == 0) {
 		alert("No XML provided");
 	} else {
-		// console.log("JSON Grammars: " + grammars);
-		var exiEncoder = new EXIEncoder(grammars);	
-		
-		// TODO full encode
-		exiEncoder.encodeXmlText(textXML);
-		
-		var uint8ArrayLength = exiEncoder.getUint8ArrayLength();
-		var uint8Array = exiEncoder.getUint8Array();
-		writeUint18ArrayBufferToEXIEditor(uint8Array, uint8ArrayLength);
-		
-		// show encoding information
-		var c = document.getElementById('pieContainer');
-		while(c.hasChildNodes()) {
-			c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
+		try {
+			// console.log("JSON Grammars: " + grammars);
+			var exiEncoder = new EXIEncoder(grammars);	
+			
+			// TODO full encode
+			exiEncoder.encodeXmlText(textXML);
+			
+			var uint8ArrayLength = exiEncoder.getUint8ArrayLength();
+			var uint8Array = exiEncoder.getUint8Array();
+			writeUint18ArrayBufferToEXIEditor(uint8Array, uint8ArrayLength);
+			
+			// show encoding information
+			var c = document.getElementById('pieContainer');
+			while(c.hasChildNodes()) {
+				c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
+			}
+			c.appendChild( pieChart(((uint8ArrayLength/textXML.length)*100), 70 ) );
+			var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Encoded XML (" + textXML.length +" Bytes) into EXI (" + uint8ArrayLength + " Bytes)"); 
+			c.appendChild(textnode); 
+		} catch(err) {
+			alert("Error while encoding XML. " + err);
 		}
-		c.appendChild( pieChart(((uint8ArrayLength/textXML.length)*100), 70 ) );
-		var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Encoded XML (" + textXML.length +" Bytes) into EXI (" + uint8ArrayLength + " Bytes)"); 
-		c.appendChild(textnode); 
 	}
 }
 
@@ -87,34 +98,39 @@ function decodeEXI(grammars) {
 	if(textEXI.length == 0) {
 		alert("No EXI provided");
 	} else {
-		// remove multiple spaces
-		textEXI = textEXI.replace(/ +(?= )/g,'');
-		var sp = textEXI.split(" "); 
-		var arrayBuffer = new ArrayBuffer(sp.length);
-		var arrayBufferView = new Uint8Array(arrayBuffer);
-		// alert("TODO EXI " + sp.length + ": " + sp);
-		for(var i=0; i<sp.length; i++) {
-			arrayBufferView[i] = parseInt(sp[i], 16);
+		try {
+			// remove multiple spaces
+			textEXI = textEXI.replace(/ +(?= )/g,'');
+			var sp = textEXI.split(" "); 
+			var arrayBuffer = new ArrayBuffer(sp.length);
+			var arrayBufferView = new Uint8Array(arrayBuffer);
+			// alert("TODO EXI " + sp.length + ": " + sp);
+			for(var i=0; i<sp.length; i++) {
+				arrayBufferView[i] = parseInt(sp[i], 16);
+			}
+			
+			var exiDecoder = new EXIDecoder(grammars);
+			
+			// register XML handler
+			var xmlHandler = new XMLEventHandler();
+			exiDecoder.registerEventHandler(xmlHandler);
+			exiDecoder.decode(arrayBuffer);
+			editorXML.setValue(xmlHandler.getXML());
+			// pretty-print XML
+			autoFormat(); 
+			
+			// show decoding information
+			var c = document.getElementById('pieContainer');
+			while(c.hasChildNodes()) {
+				c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
+			}
+			c.appendChild( pieChart(((sp.length/xmlHandler.getXML().length)*100), 70 ) );
+			var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Decoded EXI (" + sp.length +" Bytes) into XML (" + xmlHandler.getXML().length + " Bytes)"); 
+			c.appendChild(textnode); 
+		} catch(err) {
+			alert("Error while decoding EXI. " + err);
 		}
-		
-		var exiDecoder = new EXIDecoder(grammars);
-		
-		// register XML handler
-		var xmlHandler = new XMLEventHandler();
-		exiDecoder.registerEventHandler(xmlHandler);
-		exiDecoder.decode(arrayBuffer);
-		editorXML.setValue(xmlHandler.getXML());
-		// pretty-print XML
-		autoFormat(); 
-		
-		// show decoding information
-		var c = document.getElementById('pieContainer');
-		while(c.hasChildNodes()) {
-			c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
-		}
-		c.appendChild( pieChart(((sp.length/xmlHandler.getXML().length)*100), 70 ) );
-		var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Decoded EXI (" + sp.length +" Bytes) into XML (" + xmlHandler.getXML().length + " Bytes)"); 
-		c.appendChild(textnode); 
+
 	}
 }
 
@@ -203,7 +219,19 @@ function readEXIFile() {
 	<tr>
 		<td style="width:50%">
 			<!-- readonly="readonly"  -->
-			<textarea id="codeXML" name="codeXML"  ></textarea>
+			<textarea id="codeXML" name="codeXML"><notebook date="2007-09-12">
+    <note date="2007-07-23" category="EXI">
+        <subject>EXI</subject>
+        <body>Do not forget it!</body>
+    </note>
+    <note date="2007-09-12">
+        <subject>shopping list</subject>
+        <body>milk, honey</body>
+    </note>
+</notebook>
+			</textarea>
+			
+
 		</td>
 		<td>
 			<button type="button" onclick="javascript:encodeXMLFile()">Encode &rarr;</button>
