@@ -1,4 +1,4 @@
-/*! exificient.js v0.0.1 | (c) 2015 Siemens AG | The MIT License (MIT) */
+/*! exificient.js v0.0.2-SNAPSHOT | (c) 2015 Siemens AG | The MIT License (MIT) */
 
 /* TODO How to realize proper error handling */
 
