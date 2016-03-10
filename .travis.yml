@@ -1,5 +1,5 @@
 before_script:
-	cd test
+ - cd test
 
 language: java
 jdk:
