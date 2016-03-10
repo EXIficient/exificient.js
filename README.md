@@ -6,3 +6,21 @@ JavaScript Implementation of [EXI](https://www.w3.org/TR/exi/) and [EXI for JSON
 ## Demo
 
 An online demonstration can be found here: <http://exificient.github.io/javascript/demo/>.
+
+## HowTo EXIforJSON
+
+```javascript
+// encode JSON
+var exiEncoder = new EXI4JSONEncoder();	
+exiEncoder.encodeJsonText(textJSON);
+var uint8ArrayLength = exiEncoder.getUint8ArrayLength();
+var uint8Array = exiEncoder.getUint8Array();
+
+// decode JSON
+var exiDecoder = new EXI4JSONDecoder();
+var jsonHandler = new JSONEventHandler(); // register JSON handler
+exiDecoder.registerEventHandler(jsonHandler);
+exiDecoder.decode(arrayBuffer); // input data
+jsonHandler.getJSON();
+
+```

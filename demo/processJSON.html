@@ -106,7 +106,7 @@ function decodeEXI4JSON() {
 			// shared strings
 			exiDecoder.initSharedStrings(getSharedStrings());
 			
-			// register XML handler
+			// register JSON handler
 			var jsonHandler = new JSONEventHandler();
 			exiDecoder.registerEventHandler(jsonHandler);
 			exiDecoder.decode(arrayBuffer);
