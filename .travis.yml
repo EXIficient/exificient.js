@@ -1,0 +1,7 @@
+before_script:
+	cd test
+
+language: java
+jdk:
+  - oraclejdk8
+  
