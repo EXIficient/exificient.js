@@ -12,15 +12,16 @@ An online demonstration can be found here: <http://exificient.github.io/javascri
 ```javascript
 // encode JSON
 var exiEncoder = new EXI4JSONEncoder();	
-exiEncoder.encodeJsonText(textJSON);
+exiEncoder.encodeJsonText(textJSON); // JSON text input
+// Note: there is also encodeJsonObject
 var uint8ArrayLength = exiEncoder.getUint8ArrayLength();
 var uint8Array = exiEncoder.getUint8Array();
 
-// decode JSON
+// decode EXIforJSON
 var exiDecoder = new EXI4JSONDecoder();
 var jsonHandler = new JSONEventHandler(); // register JSON handler
 exiDecoder.registerEventHandler(jsonHandler);
 exiDecoder.decode(arrayBuffer); // input data
-jsonHandler.getJSON();
+jsonHandler.getJSON(); // get JSON object
 
 ```
