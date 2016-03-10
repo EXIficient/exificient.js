@@ -168,9 +168,9 @@ public class TestJSON extends TestCase {
 		System.out.println("resultErrn: " + o);
 		
 		
-		Object objJsonHandler = engine.get("jsonHandler");
-		Invocable invJsonHandler = (Invocable) engine;
-		Object oo = invJsonHandler.invokeMethod(objJsonHandler, "getJSON");
+//		Object objJsonHandler = engine.get("jsonHandler");
+//		Invocable invJsonHandler = (Invocable) engine;
+//		Object oo = invJsonHandler.invokeMethod(objJsonHandler, "getJSON");
 		
 		// var jsonText = JSON.stringify(jsonHandler.getJSON(), null, "\t");
 		Object jtext = engine.eval("JSON.stringify(jsonHandler.getJSON(), null);");
@@ -180,21 +180,21 @@ public class TestJSON extends TestCase {
 		JSONAssert.assertEquals(jsonTest, jtext.toString(), true);
 		
 		
-		/////////////////////////////////////////////////
-		// TODO how to call function properly!?
-		System.out.println("resultOO: " + oo);
-		jdk.nashorn.api.scripting.ScriptUtils.unwrap(oo);
-		Object oib = jdk.nashorn.api.scripting.ScriptUtils.wrapArray(ibytes);
-		
-		Object obj = engine.get("exiDecoder");
-		Invocable inv = (Invocable) engine;
-//		inv.invokeMethod(obj, "decode", b);
-//		inv.invokeMethod(obj, "decode", bytes);
-//		inv.invokeMethod(obj, "decode", ibytes);
-//		inv.invokeMethod(obj, "decode", oib);
-//		inv.invokeMethod(obj, "decode(arrayBuffer)");
-//		inv.invokeMethod(obj, "decode", ilist);
-		// System.out.println(obj2);
+//		/////////////////////////////////////////////////
+//		// TODO how to call function properly!?
+//		System.out.println("resultOO: " + oo);
+//		jdk.nashorn.api.scripting.ScriptUtils.unwrap(oo);
+//		Object oib = jdk.nashorn.api.scripting.ScriptUtils.wrapArray(ibytes);
+//		
+//		Object obj = engine.get("exiDecoder");
+//		Invocable inv = (Invocable) engine;
+////		inv.invokeMethod(obj, "decode", b);
+////		inv.invokeMethod(obj, "decode", bytes);
+////		inv.invokeMethod(obj, "decode", ibytes);
+////		inv.invokeMethod(obj, "decode", oib);
+////		inv.invokeMethod(obj, "decode(arrayBuffer)");
+////		inv.invokeMethod(obj, "decode", ilist);
+//		// System.out.println(obj2);
 
 	}
 
