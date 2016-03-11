@@ -130,10 +130,10 @@ var jsonGrammarsObject = JSON.parse(jsonGrammars);
 
 function JSONEventHandler() {
 
-	this.openTag = null;
-	this.openTagKey = null;
-	this.json = null;
-	this.jsonStack = [];
+	this.openTag;
+	this.openTagKey;
+	this.json;
+	this.jsonStack;
 	// this.lastElement;
 	
 	JSONEventHandler.prototype.getJSON = function(){

@@ -89,14 +89,20 @@ function AbtractEXICoder(grammars) {
 	this.grammars = grammars;
 	this.isStrict = true; // TODO
 
-	this.stringTable = new StringTable();
+	this.stringTable;
+	this.sharedStrings;
 
 	// WARNING: not specified in EXI 1.0 core (is extension)
-	AbtractEXICoder.prototype.initSharedStrings = function(sharedStrings) {
-		if (sharedStrings != null && sharedStrings instanceof Array) {
-			console.log("SharedStrings: " + sharedStrings);
-			for (var i = 0; i < sharedStrings.length; i++) {
-				this.stringTable.addValue(-1, sharedStrings[i]);
+	AbtractEXICoder.prototype.setSharedStrings = function(sharedStrings) {
+		this.sharedStrings = sharedStrings;
+	}
+	
+	AbtractEXICoder.prototype.init = function() {
+		this.stringTable = new StringTable();
+		if (this.sharedStrings != null && this.sharedStrings instanceof Array) {
+			console.log("SharedStrings: " + this.sharedStrings);
+			for (var i = 0; i < this.sharedStrings.length; i++) {
+				this.stringTable.addValue(-1, this.sharedStrings[i]);
 			}
 		}
 	}
@@ -644,6 +650,7 @@ function EXIDecoder(grammars) {
 	}
 
 	EXIDecoder.prototype.decode = function(arrayBuffer) {
+		this.init();
 		
 		this.bitStream = new BitInputStream(arrayBuffer)
 
@@ -922,8 +929,8 @@ function EXIEncoder(grammars) {
 
 	EXIEncoder.baseConstructor.call(this, grammars);
 
-	this.bitStream = new BitOutputStream();
-	this.elementContext = [];
+	this.bitStream;
+	this.elementContext;
 
 	function ElementContextEntry(qnameID, grammar) {
 		this.qnameID = qnameID
@@ -964,7 +971,7 @@ function EXIEncoder(grammars) {
 		this.encodeXmlDocument(xmlDoc);
 	}
 
-	EXIEncoder.prototype.encodeXmlDocument = function(xmlDoc) {
+	EXIEncoder.prototype.encodeXmlDocument = function(xmlDoc) {		
 		this.startDocument();
 		// documentElement always represents the root node
 		this.processXMLElement(xmlDoc.documentElement);
@@ -1058,6 +1065,10 @@ function EXIEncoder(grammars) {
 	}
 
 	EXIEncoder.prototype.startDocument = function() {
+		this.init();
+		this.bitStream = new BitOutputStream();
+		this.elementContext = [];
+		
 		this.encodeHeader();
 		// set grammar position et cetera
 
