@@ -211,36 +211,27 @@ if (gup('SharedStrings', null)) {
 	<tr>
 		<td style="width:50%">
 			<!-- readonly="readonly"  -->
-			<!-- Example from http://www.sitepoint.com/colors-json-example/ -->
+			<!-- JSON-LD thing description example -->
 			<textarea id="codeJSON" name="codeJSON">{
-	"colorsArray": [
-		{
-			"colorName": "red",
-			"hexValue": "#f00"
+	"@context": "http://w3c.github.io/wot/w3c-wot-td-context.jsonld",
+	"metadata": {
+		"name": "MyCar",
+		"protocols": {
+			"HTTP": {
+				"uri": "http://100.64.24.55:3000/api/",
+				"priority": 1
+			}
 		},
+		"encodings": [
+			"JSON"
+		]
+	},
+	"interactions": [
 		{
-			"colorName": "green",
-			"hexValue": "#0f0"
-		},
-		{
-			"colorName": "blue",
-			"hexValue": "#00f"
-		},
-		{
-			"colorName": "cyan",
-			"hexValue": "#0ff"
-		},
-		{
-			"colorName": "magenta",
-			"hexValue": "#f0f"
-		},
-		{
-			"colorName": "yellow",
-			"hexValue": "#ff0"
-		},
-		{
-			"colorName": "black",
-			"hexValue": "#000"
+			"@type": "Property",
+			"name": "vehicleSpeed",
+			"outputData": "xsd:unsignedShort",
+			"writable": false
 		}
 	]
 }</textarea>
