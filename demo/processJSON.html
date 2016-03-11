@@ -56,13 +56,31 @@ function encodeJSON() {
 		alert("No JSON provided");
 	} else {
 		try {
+			var jsonObj = JSON.parse(textJSON);
+		
 			var exiEncoder = new EXI4JSONEncoder();	
 			
 			// shared strings
-			exiEncoder.initSharedStrings(getSharedStrings());
+			exiEncoder.setSharedStrings(getSharedStrings());
 			
 			// encode
-			exiEncoder.encodeJsonText(textJSON);
+			var te0 = performance.now();
+			var times = document.getElementById('performanceRuns').value;
+			for(i=0; i<times; i++) {
+				exiEncoder.encodeJsonObject(jsonObj);
+			}
+			var te1 = performance.now();
+			var tj0;
+			var tj1;
+			if(times > 1) {
+				var tj0 = performance.now();
+				// run also JSON encode
+				for(i=0; i<times; i++) {
+					var s = JSON.stringify(jsonObj);
+				}
+				var tj1 = performance.now();
+			}
+			
 			
 			var uint8ArrayLength = exiEncoder.getUint8ArrayLength();
 			var uint8Array = exiEncoder.getUint8Array();
@@ -75,8 +93,16 @@ function encodeJSON() {
 				c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
 			}
 			c.appendChild( pieChart(((uint8ArrayLength/textJSON.length)*100), 70 ) );
-			var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Encoded JSON (" + textJSON.length +" Bytes) into EXI (" + uint8ArrayLength + " Bytes)"); 
-			c.appendChild(textnode); 
+			var textnode1 = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Encoded JSON (" + textJSON.length +" Bytes) into EXI (" + uint8ArrayLength + " Bytes)"); 
+			c.appendChild(textnode1); 
+			if(times > 1) {
+				c.appendChild(document.createElement("br")); 
+				var textnode2 = document.createTextNode(" " + "Call exiEncoder.encodeJsonText " + times + " times took " + (te1 - te0) + " milliseconds."); 
+				c.appendChild(textnode2); 
+				c.appendChild(document.createElement("br")); 
+				var textnode3 = document.createTextNode(" " + "Call JSON.stringify " + times + " times took " + (tj1 - tj0) + " milliseconds."); 
+				c.appendChild(textnode3);
+			}
 		} catch(err) {
 			alert("Error while encoding JSON. " + err);
 		}
@@ -104,12 +130,29 @@ function decodeEXI4JSON() {
 			var exiDecoder = new EXI4JSONDecoder();
 			
 			// shared strings
-			exiDecoder.initSharedStrings(getSharedStrings());
+			exiDecoder.setSharedStrings(getSharedStrings());
 			
 			// register JSON handler
 			var jsonHandler = new JSONEventHandler();
 			exiDecoder.registerEventHandler(jsonHandler);
-			exiDecoder.decode(arrayBuffer);
+			var te0 = performance.now();
+			var times = document.getElementById('performanceRuns').value;
+			for(i=0; i<times; i++) {
+				exiDecoder.decode(arrayBuffer);
+			}
+			var te1 = performance.now();
+			var tj0;
+			var tj1;
+			if(times > 1) {
+				var textJSON = editorJSON.getValue();
+				var tj0 = performance.now();
+				// run also JSON decode
+				for(i=0; i<times; i++) {
+					var jsonObj = JSON.parse(textJSON);
+				}
+				var tj1 = performance.now();
+			}
+			
 			var jsonText = JSON.stringify(jsonHandler.getJSON(), null, "\t");
 			editorJSON.setValue(jsonText);
 			
@@ -120,8 +163,16 @@ function decodeEXI4JSON() {
 				c.removeChild(c.childNodes[0]); // Remove first child node (index 0)
 			}
 			c.appendChild( pieChart(((sp.length/jsonText.length)*100), 70 ) );
-			var textnode = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Decoded EXI (" + sp.length +" Bytes) into JSON (" + jsonText.length + " Bytes)"); 
-			c.appendChild(textnode); 
+			var textnode1 = document.createTextNode(" " + new Date().toLocaleTimeString() + ": Decoded EXI (" + sp.length +" Bytes) into JSON (" + jsonText.length + " Bytes)"); 
+			c.appendChild(textnode1); 
+			if(times > 1) {
+				c.appendChild(document.createElement("br")); 
+				var textnode2 = document.createTextNode(" " + "Call exiDecoder.decode " + times + " times took " + (te1 - te0) + " milliseconds."); 
+				c.appendChild(textnode2);
+				c.appendChild(document.createElement("br")); 
+				var textnode3 = document.createTextNode(" " + "Call JSON.parse " + times + " times took " + (tj1 - tj0) + " milliseconds."); 
+				c.appendChild(textnode3);
+			}
 		} catch(err) {
 			alert("Error while decoding EXI. " + err);
 		}
@@ -183,10 +234,15 @@ function readEXI4JSONFile() {
 <legend>Processing Performance Visualization</legend>
 <div id="pieContainer" style="height: 70px;"></div>
 </fieldset>
+<br /><br />
 <fieldset id="sharedStringsFieldset" style="width:95%;">
 <legend>SharedStrings (a.k.a. shared vocabulary). Note: delete/update if needed</legend>
 <textarea id="sharedStrings" rows="3" style="width:100%" >
 "@context","@id","@value","@type","xsd:string","xsd:boolean","xsd:unsignedShort","xsd:unsignedByte", "xsd:float","http://w3c.github.io/wot/w3c-wot-td-context.jsonld","metadata","name","protocols","uri","priority","encodings","interactions","outputData","inputData","writable","Property","Action","Event","CoAP","HTTP","JSON","EXI", "WS"</textarea>
+</fieldset>
+<fieldset id="performanceFieldset" style="width:95%;">
+<legend>Performance: number of runs</legend>
+<input id="performanceRuns" style="width:100%" value="100"></input>
 </fieldset>
 <script>
 if (gup('SharedStrings', null)) {
@@ -197,6 +253,16 @@ if (gup('SharedStrings', null)) {
 	sharedStringsFieldset.style.display = 'none'; // hide
 	// sharedStringsFieldset.visible = false;
 	document.getElementById('sharedStrings').value = ""; // unset values
+}
+if (gup('PerformanceRuns', null) > 1) {
+	// show it
+	document.getElementById('performanceRuns').value = gup('PerformanceRuns', null);
+} else {
+	// make it invisible
+	performanceFieldset.style.visibility='hidden';
+	performanceFieldset.style.display = 'none'; // hide
+	// performanceFieldset.visible = false;
+	document.getElementById('performanceRuns').value = "1"; // unset
 }
 </script>
 
