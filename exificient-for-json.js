@@ -65,7 +65,7 @@ function EXI4JSONEncoder() {
 				this.startElement(exiForJsonUri, "boolean");
 				this.characters(val);
 				this.endElement();
-			} else if (val == null) {
+			} else if (val === null) {
 				this.startElement(exiForJsonUri, "null");
 				// this.characters(val);
 				this.endElement();
@@ -109,7 +109,7 @@ function EXI4JSONEncoder() {
 					this.attribute("", "key", key);
 					this.characters(val);
 					this.endElement();
-				} else if (val == null) {
+				} else if (val === null) {
 					this.startElement(exiForJsonUri, "null");
 					this.attribute("", "key", key);
 					// this.characters(val);
@@ -155,16 +155,16 @@ function JSONEventHandler() {
 			var top = this.jsonStack[this.jsonStack.length-1];
 			
 			var el = null;
-			if(this.openTag == "map") {
+			if(this.openTag === "map") {
 				el = new Object();
 				this.jsonStack.push(el);
-			} else if(this.openTag == "array") {
+			} else if(this.openTag === "array") {
 				el = new Array();
 				this.jsonStack.push(el);
 			}
 			
 			if(el != null) {
-				if(this.openTagKey == null) {
+				if(this.openTagKey === null) {
 					// outer array
 					top.push(el);
 				} else {
@@ -180,12 +180,12 @@ function JSONEventHandler() {
 	}
 	
 	JSONEventHandler.prototype.startElement = function(namespace, localName){
-		if(this.json == null) {
+		if(this.json === null) {
 			// root element still missing
-			if(localName == "map") {
+			if(localName === "map") {
 				this.json = new Object();
 				this.jsonStack.push(this.json);
-			} else if(localName == "array") {
+			} else if(localName === "array") {
 				this.json = new Array();
 				this.jsonStack.push(this.json);
 			}
@@ -196,7 +196,7 @@ function JSONEventHandler() {
 		}
 	}
 	JSONEventHandler.prototype.endElement = function(namespace, localName) {
-		if(this.openTag == "null") {
+		if(this.openTag === "null") {
 			var top = this.jsonStack[this.jsonStack.length-1];
 			
 			if(top instanceof Array) {
@@ -208,16 +208,16 @@ function JSONEventHandler() {
 		
 		this.checkOpenElement();
 		
-		if(localName == "map") {
+		if(localName === "map") {
 			this.jsonStack.pop();
-		} else if(localName == "array") {
+		} else if(localName === "array") {
 			this.jsonStack.pop();
 		}
 	}
 
 		
 	JSONEventHandler.prototype.attribute = function(namespace, localName, value){
-		if(localName == "key") {
+		if(localName === "key") {
 			this.openTagKey = value;
 		}
 	}
@@ -228,21 +228,21 @@ function JSONEventHandler() {
 		console.log("chars: " + chars);
 		var top = this.jsonStack[this.jsonStack.length-1];
 		
-		if(this.openTag == "number") {
+		if(this.openTag === "number") {
 			var n = new Number(chars);
 			if(top instanceof Array) {
 				top.push(n);
 			} else if(top instanceof Object) {
 				top[this.openTagKey] = n;
 			}
-		} else if(this.openTag == "string") {
+		} else if(this.openTag === "string") {
 			var s = new String(chars);
 			if(top instanceof Array) {
 				top.push(s);
 			} else if(top instanceof Object) {
 				top[this.openTagKey] = s;
 			}
-		} else if(this.openTag == "boolean") {
+		} else if(this.openTag === "boolean") {
 			var b = new Boolean(chars);
 			if(top instanceof Array) {
 				top.push(b);

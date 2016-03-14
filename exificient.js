@@ -26,7 +26,7 @@ function StringTable() {
 	StringTable.prototype.getNumberOfLocalStrings = function(qnameID) {
 		var cnt = 0;
 		for (var i = 0; i < this.strings.length; i++) {
-			if (this.strings[i].qnameID == qnameID) {
+			if (this.strings[i].qnameID === qnameID) {
 				cnt++;
 			}
 		}
@@ -36,8 +36,8 @@ function StringTable() {
 
 	StringTable.prototype.getLocalValue = function(qnameID, localValueID) {
 		for (var i = localValueID; i < this.strings.length; i++) {
-			if (this.strings[i].qnameID == qnameID
-					&& this.strings[i].localValueID == localValueID) {
+			if (this.strings[i].qnameID === qnameID
+					&& this.strings[i].localValueID === localValueID) {
 				return this.strings[i];
 			}
 		}
@@ -62,7 +62,7 @@ function StringTable() {
 
 	StringTable.prototype.getStringTableEntry = function(value) {
 		for (var i = 0; i < this.strings.length; i++) {
-			if (this.strings[i].value == value) {
+			if (this.strings[i].value === value) {
 				return this.strings[i];
 			}
 		}
@@ -167,16 +167,16 @@ function AbtractEXICoder(grammars) {
 	}
 
 	AbtractEXICoder.prototype.getCodeLengthForGrammar = function(grammar) {
-		if (grammar.type == "document" || grammar.type == "fragment") {
+		if (grammar.type === "document" || grammar.type === "fragment") {
 			return 0;
-		} else if (grammar.type == "docContent") {
+		} else if (grammar.type === "docContent") {
 			// TODO DT, CM, PI
 			return this.getCodeLength(grammar.production.length);
-		} else if (grammar.type == "docEnd"
-				|| grammar.type == "fragmentContent") {
+		} else if (grammar.type === "docEnd"
+				|| grammar.type === "fragmentContent") {
 			// TODO CM, PI
 			return 0;
-		} else if (grammar.type == "firstStartTagContent") {
+		} else if (grammar.type === "firstStartTagContent") {
 			if (this.isStrict) {
 				return this.getCodeLength(grammar.production.length
 						+ ((grammar.isTypeCastable || grammar.isNillable) ? 1
@@ -184,13 +184,13 @@ function AbtractEXICoder(grammars) {
 			} else {
 				return this.getCodeLength(grammar.production.length + 1);
 			}
-		} else if (grammar.type == "startTagContent") {
+		} else if (grammar.type === "startTagContent") {
 			if (this.isStrict) {
 				return this.getCodeLength(grammar.production.length);
 			} else {
 				return this.getCodeLength(grammar.production.length + 1);
 			}
-		} else if (grammar.type == "elementContent") {
+		} else if (grammar.type === "elementContent") {
 			if (this.isStrict) {
 				return this.getCodeLength(grammar.production.length);
 			} else {
@@ -244,7 +244,7 @@ function BitInputStream(arrayBuffer) {
 	 * If buffer is empty, read byte from underlying byte array
 	 */
 	BitInputStream.prototype.readBuffer = function() {
-		if (this.capacity == 0) {
+		if (this.capacity === 0) {
 			if (this.uint8Array.length > this.pos) {
 				this.buffer = this.uint8Array[this.pos++];
 				this.capacity = 8; // bits
@@ -262,21 +262,21 @@ function BitInputStream(arrayBuffer) {
 			throw new Error("Error in decodeNBitUnsignedInteger, nbits = " + nbits);
 			this.errn = -1;
 			return -1;
-		} else if (nbits == 0) {
+		} else if (nbits === 0) {
 			return 0;
 		} else {
 			// check buffer
 			this.readBuffer();
 
 			// read bits
-			if (this.errn == 0) {
+			if (this.errn === 0) {
 				if (nbits <= this.capacity) {
 					/* read the bits in one step */
 					this.capacity = this.capacity - nbits;
 					var b = (this.buffer >> this.capacity)
 							& (0xff >> (8 - nbits));
 					return b;
-				} else if (this.capacity == 0 && nbits == 8) {
+				} else if (this.capacity === 0 && nbits === 8) {
 					/* possible to read direct byte, nothing else to do */
 					return this.uint8Array[this.pos];
 				} else {
@@ -286,7 +286,7 @@ function BitInputStream(arrayBuffer) {
 					this.capacity = 0;
 
 					/* read whole bytes */
-					while (this.errn == 0 && nbits >= 8) {
+					while (this.errn === 0 && nbits >= 8) {
 						this.readBuffer();
 						b = (b << 8) | this.buffer;
 						nbits = nbits - 8;
@@ -294,9 +294,9 @@ function BitInputStream(arrayBuffer) {
 					}
 
 					/* read the spare bits in the buffer */
-					if (this.errn == 0 && nbits > 0) {
+					if (this.errn === 0 && nbits > 0) {
 						this.readBuffer();
-						if (this.errn == 0) {
+						if (this.errn === 0) {
 							b = (b << nbits) | (this.buffer >> (8 - nbits));
 							this.capacity = 8 - nbits;
 						}
@@ -353,7 +353,7 @@ function BitInputStream(arrayBuffer) {
 	 * to store the integer's value.
 	 */
 	BitInputStream.prototype.decodeInteger = function() {
-		if (this.decodeNBitUnsignedInteger(1) == 0) {
+		if (this.decodeNBitUnsignedInteger(1) === 0) {
 			// positive
 			return this.decodeUnsignedInteger();
 		} else {
@@ -427,7 +427,7 @@ function EXIDecoder(grammars) {
 	EXIDecoder.prototype.decodeDatatypeValue = function(datatype, qnameID,
 			qnameContext) {
 		// Note: qnameContext == null --> CHARACTERS event
-		if (datatype.type == "STRING") {
+		if (datatype.type === "STRING") {
 			var s;
 			var i = this.bitStream.decodeUnsignedInteger();
 			// console.log("\t" + " String i: " + i );
@@ -457,7 +457,7 @@ function EXIDecoder(grammars) {
 				// ==> string literal is encoded as a String with the length
 				// incremented by two.
 				i = i - 2;
-				if (i == 0) {
+				if (i === 0) {
 					// empty string
 					console.log("\t" + " String is empty string ''");
 					s = "";
@@ -470,43 +470,43 @@ function EXIDecoder(grammars) {
 			}
 			for (var i = 0; i < this.eventHandler.length; i++) {
 				var eh = this.eventHandler[i];
-				if (qnameContext == null || qnameContext == undefined) {
+				if (qnameContext === null || qnameContext === undefined) {
 					eh.characters(s);
 				} else {
 					eh.attribute("", qnameContext.localName, s); // TODO uri
 				}
 			}
-		} else if (datatype.type == "FLOAT") {
+		} else if (datatype.type === "FLOAT") {
 			var mantissa = this.bitStream.decodeInteger();
 			var exponent = this.bitStream.decodeInteger();
 			console.log("\t" + " float = " + mantissa + "E" + exponent);
 			var i;
 			for (i = 0; i < this.eventHandler.length; i++) {
 				var eh = this.eventHandler[i];
-				if (qnameContext == null || qnameContext == undefined) {
+				if (qnameContext === null || qnameContext === undefined) {
 					eh.characters(mantissa + "E" + exponent);
 				} else {
 					eh.attribute("", qnameContext.localName, mantissa + "E"
 							+ exponent); // TODO uri
 				}
 			}
-		} else if (datatype.type == "BOOLEAN") {
-			var b = this.bitStream.decodeNBitUnsignedInteger(1) == 0 ? false
+		} else if (datatype.type === "BOOLEAN") {
+			var b = this.bitStream.decodeNBitUnsignedInteger(1) === 0 ? false
 					: true;
 			console.log("\t" + " boolean = " + b);
 			for (var i = 0; i < this.eventHandler.length; i++) {
 				var eh = this.eventHandler[i];
-				if (qnameContext == null || qnameContext == undefined) {
+				if (qnameContext === null || qnameContext === undefined) {
 					eh.characters(b);
 				} else {
 					eh.attribute("", qnameContext.localName, b); // TODO uri
 				}
 			}
-		} else if (datatype.type == "DATETIME") {
+		} else if (datatype.type === "DATETIME") {
 			var year = 0, monthDay = 0, time = 0, fractionalSecs = 0;
 			var presenceFractionalSecs = false;
 			var sDatetime = "";
-			if (datatype.datetimeType == "date"
+			if (datatype.datetimeType === "date"
 			// || datatype.datetimeType == "gYearMonth"
 			) {
 				// YEAR_OFFSET = 2000
@@ -526,7 +526,7 @@ function EXIDecoder(grammars) {
 			} else {
 				throw new Error("Unsupported datetime type: " + datatype.datetimeType);
 			}
-			var presenceTimezone = this.bitStream.decodeNBitUnsignedInteger(1) == 0 ? false
+			var presenceTimezone = this.bitStream.decodeNBitUnsignedInteger(1) === 0 ? false
 					: true;
 			// console.log("\t" + " presenceTimezone = " + presenceTimezone);
 			if (presenceTimezone) {
@@ -536,7 +536,7 @@ function EXIDecoder(grammars) {
 			console.log("\t" + " datetime = " + sDatetime);
 			for (var i = 0; i < this.eventHandler.length; i++) {
 				var eh = this.eventHandler[i];
-				if (qnameContext == null || qnameContext == undefined) {
+				if (qnameContext === null || qnameContext === undefined) {
 					eh.characters(sDatetime);
 				} else {
 					eh.attribute("", qnameContext.localName, sDatetime); // TODO
@@ -669,7 +669,7 @@ function EXIDecoder(grammars) {
 		// process header
 		var errn = this.decodeHeader();
 
-		if (errn == 0) {
+		if (errn === 0) {
 			// process EXI body
 
 			// Document grammar
@@ -785,13 +785,13 @@ function BitOutputStream() {
 	 * b starting with the most significant, i.e. from left to right.
 	 */
 	BitOutputStream.prototype.encodeNBitUnsignedInteger = function(b, n) {
-		if (n == 0) {
+		if (n === 0) {
 			// nothing to write
 		} else if (n <= this.capacity) {
 			// all bits fit into the current buffer
 			this.buffer = (this.buffer << n) | (b & (0xff >> (8 - n)));
 			this.capacity -= n;
-			if (this.capacity == 0) {
+			if (this.capacity === 0) {
 				this.checkBuffer();
 				this.uint8Array[this.len] = this.buffer;
 				this.capacity = 8;
@@ -1037,7 +1037,7 @@ function EXIEncoder(grammars) {
 			// Attributes (type 1)
 			// Text (type 3)
 			var cn = childNodes.item(i);
-			if (cn.nodeType == 3) {
+			if (cn.nodeType === 3) {
 				var text = cn.nodeValue;
 				text = text.trim();
 				if (text.length > 0) {
@@ -1047,7 +1047,7 @@ function EXIEncoder(grammars) {
 			}
 
 			// Process only element nodes (type 1) further
-			if (cn.nodeType == 1) {
+			if (cn.nodeType === 1) {
 				this.processXMLElement(cn);
 				// console.log(childNodes[i].childNodes[0].nodeValue);
 			}
@@ -1082,9 +1082,9 @@ function EXIEncoder(grammars) {
 
 		var ec = -1;
 		var prod;
-		for (var i = 0; ec == -1 && i < docGr.production.length; i++) {
+		for (var i = 0; ec === -1 && i < docGr.production.length; i++) {
 			prod = docGr.production[i];
-			if (prod.event == "startDocument") {
+			if (prod.event === "startDocument") {
 				ec = i;
 			}
 		}
@@ -1104,9 +1104,9 @@ function EXIEncoder(grammars) {
 		var ec = -1;
 		var prod;
 		var grammar = this.elementContext[this.elementContext.length - 1].grammar;
-		for (var i = 0; ec == -1 && i < grammar.production.length; i++) {
+		for (var i = 0; ec === -1 && i < grammar.production.length; i++) {
 			prod = grammar.production[i];
-			if (prod.event == "endDocument") {
+			if (prod.event === "endDocument") {
 				ec = i;
 			}
 		}
@@ -1129,7 +1129,7 @@ function EXIEncoder(grammars) {
 	}
 
 	EXIEncoder.prototype.startElement = function(namespace, localName) {
-		if (namespace == null) {
+		if (namespace === null) {
 			namespace = "";
 		}
 		console.log("SE {" + namespace + "}" + localName);
@@ -1137,12 +1137,12 @@ function EXIEncoder(grammars) {
 		var ec = -1;
 		var prod;
 		var grammar = this.elementContext[this.elementContext.length - 1].grammar;
-		for (var i = 0; ec == -1 && i < grammar.production.length; i++) {
+		for (var i = 0; ec === -1 && i < grammar.production.length; i++) {
 			prod = grammar.production[i];
-			if (prod.event == "startElement") {
+			if (prod.event === "startElement") {
 				var qnameContext = this
 						.getQNameContext(prod.startElementQNameID);
-				if (qnameContext.localName == localName) {
+				if (qnameContext.localName === localName) {
 					// TODO namespace
 					ec = i;
 				}
@@ -1171,9 +1171,9 @@ function EXIEncoder(grammars) {
 		var ec = -1;
 		var prod;
 		var grammar = this.elementContext[this.elementContext.length - 1].grammar;
-		for (var i = 0; ec == -1 && i < grammar.production.length; i++) {
+		for (var i = 0; ec === -1 && i < grammar.production.length; i++) {
 			prod = grammar.production[i];
-			if (prod.event == "endElement") {
+			if (prod.event === "endElement") {
 				ec = i;
 			}
 		}
@@ -1190,26 +1190,26 @@ function EXIEncoder(grammars) {
 	}
 
 	EXIEncoder.prototype.attribute = function(namespace, localName, value) {
-		if (namespace == null) {
+		if (namespace === null) {
 			namespace = "";
 		}
 		console.log("\tAT {" + namespace + "}" + localName + " == '" + value
 				+ "'");
-		if ("http://www.w3.org/2000/xmlns/" == namespace) {
+		if ("http://www.w3.org/2000/xmlns/" === namespace) {
 			// TODO namespace declaration
-		} else if ("http://www.w3.org/2001/XMLSchema-instance" == namespace) {
+		} else if ("http://www.w3.org/2001/XMLSchema-instance" === namespace) {
 			// TODO schemaLocation et cetera
 		} else {
 			// normal attribute
 			var ec = -1;
 			var prod;
 			var grammar = this.elementContext[this.elementContext.length - 1].grammar;
-			for (var i = 0; ec == -1 && i < grammar.production.length; i++) {
+			for (var i = 0; ec === -1 && i < grammar.production.length; i++) {
 				prod = grammar.production[i];
-				if (prod.event == "attribute") {
+				if (prod.event === "attribute") {
 					var qnameContext = this
 							.getQNameContext(prod.attributeQNameID);
-					if (qnameContext.localName == localName) {
+					if (qnameContext.localName === localName) {
 						// TODO namespace
 						ec = i;
 					}
@@ -1239,9 +1239,9 @@ function EXIEncoder(grammars) {
 		var ec = -1;
 		var prod;
 		var grammar = this.elementContext[this.elementContext.length - 1].grammar;
-		for (var i = 0; ec == -1 && i < grammar.production.length; i++) {
+		for (var i = 0; ec === -1 && i < grammar.production.length; i++) {
 			prod = grammar.production[i];
-			if (prod.event == "characters") {
+			if (prod.event === "characters") {
 				ec = i;
 			}
 		}
@@ -1311,7 +1311,7 @@ function EXIEncoder(grammars) {
 	function parseYear(sb, dateTimeValue) {
 		var sYear;
 		var len;
-		if (sb.charAt(0) == '-') {
+		if (sb.charAt(0) === '-') {
 			sYear = sb.substring(0, 5);
 			len = 5;
 		} else {
@@ -1337,7 +1337,7 @@ function EXIEncoder(grammars) {
 	 */
 
 	function checkCharacter(sb, pos, c, dateTimeValue) {
-		if (sb.length > pos && sb.charAt(pos) == c) {
+		if (sb.length > pos && sb.charAt(pos) === c) {
 			// ok
 		} else {
 			dateTimeValue.error = -1;
@@ -1362,9 +1362,9 @@ function EXIEncoder(grammars) {
 
 	EXIEncoder.prototype.encodeDatatypeValue = function(value, datatype,
 			qnameID) {
-		if (datatype.type == "STRING") {
+		if (datatype.type === "STRING") {
 			var stEntry = this.stringTable.getStringTableEntry(value);
-			if (stEntry == null) {
+			if (stEntry === null) {
 				// miss
 				var slen = value.length;
 				this.bitStream.encodeUnsignedInteger(2 + slen);
@@ -1374,7 +1374,7 @@ function EXIEncoder(grammars) {
 					this.stringTable.addValue(qnameID, value);
 				}
 			} else {
-				if (stEntry.qnameID == qnameID) {
+				if (stEntry.qnameID === qnameID) {
 					// local hit
 					this.bitStream.encodeUnsignedInteger(0);
 					var n = this.getCodeLength(this.stringTable
@@ -1390,7 +1390,7 @@ function EXIEncoder(grammars) {
 							stEntry.globalValueID, n);
 				}
 			}
-		} else if (datatype.type == "FLOAT") {
+		} else if (datatype.type === "FLOAT") {
 			var f = parseFloat(value);
 			// 
 			console.log("\t" + " floatA = " + f);
@@ -1403,18 +1403,18 @@ function EXIEncoder(grammars) {
 			console
 					.log("\t" + " floatB = " + fl.mantissa + " E "
 							+ fl.exponent);
-		} else if (datatype.type == "BOOLEAN") {
-			if (value == "true" || value == "1") {
+		} else if (datatype.type === "BOOLEAN") {
+			if (value) { // == "true" || value == "1"
 				this.bitStream.encodeNBitUnsignedInteger(1, 1);
 			} else {
 				this.bitStream.encodeNBitUnsignedInteger(0, 1);
 			}
-		} else if (datatype.type == "DATETIME") {
+		} else if (datatype.type === "DATETIME") {
 			var year = 0, monthDay = 0, time = 0, fractionalSecs = 0;
 			var presenceFractionalSecs = false;
 			var presenceTimezone = false;
 			var sDatetime = "";
-			if (datatype.datetimeType == "date") { // // date: Year, MonthDay,
+			if (datatype.datetimeType === "date") { // // date: Year, MonthDay,
 				// [TimeZone]
 				// YEAR_OFFSET = 2000
 				// NUMBER_BITS_MONTHDAY = 9
