@@ -10,7 +10,8 @@
 <!-- CodeMirror - normal stuff -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/codemirror.min.css">
 <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/codemirror.min.js"></script>
-<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/mode/xml/xml.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/mode/javascript/javascript.min.js"></script>
+
 
 <!-- CodeMirror - foldable -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.5.0/addon/fold/foldgutter.min.css" />
@@ -238,7 +239,8 @@ function readEXI4JSONFile() {
 <fieldset id="sharedStringsFieldset" style="width:95%;">
 <legend>SharedStrings (a.k.a. shared vocabulary). Note: delete/update if needed</legend>
 <textarea id="sharedStrings" rows="3" style="width:100%" >
-"@context","@id","@value","@type","xsd:string","xsd:boolean","xsd:unsignedShort","xsd:unsignedByte", "xsd:float","http://w3c.github.io/wot/w3c-wot-td-context.jsonld","metadata","name","protocols","uri","priority","encodings","interactions","outputData","inputData","writable","Property","Action","Event","CoAP","HTTP","JSON","EXI", "WS"</textarea>
+"@context", "@id", "@type", "@value", "Brightness", "Car", "CoAP", "DecreaseColor", "Distance", "Door", "EXI", "EXI4JSON", "Fan", "HTTP", "IncreaseColor", "JSON", "Lamp", "Lighting", "Off", "On", "OnOff", "PowerConsumption", "RGBColor", "RGBColorBlue", "RGBColorGreen", "RGBColorRed", "Speed", "Start", "Stop", "Switch", "Temperature", "Thing", "Toggle", "TrafficLight", "WS", "actions", "associations", "celsius", "dogont", "encodings", "events", "hrefs", "http://w3c.github.io/wot/w3c-wot-td-context.jsonld", "https://w3c.github.io/wot/w3c-wot-common-context.jsonld", "inch", "inputData", "interactions", "joule", "kelvin", "kmh", "kwh", "lgdo", "m", "max", "mile", "min", "mm", "mph", "name", "outputData", "properties", "protocols", "qu", "reference", "schema", "security", "unit", "uris", "valueType", "writable", "xsd:boolean", "xsd:byte", "xsd:float", "xsd:int", "xsd:short", "xsd:string", "xsd:unsignedByte", "xsd:unsignedInt", "xsd:unsignedShort"
+</textarea>
 </fieldset>
 <fieldset id="performanceFieldset" style="width:95%;">
 <legend>Performance: number of runs</legend>
@@ -279,25 +281,58 @@ if (gup('PerformanceRuns', null) > 1) {
 			<!-- readonly="readonly"  -->
 			<!-- JSON-LD thing description example -->
 			<textarea id="codeJSON" name="codeJSON">{
-	"@context": "http://w3c.github.io/wot/w3c-wot-td-context.jsonld",
-	"metadata": {
-		"name": "MyCar",
-		"protocols": {
-			"HTTP": {
-				"uri": "http://100.64.24.55:3000/api/",
-				"priority": 1
-			}
-		},
-		"encodings": [
-			"JSON"
-		]
-	},
-	"interactions": [
+	"@context": [
+		"https://w3c.github.io/wot/w3c-wot-td-context.jsonld",
+		"https://w3c.github.io/wot/w3c-wot-common-context.jsonld"
+	],
+	"@type": "Sensor",
+	"name": "myTempSensor",
+	"uris": [
+		"coap:///www.example.com:5683/temp"
+	],
+	"encodings": [
+		"JSON"
+	],
+	"properties": [
 		{
-			"@type": "Property",
-			"name": "vehicleSpeed",
-			"outputData": "xsd:unsignedShort",
-			"writable": false
+			"@id": "val",
+			"@type": "Temperature",
+			"unit": "celsius",
+			"reference": "threshold",
+			"name": "myTemp",
+			"valueType": "xsd:float",
+			"writable": false,
+			"hrefs": [
+				"val"
+			]
+		},
+		{
+			"@id": "threshold",
+			"@type": "Temperature",
+			"unit": "celsius",
+			"name": "myThreshold",
+			"valueType": "xsd:float",
+			"writable": true,
+			"hrefs": [
+				"threshold"
+			]
+		}
+	],
+	"events": [
+		{
+			"valueType": "xsd:float",
+			"name": "myChange",
+			"property": "temp",
+			"hrefs": [
+				"val/changed"
+			]
+		},
+		{
+			"valueType": "xsd:float",
+			"name": "myWarning",
+			"hrefs": [
+				"val/high"
+			]
 		}
 	]
 }</textarea>
@@ -346,7 +381,7 @@ switchOptionsOnOff();
  <script  type="text/javascript">
 //<![CDATA[
 	var editorJSON = CodeMirror.fromTextArea(document.getElementById("codeJSON"), {
-	  mode: "application/json",
+	  mode: "application/ld+json",
 	  styleActiveLine: true,
 	  foldGutter: true,
 	  gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
