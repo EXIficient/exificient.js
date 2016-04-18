@@ -1,0 +1,26 @@
+{
+  "name": "exificient.js",
+  "main": [
+    "exificient-for-json.js",
+    "exificient.js"
+  ],
+  "homepage": "https://github.com/EXIficient/exificient.js",
+  "authors": [
+    "Daniel Peintner"
+  ],
+  "description": "exi and exi4json en/decoder in pure js",
+  "keywords": [
+    "EXI",
+    "JSON"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "demo",
+    "grammars"
+  ],
+  "version": "0.0.1"
+}
