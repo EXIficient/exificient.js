@@ -1,11 +1,16 @@
 package exificient.js.tests;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.script.Bindings;
@@ -19,13 +24,27 @@ import org.json.JSONException;
 import org.junit.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 
+import com.siemens.ct.exi.EXIFactory;
 import com.siemens.ct.exi.exceptions.EXIException;
+import com.siemens.ct.exi.helpers.DefaultEXIFactory;
 import com.siemens.ct.exi.json.EXIforJSONGenerator;
 import com.siemens.ct.exi.json.EXIforJSONParser;
 
 import junit.framework.TestCase;
 
 public class TestJSON extends TestCase {
+	
+	static List<String> SHARED_STRINGS_EXI_FOR_JSON = Arrays.asList(new String[] { "@context", "@id", "@type", "@value", "Brightness",
+			"Car", "CoAP", "DecreaseColor", "Distance", "Door", "EXI", "EXI4JSON", "Fan", "HTTP", "IncreaseColor",
+			"JSON", "Lamp", "Lighting", "Off", "On", "OnOff", "PowerConsumption", "RGBColor", "RGBColorBlue",
+			"RGBColorGreen", "RGBColorRed", "Speed", "Start", "Stop", "Switch", "Temperature", "Thing", "Toggle",
+			"TrafficLight", "WS", "actions", "associations", "celsius", "dogont", "encodings", "events", "hrefs",
+			"http://w3c.github.io/wot/w3c-wot-td-context.jsonld",
+			"https://w3c.github.io/wot/w3c-wot-common-context.jsonld", "inch", "inputData", "interactions", "joule",
+			"kelvin", "kmh", "kwh", "lgdo", "m", "max", "mile", "min", "mm", "mph", "name", "outputData",
+			"properties", "protocols", "qu", "reference", "schema", "security", "unit", "uris", "valueType",
+			"writable", "xsd:boolean", "xsd:byte", "xsd:float", "xsd:int", "xsd:short", "xsd:string",
+			"xsd:unsignedByte", "xsd:unsignedInt", "xsd:unsignedShort" });
 	
 	File fJS;
 
@@ -53,12 +72,45 @@ public class TestJSON extends TestCase {
 		_testJSONCode(jsonTest);
 	}
 	
+	
+	protected String url2String(URL url) throws IOException {
+		BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
+		
+        StringBuilder response = new StringBuilder();
+        String inputLine;
+
+        while ((inputLine = in.readLine()) != null)  {
+        	response.append(inputLine);
+        }
+
+        in.close();
+        
+        return response.toString();
+	}
+	
+	@Test
+	public void testJSONLD_URL1() throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+		URL jsonld = new URL("https://raw.githubusercontent.com/w3c/wot/master/TF-TD/TD%20Samples/led.jsonld");
+		String jsonTest = url2String(jsonld);
+		_testJSONCode(jsonTest);
+	}
+	
+	
 	protected void _testJSONCode(String jsonTest) throws NoSuchMethodException, IOException, ScriptException, EXIException, JSONException {
-		_testJSONEncode(jsonTest);
+		int enc1 = _testJSONEncode(jsonTest);
+		int enc2 = _testJSONEncode(jsonTest, SHARED_STRINGS_EXI_FOR_JSON);
+		System.out.println("Encode JSON into " + enc1 + " Bytes and into " + enc2 + " Bytes with shared strings");
 		_testJSONDecode(jsonTest);
+		_testJSONDecode(jsonTest, SHARED_STRINGS_EXI_FOR_JSON);
 	}
 
-	protected void _testJSONEncode(String jsonTest)
+	protected int _testJSONEncode(String jsonTest)
+			throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+		return _testJSONEncode(jsonTest, null);
+	}
+	
+	
+	protected int _testJSONEncode(String jsonTest, List<String> sharedStrings)
 			throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
 		ScriptEngineManager engineManager = new ScriptEngineManager();
 		ScriptEngine engine = engineManager.getEngineByName("JavaScript");
@@ -69,6 +121,10 @@ public class TestJSON extends TestCase {
 		engine.eval("var exiEncoder = new EXI4JSONEncoder();");
 		Object obj = engine.get("exiEncoder");
 		Invocable inv = (Invocable) engine;
+		if(sharedStrings != null) {
+			Object o = inv.invokeMethod(engine.get("Java"), "from", sharedStrings);
+			inv.invokeMethod(obj, "setSharedStrings", o);
+		}
 		inv.invokeMethod(obj, "encodeJsonText", jsonTest);
 		// System.out.println(obj2);
 
@@ -101,7 +157,14 @@ public class TestJSON extends TestCase {
 					// System.out.println(oi.getClass());
 				}
 				
-				EXIforJSONParser e4jParser = new EXIforJSONParser();
+				EXIforJSONParser e4jParser;
+				if(sharedStrings != null) {
+					EXIFactory ef = DefaultEXIFactory.newInstance();
+					ef.setSharedStrings(sharedStrings);	
+					e4jParser = new EXIforJSONParser(ef);
+				} else {
+					e4jParser = new EXIforJSONParser();	
+				}
 				ByteArrayOutputStream baos = new ByteArrayOutputStream();
 				e4jParser.parse(new ByteArrayInputStream(foo), baos);
 
@@ -114,19 +177,37 @@ public class TestJSON extends TestCase {
 
 				// compare both JSON documents
 				JSONAssert.assertEquals(jsonTest, jsonTestResult, true);
+				
+				return ni;
 			} else {
 				fail("getUint8Array not an array");
 			}
 		} else {
 			fail("getUint8ArrayLength not a number");
 		}
+		
+		return -1;
 	}
-	
 	
 	protected void _testJSONDecode(String jsonTest)
 			throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+		_testJSONDecode(jsonTest, null);
+	}
+	
+	protected void _testJSONDecode(String jsonTest, List<String> sharedStrings)
+			throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
 		
-		EXIforJSONGenerator e4jGenerator = new EXIforJSONGenerator();
+		EXIforJSONGenerator e4jGenerator;
+		
+		if(sharedStrings != null) {
+			EXIFactory ef = DefaultEXIFactory.newInstance();
+			ef.setSharedStrings(sharedStrings);
+			e4jGenerator = new EXIforJSONGenerator(ef);
+		} else {
+			e4jGenerator = new EXIforJSONGenerator();
+		}
+		
+		
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		e4jGenerator.generate(new ByteArrayInputStream(jsonTest.getBytes()), baos);
 		
@@ -142,6 +223,17 @@ public class TestJSON extends TestCase {
 		engine.eval(new FileReader(fJS));
 
 		engine.eval("var exiDecoder = new EXI4JSONDecoder();");
+		
+		Object obj = engine.get("exiDecoder");
+		Invocable inv = (Invocable) engine;
+		if(sharedStrings != null) {
+			Object o = inv.invokeMethod(engine.get("Java"), "from", sharedStrings);
+			inv.invokeMethod(obj, "setSharedStrings", o);
+			
+			// inv.invokeMethod(obj, "setSharedStrings", sharedStrings);
+			// inv.invokeMethod(obj, "setSharedStrings", "['metadata', 'interactions']");
+		}
+		
 		engine.eval("var jsonHandler = new JSONEventHandler();");
 		engine.eval("exiDecoder.registerEventHandler(jsonHandler);");
 		

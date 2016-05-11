@@ -96,10 +96,12 @@ function AbtractEXICoder(grammars) {
 	// WARNING: not specified in EXI 1.0 core (is extension)
 	AbtractEXICoder.prototype.setSharedStrings = function(sharedStrings) {
 		this.sharedStrings = sharedStrings;
+		console.log("Set sharedStrings: " + this.sharedStrings);
 	}
 	
 	AbtractEXICoder.prototype.init = function() {
 		this.stringTable = new StringTable();
+		// console.log("SharedStringsX: " + this.sharedStrings + Object.prototype.toString.call(this.sharedStrings));
 		if (this.sharedStrings != null && this.sharedStrings instanceof Array) {
 			console.log("SharedStrings: " + this.sharedStrings);
 			for (var i = 0; i < this.sharedStrings.length; i++) {
