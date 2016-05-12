@@ -1364,7 +1364,7 @@ function EXIEncoder(grammars) {
 		}
 		
 		// value = (Number(value)).doubleValue();
-		value = Number(Number(value).toFixed(8)); // at most 8 digits
+		value = Number(Number(value).toFixed(6)); // at most 6 digits
 		
 		
 		// negative?

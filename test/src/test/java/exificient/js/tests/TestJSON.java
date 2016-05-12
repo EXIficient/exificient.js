@@ -6,7 +6,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
@@ -20,9 +19,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
-import org.json.JSONException;
 import org.junit.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
 
 import com.siemens.ct.exi.EXIFactory;
 import com.siemens.ct.exi.exceptions.EXIException;
@@ -31,8 +28,11 @@ import com.siemens.ct.exi.json.EXIforJSONGenerator;
 import com.siemens.ct.exi.json.EXIforJSONParser;
 
 import junit.framework.TestCase;
+import net.javacrumbs.jsonunit.JsonAssert;
 
 public class TestJSON extends TestCase {
+	
+	static final double NUMBER_TOLERANCE = 0.000001;
 	
 	static List<String> SHARED_STRINGS_EXI_FOR_JSON = Arrays.asList(new String[] { "@context", "@id", "@type", "@value", "Brightness",
 			"Car", "CoAP", "DecreaseColor", "Distance", "Door", "EXI", "EXI4JSON", "Fan", "HTTP", "IncreaseColor",
@@ -55,25 +55,25 @@ public class TestJSON extends TestCase {
 	}
 
 	@Test
-	public void testJSON1() throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+	public void testJSON1() throws IOException, ScriptException, NoSuchMethodException, EXIException {
 		String jsonTest = "{\"test\": true}";
 		_testJSONCode(jsonTest);
 	}
 
 	@Test
-	public void testJSON2() throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+	public void testJSON2() throws IOException, ScriptException, NoSuchMethodException, EXIException {
 		String jsonTest = "{\"menu\": {\r\n  \"id\": \"file\",\r\n  \"value\": \"File\",\r\n  \"popup\": {\r\n    \"menuitem\": [\r\n      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\r\n      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\r\n      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\r\n    ]\r\n  }\r\n}}";
 		_testJSONCode(jsonTest);
 	}
 
 	@Test
-	public void testJSON3() throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+	public void testJSON3() throws IOException, ScriptException, NoSuchMethodException, EXIException {
 		String jsonTest = "{\"menu\": {\r\n    \"header\": \"SVG Viewer\",\r\n    \"items\": [\r\n        {\"id\": \"Open\"},\r\n        {\"id\": \"OpenNew\", \"label\": \"Open New\"},\r\n        null,\r\n        {\"id\": \"ZoomIn\", \"label\": \"Zoom In\"},\r\n        {\"id\": \"ZoomOut\", \"label\": \"Zoom Out\"},\r\n        {\"id\": \"OriginalView\", \"label\": \"Original View\"},\r\n        null,\r\n        {\"id\": \"Quality\"},\r\n        {\"id\": \"Pause\"},\r\n        {\"id\": \"Mute\"},\r\n        null,\r\n        {\"id\": \"Find\", \"label\": \"Find...\"},\r\n        {\"id\": \"FindAgain\", \"label\": \"Find Again\"},\r\n        {\"id\": \"Copy\"},\r\n        {\"id\": \"CopyAgain\", \"label\": \"Copy Again\"},\r\n        {\"id\": \"CopySVG\", \"label\": \"Copy SVG\"},\r\n        {\"id\": \"ViewSVG\", \"label\": \"View SVG\"},\r\n        {\"id\": \"ViewSource\", \"label\": \"View Source\"},\r\n        {\"id\": \"SaveAs\", \"label\": \"Save As\"},\r\n        null,\r\n        {\"id\": \"Help\"},\r\n        {\"id\": \"About\", \"label\": \"About Adobe CVG Viewer...\"}\r\n    ]\r\n}}";
 		_testJSONCode(jsonTest);
 	}
 	
 	@Test
-	public void testIssue1() throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+	public void testIssue1() throws IOException, ScriptException, NoSuchMethodException, EXIException {
 		// https://github.com/EXIficient/exificient.js/issues/1
 		String jsonTest = "{\n\"type\": \"FeatureCollection\",\n\"totalFeatures\": 2,\n\"features\": [\n{\n\"type\": \"Feature\",\n\"id\": \"poi.1\",\n\"geometry\": {\n\"type\": \"Point\",\n\"coordinates\": [\n40.707587626256554,\n-74.01046109936333\n]\n},\n\"geometry_name\": \"the_geom\",\n\"properties\": {\n\"NAME\": \"museam\",\n\"THUMBNAIL\": \"pics/22037827-Ti.jpg\",\n\"MAINPAGE\": \"pics/22037827-L.jpg\"\n}\n},\n{\n\"type\": \"Feature\",\n\"id\": \"poi.2\",\n\"geometry\": {\n\"type\": \"Point\",\n\"coordinates\": [\n40.70754683896324,\n-74.0108375113659\n]\n},\n\"geometry_name\": \"the_geom\",\n\"properties\": {\n\"NAME\": \"stock\",\n\"THUMBNAIL\": \"pics/22037829-Ti.jpg\",\n\"MAINPAGE\": \"pics/22037829-L.jpg\"\n}\n}\n],\n\"crs\": {\n\"type\": \"EPSG\",\n\"properties\": {\n\"code\": \"4326\"\n}\n}\n}";
 		_testJSONCode(jsonTest);
@@ -96,14 +96,14 @@ public class TestJSON extends TestCase {
 	}
 	
 	@Test
-	public void testJSONLD_URL1() throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+	public void testJSONLD_URL1() throws IOException, ScriptException, NoSuchMethodException, EXIException {
 		URL jsonld = new URL("https://raw.githubusercontent.com/w3c/wot/master/TF-TD/TD%20Samples/led.jsonld");
 		String jsonTest = url2String(jsonld);
 		_testJSONCode(jsonTest);
 	}
 	
 	
-	protected void _testJSONCode(String jsonTest) throws NoSuchMethodException, IOException, ScriptException, EXIException, JSONException {
+	protected void _testJSONCode(String jsonTest) throws NoSuchMethodException, IOException, ScriptException, EXIException {
 		int enc1 = _testJSONEncode(jsonTest);
 		int enc2 = _testJSONEncode(jsonTest, SHARED_STRINGS_EXI_FOR_JSON);
 		System.out.println("Encode JSON into " + enc1 + " Bytes and into " + enc2 + " Bytes with shared strings");
@@ -112,13 +112,13 @@ public class TestJSON extends TestCase {
 	}
 
 	protected int _testJSONEncode(String jsonTest)
-			throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+			throws IOException, ScriptException, NoSuchMethodException, EXIException {
 		return _testJSONEncode(jsonTest, null);
 	}
 	
 	
 	protected int _testJSONEncode(String jsonTest, List<String> sharedStrings)
-			throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+			throws IOException, ScriptException, NoSuchMethodException, EXIException {
 		ScriptEngineManager engineManager = new ScriptEngineManager();
 		ScriptEngine engine = engineManager.getEngineByName("JavaScript");
 
@@ -183,7 +183,12 @@ public class TestJSON extends TestCase {
 				System.out.println(jsonTestResult);
 
 				// compare both JSON documents
-				JSONAssert.assertEquals(jsonTest, jsonTestResult, true);
+				// JSONAssert.assertEquals(jsonTest, jsonTestResult, true);
+				
+				JsonAssert.setTolerance(NUMBER_TOLERANCE);
+				JsonAssert.assertJsonEquals(jsonTest, jsonTestResult);
+				// JsonAssert.assertJsonEquals("1", "\n1.009\n"); // , withTolerance(0.01));
+				
 				
 				return ni;
 			} else {
@@ -197,12 +202,12 @@ public class TestJSON extends TestCase {
 	}
 	
 	protected void _testJSONDecode(String jsonTest)
-			throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+			throws IOException, ScriptException, NoSuchMethodException, EXIException {
 		_testJSONDecode(jsonTest, null);
 	}
 	
 	protected void _testJSONDecode(String jsonTest, List<String> sharedStrings)
-			throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException {
+			throws IOException, ScriptException, NoSuchMethodException, EXIException {
 		
 		EXIforJSONGenerator e4jGenerator;
 		
@@ -276,7 +281,9 @@ public class TestJSON extends TestCase {
 		
 		
 		// compare both JSON documents
-		JSONAssert.assertEquals(jsonTest, jtext.toString(), true);
+		JsonAssert.setTolerance(NUMBER_TOLERANCE);
+		JsonAssert.assertJsonEquals(jsonTest, jtext.toString());
+		// JSONAssert.assertEquals(jsonTest, jtext.toString(), true);
 		
 		
 //		/////////////////////////////////////////////////

@@ -26,7 +26,6 @@ import javax.xml.transform.stream.StreamResult;
 
 import org.custommonkey.xmlunit.XMLTestCase;
 import org.custommonkey.xmlunit.XMLUnit;
-import org.json.JSONException;
 import org.junit.Test;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -75,7 +74,7 @@ public class TestXML extends XMLTestCase {
 	}
 
 	@Test
-	public void testNotebook() throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException, TransformerException, SAXException {
+	public void testNotebook() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
 		String xmlPath = "./data/xml/notebook.xml";
 		String xsdPath = "../grammars/notebook.xsd"; 
 		
@@ -85,13 +84,13 @@ public class TestXML extends XMLTestCase {
 	}
 
 	
-	protected void _testXMLCode(String xmlTest, String xsdPath) throws NoSuchMethodException, IOException, ScriptException, EXIException, JSONException, TransformerException, SAXException {
+	protected void _testXMLCode(String xmlTest, String xsdPath) throws NoSuchMethodException, IOException, ScriptException, EXIException, TransformerException, SAXException {
 		_testXMLEncode(xmlTest, xsdPath);
 		_testXMLDecode(xmlTest, xsdPath);
 	}
 
 	protected void _testXMLEncode(String xmlTest, String xsdPath)
-			throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException, TransformerException, SAXException {
+			throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
 		String grammars = parseGrammars(xsdPath);
 		
 		ScriptEngineManager engineManager = new ScriptEngineManager();
@@ -164,7 +163,7 @@ public class TestXML extends XMLTestCase {
 	
 	
 	protected void _testXMLDecode(String xmlTest, String xsdPath)
-			throws IOException, ScriptException, NoSuchMethodException, EXIException, JSONException, SAXException {
+			throws IOException, ScriptException, NoSuchMethodException, EXIException, SAXException {
 		
 		EXIFactory exiFactory = getEXIFactory(xsdPath);
 		ByteArrayOutputStream osEXI = new ByteArrayOutputStream();
