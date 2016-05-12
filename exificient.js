@@ -433,134 +433,227 @@ function EXIDecoder(grammars) {
 			isCharactersEvent) {
 		// Note: qnameContext == null --> CHARACTERS event
 		if (datatype.type === "STRING") {
-			var s;
-			var i = this.bitStream.decodeUnsignedInteger();
-			// console.log("\t" + " String i: " + i );
-			switch (i) {
-			case 0:
-				/* local value hit */
-				var n = this.getCodeLength(this.stringTable
-						.getNumberOfLocalStrings(namespaceID, localNameID));
-				var localID = this.bitStream.decodeNBitUnsignedInteger(n);
-				var lhit = this.stringTable.getLocalValue(namespaceID, localNameID, localID);
-				console.log("\t" + " String localValue hit '" + lhit.value
-						+ "'");
-				s = lhit.value;
-				break;
-			case 1:
-				/* global value hit */
-				var n = this.getCodeLength(this.stringTable
-						.getNumberOfGlobalStrings());
-				var globalID = this.bitStream.decodeNBitUnsignedInteger(n);
-				var ghit = this.stringTable.getGlobalValue(globalID);
-				console.log("\t" + " String globalValue hit '" + ghit.value
-						+ "'");
-				s = ghit.value;
-				break;
-			default:
-				// not found in global value (and local value) partition
-				// ==> string literal is encoded as a String with the length
-				// incremented by two.
-				i = i - 2;
-				if (i === 0) {
-					// empty string
-					console.log("\t" + " String is empty string ''");
-					s = "";
-				} else {
-					s = this.bitStream.decodeStringOnly(i);
-					console.log("\t" + " String = " + s);
-					this.stringTable.addValue(namespaceID, localNameID, s);
-				}
-				break;
-			}
-			for (var i = 0; i < this.eventHandler.length; i++) {
-				var eh = this.eventHandler[i];
-				if (isCharactersEvent) {
-					eh.characters(s);
-				} else {
-					var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
-					var qnameContext = namespaceContext.qnameContext[localNameID];
-					eh.attribute(namespaceContext.uri, qnameContext.localName, s);
-				}
-			}
+			this.decodeDatatypeValueString(namespaceID, localNameID, isCharactersEvent);
+		} else if (datatype.type === "UNSIGNED_INTEGER") {
+			this.decodeDatatypeValueUnsignedInteger(namespaceID, localNameID, isCharactersEvent);
+		} else if (datatype.type === "INTEGER") {
+			this.decodeDatatypeValueInteger(namespaceID, localNameID, isCharactersEvent);
 		} else if (datatype.type === "FLOAT") {
-			var mantissa = this.bitStream.decodeInteger();
-			var exponent = this.bitStream.decodeInteger();
-			console.log("\t" + " float = " + mantissa + "E" + exponent);
-			var i;
-			for (i = 0; i < this.eventHandler.length; i++) {
-				var eh = this.eventHandler[i];
-				if (isCharactersEvent) {
-					eh.characters(mantissa + "E" + exponent);
-				} else {
-					var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
-					var qnameContext = namespaceContext.qnameContext[localNameID];
-					eh.attribute(namespaceContext.uri, qnameContext.localName, mantissa + "E"
-							+ exponent);
-				}
-			}
+			this.decodeDatatypeValueFloat(namespaceID, localNameID, isCharactersEvent);
 		} else if (datatype.type === "BOOLEAN") {
-			var b = this.bitStream.decodeNBitUnsignedInteger(1) === 0 ? false
-					: true;
-			console.log("\t" + " boolean = " + b);
-			for (var i = 0; i < this.eventHandler.length; i++) {
-				var eh = this.eventHandler[i];
-				if (isCharactersEvent) {
-					eh.characters(b);
-				} else {
-					var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
-					var qnameContext = namespaceContext.qnameContext[localNameID];
-					eh.attribute(namespaceContext.uri, qnameContext.localName, b);
-				}
-			}
+			this.decodeDatatypeValueBoolean(namespaceID, localNameID, isCharactersEvent);
 		} else if (datatype.type === "DATETIME") {
-			var year = 0, monthDay = 0, time = 0, fractionalSecs = 0;
-			var presenceFractionalSecs = false;
-			var sDatetime = "";
-			if (datatype.datetimeType === "date"
-			// || datatype.datetimeType == "gYearMonth"
-			) {
-				// YEAR_OFFSET = 2000
-				// NUMBER_BITS_MONTHDAY = 9
-				// MONTH_MULTIPLICATOR = 32
-				year = this.bitStream.decodeInteger() + 2000;
-				sDatetime += year;
-				monthDay = this.bitStream.decodeNBitUnsignedInteger(9);
-				var month = Math.floor(monthDay / 32);
-				if (month < 10) {
-					sDatetime += "-0" + month;
-				} else {
-					sDatetime += "-" + month;
-				}
-				var day = monthDay - (month * 32);
-				sDatetime += "-" + day;
-			} else {
-				throw new Error("Unsupported datetime type: " + datatype.datetimeType);
-			}
-			var presenceTimezone = this.bitStream.decodeNBitUnsignedInteger(1) === 0 ? false
-					: true;
-			// console.log("\t" + " presenceTimezone = " + presenceTimezone);
-			if (presenceTimezone) {
-				var timeZone = this.bitStream.decodeNBitUnsignedInteger(11) - 896;
-			}
-
-			console.log("\t" + " datetime = " + sDatetime);
+			this.decodeDatatypeValueDateTime(datatype.datetimeType, namespaceID, localNameID, isCharactersEvent);
+		} else if (datatype.type === "LIST") {
+			var sList = "";
+			var listLength = this.bitStream.decodeUnsignedInteger();
+			console.log("\t" + " LIST with length " + listLength );
+			
 			for (var i = 0; i < this.eventHandler.length; i++) {
 				var eh = this.eventHandler[i];
 				if (isCharactersEvent) {
-					eh.characters(sDatetime);
+					// eh.characters(sList);
+					
+					for(var i=0; i < listLength; i++) {
+						if (datatype.listType === "STRING") {
+							this.decodeDatatypeValueString(namespaceID, localNameID, true);
+							eh.characters(" ");
+						} else if (datatype.listType === "UNSIGNED_INTEGER") {
+							this.decodeDatatypeValueUnsignedInteger(namespaceID, localNameID, true);
+							eh.characters(" ");
+						} else if (datatype.listType === "INTEGER") {
+							this.decodeDatatypeValueInteger(namespaceID, localNameID, true);
+							eh.characters(" ");
+						} else if (datatype.listType === "FLOAT") {
+							this.decodeDatatypeValueFloat(namespaceID, localNameID, true);
+							eh.characters(" ");
+						} else if (datatype.listType === "BOOLEAN") {
+							this.decodeDatatypeValueBoolean(namespaceID, localNameID, true);
+							eh.characters(" ");
+						} else {
+							throw new Error("Unsupported list datatype: " + datatype.listType + " for value " + value );
+						}		
+					}
 				} else {
-					var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
-					var qnameContext = namespaceContext.qnameContext[localNameID];
-					eh.attribute(namespaceContext.uri, qnameContext.localName, sDatetime);
+					// Note: we need to change the process so that a values is returned instead!!
+					throw new Error("Unsupported LIST datatype attribute!!");
+					
+					// var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
+					// var qnameContext = namespaceContext.qnameContext[localNameID];
+					// eh.attribute(namespaceContext.uri, qnameContext.localName, sList);
 				}
 			}
-
+			
 		} else {
 			throw new Error("Unsupported datatype: " + datatype.type);
 		}
 	}
+	
+	EXIDecoder.prototype.decodeDatatypeValueString = function(namespaceID, localNameID, isCharactersEvent) {
+		var s;
+		var i = this.bitStream.decodeUnsignedInteger();
+		// console.log("\t" + " String i: " + i );
+		switch (i) {
+		case 0:
+			/* local value hit */
+			var n = this.getCodeLength(this.stringTable
+					.getNumberOfLocalStrings(namespaceID, localNameID));
+			var localID = this.bitStream.decodeNBitUnsignedInteger(n);
+			var lhit = this.stringTable.getLocalValue(namespaceID, localNameID, localID);
+			console.log("\t" + " String localValue hit '" + lhit.value
+					+ "'");
+			s = lhit.value;
+			break;
+		case 1:
+			/* global value hit */
+			var n = this.getCodeLength(this.stringTable
+					.getNumberOfGlobalStrings());
+			var globalID = this.bitStream.decodeNBitUnsignedInteger(n);
+			var ghit = this.stringTable.getGlobalValue(globalID);
+			console.log("\t" + " String globalValue hit '" + ghit.value
+					+ "'");
+			s = ghit.value;
+			break;
+		default:
+			// not found in global value (and local value) partition
+			// ==> string literal is encoded as a String with the length
+			// incremented by two.
+			i = i - 2;
+			if (i === 0) {
+				// empty string
+				console.log("\t" + " String is empty string ''");
+				s = "";
+			} else {
+				s = this.bitStream.decodeStringOnly(i);
+				console.log("\t" + " String = " + s);
+				this.stringTable.addValue(namespaceID, localNameID, s);
+			}
+			break;
+		}
+		for (var i = 0; i < this.eventHandler.length; i++) {
+			var eh = this.eventHandler[i];
+			if (isCharactersEvent) {
+				eh.characters(s);
+			} else {
+				var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
+				var qnameContext = namespaceContext.qnameContext[localNameID];
+				eh.attribute(namespaceContext.uri, qnameContext.localName, s);
+			}
+		}
+	}
+	
+	EXIDecoder.prototype.decodeDatatypeValueUnsignedInteger = function(namespaceID, localNameID, isCharactersEvent) {
+		var uint = this.bitStream.decodeUnsignedInteger();
+		console.log("\t" + " UNSIGNED_INTEGER = " + uint);
+		for (i = 0; i < this.eventHandler.length; i++) {
+			var eh = this.eventHandler[i];
+			if (isCharactersEvent) {
+				eh.characters(uint);
+			} else {
+				var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
+				var qnameContext = namespaceContext.qnameContext[localNameID];
+				eh.attribute(namespaceContext.uri, qnameContext.localName, uint);
+			}
+		}
+	}
+	
+	EXIDecoder.prototype.decodeDatatypeValueInteger = function(namespaceID, localNameID, isCharactersEvent) {
+		var int = this.bitStream.decodeInteger();
+		console.log("\t" + " INTEGER = " + int);
+		var i;
+		for (i = 0; i < this.eventHandler.length; i++) {
+			var eh = this.eventHandler[i];
+			if (isCharactersEvent) {
+				eh.characters(int);
+			} else {
+				var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
+				var qnameContext = namespaceContext.qnameContext[localNameID];
+				eh.attribute(namespaceContext.uri, qnameContext.localName, int);
+			}
+		}
+	}
+	
+	EXIDecoder.prototype.decodeDatatypeValueFloat = function(namespaceID, localNameID, isCharactersEvent) {
+		var mantissa = this.bitStream.decodeInteger();
+		var exponent = this.bitStream.decodeInteger();
+		console.log("\t" + " float = " + mantissa + "E" + exponent);
+		var i;
+		for (i = 0; i < this.eventHandler.length; i++) {
+			var eh = this.eventHandler[i];
+			if (isCharactersEvent) {
+				eh.characters(mantissa + "E" + exponent);
+			} else {
+				var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
+				var qnameContext = namespaceContext.qnameContext[localNameID];
+				eh.attribute(namespaceContext.uri, qnameContext.localName, mantissa + "E"
+						+ exponent);
+			}
+		}
+	}
+	
+	EXIDecoder.prototype.decodeDatatypeValueBoolean = function(namespaceID, localNameID, isCharactersEvent) {
+		var b = this.bitStream.decodeNBitUnsignedInteger(1) === 0 ? false
+				: true;
+		console.log("\t" + " boolean = " + b);
+		for (var i = 0; i < this.eventHandler.length; i++) {
+			var eh = this.eventHandler[i];
+			if (isCharactersEvent) {
+				eh.characters(b);
+			} else {
+				var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
+				var qnameContext = namespaceContext.qnameContext[localNameID];
+				eh.attribute(namespaceContext.uri, qnameContext.localName, b);
+			}
+		}
+	}
 
+	
+	
+	EXIDecoder.prototype.decodeDatatypeValueDateTime = function(datetimeType, namespaceID, localNameID, isCharactersEvent) {
+		var year = 0, monthDay = 0, time = 0, fractionalSecs = 0;
+		var presenceFractionalSecs = false;
+		var sDatetime = "";
+		if (datetimeType === "date"
+		// || datatype.datetimeType == "gYearMonth"
+		) {
+			// YEAR_OFFSET = 2000
+			// NUMBER_BITS_MONTHDAY = 9
+			// MONTH_MULTIPLICATOR = 32
+			year = this.bitStream.decodeInteger() + 2000;
+			sDatetime += year;
+			monthDay = this.bitStream.decodeNBitUnsignedInteger(9);
+			var month = Math.floor(monthDay / 32);
+			if (month < 10) {
+				sDatetime += "-0" + month;
+			} else {
+				sDatetime += "-" + month;
+			}
+			var day = monthDay - (month * 32);
+			sDatetime += "-" + day;
+		} else {
+			throw new Error("Unsupported datetime type: " + datetimeType);
+		}
+		var presenceTimezone = this.bitStream.decodeNBitUnsignedInteger(1) === 0 ? false
+				: true;
+		// console.log("\t" + " presenceTimezone = " + presenceTimezone);
+		if (presenceTimezone) {
+			var timeZone = this.bitStream.decodeNBitUnsignedInteger(11) - 896;
+		}
+
+		console.log("\t" + " datetime = " + sDatetime);
+		for (var i = 0; i < this.eventHandler.length; i++) {
+			var eh = this.eventHandler[i];
+			if (isCharactersEvent) {
+				eh.characters(sDatetime);
+			} else {
+				var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
+				var qnameContext = namespaceContext.qnameContext[localNameID];
+				eh.attribute(namespaceContext.uri, qnameContext.localName, sDatetime);
+			}
+		}
+	}
+	
+	
 	EXIDecoder.prototype.decodeElementContext = function(grammar, elementNamespaceID, elementLocalNameID) {
 
 		var popStack = false;
@@ -1463,87 +1556,137 @@ function EXIEncoder(grammars) {
 	EXIEncoder.prototype.encodeDatatypeValue = function(value, datatype,
 			namespaceID, localNameID) {
 		if (datatype.type === "STRING") {
-			var stEntry = this.stringTable.getStringTableEntry(value);
-			if (stEntry === null) {
-				// miss
-				var slen = value.length;
-				this.bitStream.encodeUnsignedInteger(2 + slen);
-				// TODO characters
-				if (slen > 0) {
-					this.bitStream.encodeStringOnly(value);
-					this.stringTable.addValue(namespaceID, localNameID, value);
-				}
-			} else {
-				if (stEntry.namespaceID === namespaceID && stEntry.localNameID === localNameID) {
-					// local hit
-					this.bitStream.encodeUnsignedInteger(0);
-					var n = this.getCodeLength(this.stringTable
-							.getNumberOfLocalStrings(namespaceID, localNameID));
-					this.bitStream.encodeNBitUnsignedInteger(
-							stEntry.localValueID, n);
-				} else {
-					// global hit
-					this.bitStream.encodeUnsignedInteger(1);
-					var n = this.getCodeLength(this.stringTable
-							.getNumberOfGlobalStrings());
-					this.bitStream.encodeNBitUnsignedInteger(
-							stEntry.globalValueID, n);
-				}
-			}
+			this.encodeDatatypeValueString(value, namespaceID, localNameID);
+		} else if (datatype.type === "UNSIGNED_INTEGER") {
+			this.encodeDatatypeValueUnsignedInteger(value, namespaceID, localNameID);
+		} else if (datatype.type === "INTEGER") {
+			this.encodeDatatypeValueInteger(value, namespaceID, localNameID);
 		} else if (datatype.type === "FLOAT") {
-			var f = parseFloat(value);
-			// 
-			console.log("\t" + " floatA = " + f);
-			// var fl = decodeIEEE64(f);
-			// var fl = getNumberParts(f);
-			var fl = getEXIFloat(f);
-			// mantissa followed by exponent
-			this.bitStream.encodeInteger(fl.mantissa);
-			this.bitStream.encodeInteger(fl.exponent);
-			console
-					.log("\t" + " floatB = " + fl.mantissa + " E "
-							+ fl.exponent);
+			this.encodeDatatypeValueFloat(value, namespaceID, localNameID);
 		} else if (datatype.type === "BOOLEAN") {
-			if (value) { // == "true" || value == "1"
-				this.bitStream.encodeNBitUnsignedInteger(1, 1);
-			} else {
-				this.bitStream.encodeNBitUnsignedInteger(0, 1);
-			}
+			this.encodeDatatypeValueBoolean(value, namespaceID, localNameID);
 		} else if (datatype.type === "DATETIME") {
-			var year = 0, monthDay = 0, time = 0, fractionalSecs = 0;
-			var presenceFractionalSecs = false;
-			var presenceTimezone = false;
-			var sDatetime = "";
-			if (datatype.datetimeType === "date") { // // date: Year, MonthDay,
-				// [TimeZone]
-				// YEAR_OFFSET = 2000
-				// NUMBER_BITS_MONTHDAY = 9
-				// MONTH_MULTIPLICATOR = 32
-				var dateTimeValue = new DateTimeValue();
-				var pos = parseYear(value, dateTimeValue);
-				pos = checkCharacter(value, pos, '-', dateTimeValue); // hyphen
-				pos = parseMonthDay(value, pos, dateTimeValue);
-				// TODO timezone
-				this.bitStream.encodeInteger(dateTimeValue.year - 2000);
-				this.bitStream.encodeNBitUnsignedInteger(
-						dateTimeValue.monthDay, 9);
-			} else {
-				throw new Error("Unsupported datetime type: "
-						+ datatype.datetimeType);
+			this.encodeDatatypeValueDateTime(value, datatype.datetimeType, namespaceID, localNameID);
+		} else if (datatype.type === "LIST") {
+			var resArray = value.split(" ");
+			this.bitStream.encodeUnsignedInteger(resArray.length);
+			console.log("\t" + " LIST with length " + resArray.length + ": " + resArray);
+			for(var i=0; i <  resArray.length; i++) {
+				var v = resArray[i];
+				if (datatype.listType === "STRING") {
+					this.encodeDatatypeValueString(v, namespaceID, localNameID);
+				} else if (datatype.listType === "UNSIGNED_INTEGER") {
+					this.encodeDatatypeValueUnsignedInteger(v, namespaceID, localNameID);
+				} else if (datatype.listType === "INTEGER") {
+					this.encodeDatatypeValueInteger(v, namespaceID, localNameID);
+				} else if (datatype.listType === "FLOAT") {
+					this.encodeDatatypeValueFloat(v, namespaceID, localNameID);
+				} else if (datatype.listType === "BOOLEAN") {
+					this.encodeDatatypeValueBoolean(v, namespaceID, localNameID);
+				} else {
+					throw new Error("Unsupported list datatype: " + datatype.listType + " for value " + value );
+				}		
 			}
-
-			var presenceTimezone = false; // TODO
-			if (presenceTimezone) {
-				this.bitStream.encodeNBitUnsignedInteger(1, 1);
-				throw new Error("Unsupported datetime timezone");
-			} else {
-				this.bitStream.encodeNBitUnsignedInteger(0, 1);
-			}
-			// console.log("\t" + " presenceTimezone = " + presenceTimezone);
-			console.log("\t" + " datetime = " + sDatetime);
 		} else {
-			throw new Error("Unsupported datatype: " + datatype.type);
+			throw new Error("Unsupported datatype: " + datatype.type + " for value " + value );
 		}
+	}
+
+	
+	EXIEncoder.prototype.encodeDatatypeValueString = function(value, namespaceID, localNameID) {
+		var stEntry = this.stringTable.getStringTableEntry(value);
+		if (stEntry === null) {
+			// miss
+			var slen = value.length;
+			this.bitStream.encodeUnsignedInteger(2 + slen);
+			// TODO characters
+			if (slen > 0) {
+				this.bitStream.encodeStringOnly(value);
+				this.stringTable.addValue(namespaceID, localNameID, value);
+			}
+		} else {
+			if (stEntry.namespaceID === namespaceID && stEntry.localNameID === localNameID) {
+				// local hit
+				this.bitStream.encodeUnsignedInteger(0);
+				var n = this.getCodeLength(this.stringTable
+						.getNumberOfLocalStrings(namespaceID, localNameID));
+				this.bitStream.encodeNBitUnsignedInteger(
+						stEntry.localValueID, n);
+			} else {
+				// global hit
+				this.bitStream.encodeUnsignedInteger(1);
+				var n = this.getCodeLength(this.stringTable
+						.getNumberOfGlobalStrings());
+				this.bitStream.encodeNBitUnsignedInteger(
+						stEntry.globalValueID, n);
+			}
+		}
+	}
+	
+	EXIEncoder.prototype.encodeDatatypeValueUnsignedInteger = function(value, namespaceID, localNameID) {
+		console.log("\t" + " UNSIGNED_INTEGER = " + value);
+		this.bitStream.encodeUnsignedInteger(value);
+	}
+	
+	EXIEncoder.prototype.encodeDatatypeValueInteger = function(value, namespaceID, localNameID) {
+		console.log("\t" + " INTEGER = " + value);
+		this.bitStream.encodeInteger(value);
+	}
+	
+	EXIEncoder.prototype.encodeDatatypeValueFloat = function(value, namespaceID, localNameID) {
+		var f = parseFloat(value);
+		// 
+		console.log("\t" + " floatA = " + f);
+		// var fl = decodeIEEE64(f);
+		// var fl = getNumberParts(f);
+		var fl = getEXIFloat(f);
+		// mantissa followed by exponent
+		this.bitStream.encodeInteger(fl.mantissa);
+		this.bitStream.encodeInteger(fl.exponent);
+		console
+				.log("\t" + " floatB = " + fl.mantissa + " E "
+						+ fl.exponent);
+	}
+	
+	EXIEncoder.prototype.encodeDatatypeValueBoolean = function(value, namespaceID, localNameID) {
+		if (value) { // == "true" || value == "1"
+			this.bitStream.encodeNBitUnsignedInteger(1, 1);
+		} else {
+			this.bitStream.encodeNBitUnsignedInteger(0, 1);
+		}
+	}
+	
+	EXIEncoder.prototype.encodeDatatypeValueDateTime = function(value, datetimeType, namespaceID, localNameID) {
+		var year = 0, monthDay = 0, time = 0, fractionalSecs = 0;
+		var presenceFractionalSecs = false;
+		var presenceTimezone = false;
+		var sDatetime = "";
+		if (datetimeType === "date") { // // date: Year, MonthDay,
+			// [TimeZone]
+			// YEAR_OFFSET = 2000
+			// NUMBER_BITS_MONTHDAY = 9
+			// MONTH_MULTIPLICATOR = 32
+			var dateTimeValue = new DateTimeValue();
+			var pos = parseYear(value, dateTimeValue);
+			pos = checkCharacter(value, pos, '-', dateTimeValue); // hyphen
+			pos = parseMonthDay(value, pos, dateTimeValue);
+			// TODO timezone
+			this.bitStream.encodeInteger(dateTimeValue.year - 2000);
+			this.bitStream.encodeNBitUnsignedInteger(
+					dateTimeValue.monthDay, 9);
+		} else {
+			throw new Error("Unsupported datetime type: " + datetimeType);
+		}
+
+		var presenceTimezone = false; // TODO
+		if (presenceTimezone) {
+			this.bitStream.encodeNBitUnsignedInteger(1, 1);
+			throw new Error("Unsupported datetime timezone");
+		} else {
+			this.bitStream.encodeNBitUnsignedInteger(0, 1);
+		}
+		// console.log("\t" + " presenceTimezone = " + presenceTimezone);
+		console.log("\t" + " datetime = " + sDatetime);
 	}
 
 }

@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -45,7 +46,7 @@ import com.siemens.ct.exi.helpers.DefaultEXIFactory;
 public class TestXML extends XMLTestCase {
 	
 	File fJS;
-	XSDGrammarsBuilder grammarBuilder = XSDGrammarsBuilder.newInstance();
+	static XSDGrammarsBuilder grammarBuilder = XSDGrammarsBuilder.newInstance();
 
 	// assigning the values
 	protected void setUp() throws IOException {
@@ -53,7 +54,7 @@ public class TestXML extends XMLTestCase {
 		System.out.println("File: " + fJS);
 	}
 	
-	String parseGrammars(String xsdPath) throws EXIException, IOException {
+	static String parseGrammars(String xsdPath) throws EXIException, IOException {
 		grammarBuilder.loadGrammars(xsdPath);
 		SchemaInformedGrammars grammarIn = grammarBuilder.toGrammars();
 		Grammars2JSON g2j = new Grammars2JSON();
@@ -77,6 +78,27 @@ public class TestXML extends XMLTestCase {
 	public void testNotebook() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
 		String xmlPath = "./data/xml/notebook.xml";
 		String xsdPath = "../grammars/notebook.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
+	
+	@Test
+	public void testUnsignedInteger() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/unsignedInteger.xml";
+		String xsdPath = "./data/xml/unsignedInteger.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
+	
+	
+	@Test
+	public void testList() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/list.xml";
+		String xsdPath = "./data/xml/list.xsd"; 
 		
 		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
 		
@@ -152,6 +174,7 @@ public class TestXML extends XMLTestCase {
 				XMLUnit.setIgnoreWhitespace(true);
 				XMLUnit.setIgnoreAttributeOrder(true);
 				XMLUnit.setIgnoreDiffBetweenTextAndCDATA(true);
+				XMLUnit.setIgnoreComments(true);
 				assertXMLEqual(xmlTest, sw.toString());
 			} else {
 				fail("getUint8Array not an array");
@@ -244,6 +267,14 @@ public class TestXML extends XMLTestCase {
 ////		inv.invokeMethod(obj, "decode", ilist);
 //		// System.out.println(obj2);
 
+	}
+	
+	public static void main(String[] args) throws EXIException, IOException {
+		String xsdPath = "./data/xml/list.xsd"; 
+		String s = parseGrammars(xsdPath);
+		PrintWriter out = new PrintWriter(xsdPath + ".grs");
+		out.write(s);
+		out.close();
 	}
 
 }
