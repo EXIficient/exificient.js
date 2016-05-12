@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gml:FeatureCollection xmlns:ns1="http://www.w3.org/2001/SMIL20/"
+ xmlns:ns2="http://www.w3.org/2001/SMIL20/Language"
+ xmlns:gml="http://www.opengis.net/gml"
+ xmlns:tiger="http://www.census.gov"
+ xmlns:ns5="http://www.w3.org/1999/xlink"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.opengis.net/gml issue2.xsd">
+ <gml:featureMembers>
+  <tiger:poi gml:id="poi.1">
+   <tiger:the_geom>
+    <gml:Point srsDimension="2" srsName="urn:x-ogc:def:crs:EPSG:4326">
+     <gml:pos>40.707587626256554 -74.01046109936333</gml:pos>
+    </gml:Point>
+   </tiger:the_geom>
+   <tiger:NAME>museam</tiger:NAME>
+   <tiger:THUMBNAIL>pics/22037827-Ti.jpg</tiger:THUMBNAIL>
+   <tiger:MAINPAGE>pics/22037827-L.jpg</tiger:MAINPAGE>
+  </tiger:poi>
+  <tiger:poi gml:id="poi.2">
+   <tiger:the_geom>
+    <gml:Point srsDimension="2" srsName="urn:x-ogc:def:crs:EPSG:4326">
+     <gml:pos>40.70754683896324 -74.0108375113659</gml:pos>
+    </gml:Point>
+   </tiger:the_geom>
+   <tiger:NAME>stock</tiger:NAME>
+   <tiger:THUMBNAIL>pics/22037829-Ti.jpg</tiger:THUMBNAIL>
+   <tiger:MAINPAGE>pics/22037829-L.jpg</tiger:MAINPAGE>
+  </tiger:poi>
+  <tiger:poi gml:id="poi.3">
+   <tiger:the_geom>
+    <gml:Point srsDimension="2" srsName="urn:x-ogc:def:crs:EPSG:4326">
+     <gml:pos>40.70938711687079 -74.01053023879955</gml:pos>
+    </gml:Point>
+   </tiger:the_geom>
+   <tiger:NAME>art</tiger:NAME>
+   <tiger:THUMBNAIL>pics/22037856-Ti.jpg</tiger:THUMBNAIL>
+   <tiger:MAINPAGE>pics/22037856-L.jpg</tiger:MAINPAGE>
+  </tiger:poi>
+  <tiger:poi gml:id="poi.4">
+   <tiger:the_geom>
+    <gml:Point srsDimension="2" srsName="urn:x-ogc:def:crs:EPSG:4326">
+     <gml:pos>40.711945649065406 -74.00857344353275</gml:pos>
+    </gml:Point>
+   </tiger:the_geom>
+   <tiger:NAME>lox</tiger:NAME>
+   <tiger:THUMBNAIL>pics/22037884-Ti.jpg</tiger:THUMBNAIL>
+   <tiger:MAINPAGE>pics/22037884-L.jpg</tiger:MAINPAGE>
+  </tiger:poi>
+  <tiger:poi gml:id="poi.5">
+   <tiger:the_geom>
+    <gml:Point srsDimension="2" srsName="urn:x-ogc:def:crs:EPSG:4326">
+     <gml:pos>40.708529961953786 -74.0118315772888</gml:pos>
+    </gml:Point>
+   </tiger:the_geom>
+   <tiger:NAME>church</tiger:NAME>
+   <tiger:THUMBNAIL>pics/22037839-Ti.jpg</tiger:THUMBNAIL>
+   <tiger:MAINPAGE>pics/22037839-L.jpg</tiger:MAINPAGE>
+  </tiger:poi>
+  <tiger:poi gml:id="poi.6">
+   <tiger:the_geom>
+    <gml:Point srsDimension="2" srsName="urn:x-ogc:def:crs:EPSG:4326">
+     <gml:pos>40.719885123828675 -74.00153046439813</gml:pos>
+    </gml:Point>
+   </tiger:the_geom>
+   <tiger:NAME>fire</tiger:NAME>
+   <tiger:THUMBNAIL>pics/28640984-Ti.jpg</tiger:THUMBNAIL>
+   <tiger:MAINPAGE>pics/28640984-L.jpg</tiger:MAINPAGE>
+  </tiger:poi>
+ </gml:featureMembers>
+ 
+</gml:FeatureCollection>
+

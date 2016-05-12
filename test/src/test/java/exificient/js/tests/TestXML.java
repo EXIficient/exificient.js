@@ -94,6 +94,17 @@ public class TestXML extends XMLTestCase {
 		_testXMLCode(xmlTest, xsdPath);
 	}
 	
+	// @Test
+	// Note: Diff issues 
+	public void _testIssue2() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/issue2.xml";
+		String xsdPath = "./data/xml/issue2.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
+	
 	
 	@Test
 	public void testList() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
@@ -175,6 +186,7 @@ public class TestXML extends XMLTestCase {
 				XMLUnit.setIgnoreAttributeOrder(true);
 				XMLUnit.setIgnoreDiffBetweenTextAndCDATA(true);
 				XMLUnit.setIgnoreComments(true);
+				
 				assertXMLEqual(xmlTest, sw.toString());
 			} else {
 				fail("getUint8Array not an array");

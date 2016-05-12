@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:GlobalDEM10KM="http://www.opengeospatial.net/GlobalDEM10KM" xmlns:PolarWRF="http://www.opengeospatial.net/polarwrf" xmlns:basemap="http://geoserver.org/nyc/basemap" xmlns:cite="http://www.opengeospatial.net/cite" xmlns:common="http://common" xmlns:earthquake="http://earthquake" xmlns:gml="http://www.opengis.net/gml" xmlns:it.geosolutions="http://www.geo-solutions.it" xmlns:nsidc="http://nsidc" xmlns:nurc="http://www.nurc.nato.int" xmlns:sde="http://geoserver.sf.net" xmlns:sf="http://www.openplans.org/spearfish" xmlns:tiger="http://www.census.gov" xmlns:topp="http://www.openplans.org/topp" xmlns:wps_pattern="http://wps_pattern" xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="http://www.census.gov">
+  <xsd:import namespace="http://www.opengis.net/gml" schemaLocation="http://polar.geodacenter.org:8080/geoserver/schemas/gml/3.1.1/base/gml.xsd"/>
+  <xsd:complexType name="poiType">
+    <xsd:complexContent>
+      <xsd:extension base="gml:AbstractFeatureType">
+        <xsd:sequence>
+          <xsd:element maxOccurs="1" minOccurs="0" name="the_geom" nillable="true" type="gml:PointPropertyType"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="NAME" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="THUMBNAIL" nillable="true" type="xsd:string"/>
+          <xsd:element maxOccurs="1" minOccurs="0" name="MAINPAGE" nillable="true" type="xsd:string"/>
+        </xsd:sequence>
+      </xsd:extension>
+    </xsd:complexContent>
+  </xsd:complexType>
+  <xsd:element name="poi" substitutionGroup="gml:_Feature" type="tiger:poiType"/>
+</xsd:schema>
