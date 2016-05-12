@@ -308,6 +308,19 @@ function BitInputStream(arrayBuffer) {
 	 */
 	BitInputStream.prototype.decodeUnsignedInteger = function() {
 		// 0XXXXXXX ... 1XXXXXXX 1XXXXXXX
+		
+        var intVal = 0;
+        var mul = 1;
+        var val = this.decodeNBitUnsignedInteger(8);
+        while (val >= 128) {
+            intVal = intVal + mul * (val - 128);
+            val = this.decodeNBitUnsignedInteger(8);
+            mul = mul * 128;
+        }
+        intVal = intVal + (mul * val);
+        return intVal;
+        
+		/*
 		var result = this.decodeNBitUnsignedInteger(8);
 
 		// < 128: just one byte, optimal case
@@ -332,8 +345,10 @@ function BitInputStream(arrayBuffer) {
 				// step 1
 			} while (b >= 128);
 		}
+		
 
 		return result;
+		*/
 	}
 
 	/**
@@ -846,9 +861,29 @@ function BitOutputStream() {
 			return 4;
 		}
 		/* 35 bits */
-		else {
-			/* int, 32 bits */
+		else if (n < 0x800000000) {
 			return 5;
+		}
+		/* 42 bits */
+		else if (n < 0x40000000000) {
+			return 6;
+		}
+		/* 49 bits */
+		else if (n < 0x2000000000000) {
+			return 7;
+		}
+		/* 56 bits */
+		else if (n < 0x100000000000000) {
+			return 8;
+		}
+		/* 63 bits */
+		else if (n < 0x8000000000000000) {
+			return 9;
+		}
+		/* 70 bits */
+		else {
+			// long, 64 bits
+			return 10;
 		}
 	}
 
@@ -866,6 +901,21 @@ function BitOutputStream() {
 			var n7BitBlocks = this.numberOf7BitBlocksToRepresent(n);
 
 			switch (n7BitBlocks) {
+			case 10:
+				this.encodeNBitUnsignedInteger(128 | n, 8);
+				n = n >>> 7;
+			case 9:
+				this.encodeNBitUnsignedInteger(128 | n, 8);
+				n = n >>> 7;
+			case 8:
+				this.encodeNBitUnsignedInteger(128 | n, 8);
+				n = n >>> 7;
+			case 7:
+				this.encodeNBitUnsignedInteger(128 | n, 8);
+				n = n >>> 7;
+			case 6:
+				this.encodeNBitUnsignedInteger(128 | n, 8);
+				n = n >>> 7;
 			case 5:
 				this.encodeNBitUnsignedInteger(128 | n, 8);
 				n = n >>> 7;
@@ -1260,7 +1310,26 @@ function EXIEncoder(grammars) {
 			throw new Error("No characters event found for '" + chars + "'");
 		}
 	}
-
+	
+	function decimalPlaces(num) {
+		  var match = (''+num).match(/(?:\.(\d+))?(?:[eE]([+-]?\d+))?$/);
+		  if (!match) { return 0; }
+		  return Math.max(
+		       0,
+		       // Number of digits right of decimal point.
+		       (match[1] ? match[1].length : 0)
+		       // Adjust for scientific notation.
+		       - (match[2] ? +match[2] : 0));
+	}
+	
+	Number.isInteger = Number.isInteger || function(value) {
+	    return typeof value === "number" && 
+	           isFinite(value) && 
+	           Math.floor(value) === value;
+	};
+	
+	
+	// inspired by https://blog.coolmuse.com/2012/06/21/getting-the-exponent-and-mantissa-from-a-javascript-number/
 	function getEXIFloat(value) {
 		if (typeof value !== "number") {
 			throw new TypeError("value must be a Number");
@@ -1269,11 +1338,18 @@ function EXIEncoder(grammars) {
 			exponent : 0,
 			mantissa : 0
 		};
-
-		if (value === 0) {
-			// done already
-		} else if (!isFinite(value)) {
-			// not finite?
+		
+		if ( value === 0 ) {
+		    return result;
+		}
+		
+		if ( Number.isInteger(value) ) {
+			result.mantissa = value;
+			return result;
+		}
+		
+		// not finite?
+		if (!isFinite(value)) {
 			result.exponent = -16384;
 			if (isNaN(value)) {
 				result.mantissa = 0;
@@ -1284,20 +1360,47 @@ function EXIEncoder(grammars) {
 					result.mantissa = +1;
 				}
 			}
-		} else {
-			while (!(equalFloat(value, Math.floor(value))) && value < 99999999) {
-				value *= 10;
-				result.exponent--;
-			}
-			result.mantissa = Math.floor(value);
+			return result;
 		}
-
+		
+		// value = (Number(value)).doubleValue();
+		value = Number(Number(value).toFixed(8)); // at most 8 digits
+		
+		
+		// negative?
+		var isNegative = false;
+		if ( value < 0 ) {
+			isNegative = true;
+			value = -value;
+		}
+		
+		var dp = decimalPlaces(value);
+		
+		// calculate exponent
+		if(dp > 0) {
+			result.exponent = -dp;
+		}
+		
+		// calculate mantissa
+		var m = value;
+		while(dp > 0) {
+			m = m * 10;
+			dp -= 1;
+		}
+		result.mantissa = Math.round(m);
+  
+		if ( isNegative ) {
+			result.mantissa = -result.mantissa;
+		}
+		
 		return result;
 	}
 
+	/*
 	function equalFloat(f1, f2) {
 		return ((f1 > f2 ? f1 - f2 : f2 - f1) < (1e-4));
 	}
+	*/
 
 	function DateTimeValue() {
 		this.year;
