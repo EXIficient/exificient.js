@@ -979,6 +979,14 @@ function BitOutputStream() {
 			return 10;
 		}
 	}
+	
+	BitOutputStream.prototype.shiftRight = function(n, bits) {
+		for(i=0; i<bits; i++) {
+			n /= 2;
+		}
+		n = Math.floor(n);
+		return n;
+	}
 
 	/**
 	 * Encode an arbitrary precision non negative integer using a sequence of
@@ -986,6 +994,7 @@ function BitOutputStream() {
 	 * indicate sequence termination. Only seven bits per octet are used to
 	 * store the integer's value.
 	 */
+	 // Note: JavaScript shift operator works till 32 bits only!!
 	BitOutputStream.prototype.encodeUnsignedInteger = function(n) {
 		if (n < 128) {
 			// write value as is
@@ -996,22 +1005,28 @@ function BitOutputStream() {
 			switch (n7BitBlocks) {
 			case 10:
 				this.encodeNBitUnsignedInteger(128 | n, 8);
-				n = n >>> 7;
+				// n = n >>> 7;
+				n = this.shiftRight(n, 7);
 			case 9:
 				this.encodeNBitUnsignedInteger(128 | n, 8);
-				n = n >>> 7;
+				// n = n >>> 7;
+				n = this.shiftRight(n, 7);
 			case 8:
 				this.encodeNBitUnsignedInteger(128 | n, 8);
-				n = n >>> 7;
+				// n = n >>> 7;
+				n = this.shiftRight(n, 7);
 			case 7:
 				this.encodeNBitUnsignedInteger(128 | n, 8);
-				n = n >>> 7;
+				// n = n >>> 7;
+				n = this.shiftRight(n, 7);
 			case 6:
 				this.encodeNBitUnsignedInteger(128 | n, 8);
-				n = n >>> 7;
+				// n = n >>> 7;
+				n = this.shiftRight(n, 7);
 			case 5:
 				this.encodeNBitUnsignedInteger(128 | n, 8);
-				n = n >>> 7;
+				// n = n >>> 7;
+				n = this.shiftRight(n, 7);
 			case 4:
 				this.encodeNBitUnsignedInteger(128 | n, 8);
 				n = n >>> 7;
