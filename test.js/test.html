@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>EXI for JSON Tests</title>
+<script type="text/javascript" src="../exificient.js"></script>
+<script type="text/javascript" src="../exificient-for-json.js"></script>
+
+<style>
+table, th, td {
+   border: 1px solid black;
+}
+</style>
+</head>
+
+<body>
+
+
+
+<script>
+
+function NumberEventHandler() {
+
+	this.number;
+	
+	NumberEventHandler.prototype.getNumber = function(){
+		return this.number;
+	}
+	
+	NumberEventHandler.prototype.characters = function(chars){
+		this.number = chars;
+	}
+	
+	/* not needed */
+	NumberEventHandler.prototype.startDocument = function(){
+	}
+	
+	NumberEventHandler.prototype.endDocument = function(){
+	}
+	
+	NumberEventHandler.prototype.startElement = function(namespace, localName){
+	}
+	
+	NumberEventHandler.prototype.endElement = function(namespace, localName) {
+	}
+	
+	NumberEventHandler.prototype.attribute = function(namespace, localName, value){
+	}
+}
+
+function testUnsignedInteger(f) {
+	document.write("<tr>");
+	document.write("<td>" + f + "</td>");
+	var ok = false;
+	try {
+		var datatype =  new Object();
+		datatype["type"] = "UNSIGNED_INTEGER";
+		var namespaceID = 0;
+		var localNameID = 0;
+		
+		var isCharactersEvent = true;
+
+		// encode
+		var exiEncoder = new EXIEncoder();
+		exiEncoder.bitStream = new BitOutputStream();
+
+		exiEncoder.encodeDatatypeValue(f, datatype, namespaceID, localNameID);
+		exiEncoder.bitStream.align();
+
+		var uint8ArrayLength = exiEncoder.getUint8ArrayLength();
+		var uint8Array = exiEncoder.getUint8Array();
+
+		console.log("Write UnsignedInteger " + f + " encoded in " + uint8ArrayLength + " Bytes.");
+		
+		
+		// decode 
+		var exiDecoder = new EXIDecoder();
+		// register data handler
+		var numberHandler = new NumberEventHandler();
+		exiDecoder.registerEventHandler(numberHandler);
+		
+		var arrayBuffer = new ArrayBuffer(uint8ArrayLength);
+		var arrayBufferView = new Uint8Array(arrayBuffer);
+		for(var i=0; i<uint8ArrayLength; i++) {
+			arrayBufferView[i] = uint8Array[i];
+		}
+		exiDecoder.bitStream = new BitInputStream(arrayBuffer);
+		
+		exiDecoder.decodeDatatypeValue(datatype, namespaceID, localNameID, isCharactersEvent);
+		
+		console.log("Read Integer: " + numberHandler.getNumber());
+		
+		document.write("<td>" + numberHandler.getNumber() + "</td>");
+		
+		ok = f == numberHandler.getNumber();
+		
+	} catch(err) {
+		console.log("Error while testing UnsignedInteger. " + f1 + ": " + err);
+	}
+	if(ok) {
+		document.write("<td  style='background-color: green'>OK</td>");
+	} else {
+		document.write("<td style='background-color: red'>NOK</td>");
+	}
+	
+	document.write("</tr>");
+}
+
+
+function testInteger(f) {
+	document.write("<tr>");
+	document.write("<td>" + f + "</td>");
+	var ok = false;
+	try {
+		var datatype =  new Object();
+		datatype["type"] = "INTEGER";
+		var namespaceID = 0;
+		var localNameID = 0;
+		
+		var isCharactersEvent = true;
+
+		// encode
+		var exiEncoder = new EXIEncoder();
+		exiEncoder.bitStream = new BitOutputStream();
+
+		exiEncoder.encodeDatatypeValue(f, datatype, namespaceID, localNameID);
+		exiEncoder.bitStream.align();
+
+		var uint8ArrayLength = exiEncoder.getUint8ArrayLength();
+		var uint8Array = exiEncoder.getUint8Array();
+
+		console.log("Write Integer " + f + " encoded in " + uint8ArrayLength + " Bytes.");
+		
+		
+		// decode 
+		var exiDecoder = new EXIDecoder();
+		// register data handler
+		var numberHandler = new NumberEventHandler();
+		exiDecoder.registerEventHandler(numberHandler);
+		
+		var arrayBuffer = new ArrayBuffer(uint8ArrayLength);
+		var arrayBufferView = new Uint8Array(arrayBuffer);
+		for(var i=0; i<uint8ArrayLength; i++) {
+			arrayBufferView[i] = uint8Array[i];
+		}
+		exiDecoder.bitStream = new BitInputStream(arrayBuffer);
+		
+		exiDecoder.decodeDatatypeValue(datatype, namespaceID, localNameID, isCharactersEvent);
+		
+		console.log("Read Integer: " + numberHandler.getNumber());
+		
+		document.write("<td>" + numberHandler.getNumber() + "</td>");
+		
+		ok = f == numberHandler.getNumber();
+		
+	} catch(err) {
+		console.log("Error while testing Integer. " + f1 + ": " + err);
+	}
+	if(ok) {
+		document.write("<td  style='background-color: green'>OK</td>");
+	} else {
+		document.write("<td style='background-color: red'>NOK</td>");
+	}
+	
+	document.write("</tr>");
+}
+
+
+function testFloat(f) {
+	document.write("<tr>");
+	document.write("<td>" + f + "</td>");
+	var ok = false;
+	try {
+		var datatype =  new Object();
+		datatype["type"] = "FLOAT";
+		var namespaceID = 0;
+		var localNameID = 0;
+		
+		var isCharactersEvent = true;
+
+		// encode
+		var exiEncoder = new EXIEncoder();
+		exiEncoder.bitStream = new BitOutputStream();
+
+		// var f1 = 123.1; 
+
+
+		exiEncoder.encodeDatatypeValue(f, datatype, namespaceID, localNameID);
+		exiEncoder.bitStream.align();
+
+		var uint8ArrayLength = exiEncoder.getUint8ArrayLength();
+		var uint8Array = exiEncoder.getUint8Array();
+
+		
+		console.log("Write Float " + f + " encoded in " + uint8ArrayLength + " Bytes.");
+		
+		
+		// decode 
+		var exiDecoder = new EXIDecoder();
+		// register float data handler
+		var numberHandler = new NumberEventHandler();
+		exiDecoder.registerEventHandler(numberHandler);
+		
+		var arrayBuffer = new ArrayBuffer(uint8ArrayLength);
+		var arrayBufferView = new Uint8Array(arrayBuffer);
+		for(var i=0; i<uint8ArrayLength; i++) {
+			arrayBufferView[i] = uint8Array[i];
+		}
+		exiDecoder.bitStream = new BitInputStream(arrayBuffer);
+		
+		
+		exiDecoder.decodeDatatypeValue(datatype, namespaceID, localNameID, isCharactersEvent);
+		
+		console.log("Read Float: " + numberHandler.getNumber());
+		
+		document.write("<td>" + numberHandler.getNumber() + "</td>");
+		
+		// precision
+		fIn = Number(Number(f).toFixed(MAX_EXI_FLOAT_DIGITS))
+		fOut = Number(Number(numberHandler.getNumber()).toFixed(MAX_EXI_FLOAT_DIGITS))
+		// ok = f == numberHandler.getNumber();
+		ok = fIn == fOut;
+	} catch(err) {
+		console.log("Error while testing Float. " + f1 + ": " + err);
+	}
+	if(ok) {
+		document.write("<td  style='background-color: green'>OK</td>");
+	} else {
+		document.write("<td style='background-color: red'>NOK</td>");
+	}
+	
+	document.write("</tr>");
+}
+
+function testEXI4JSON(textJSON) {
+	document.write("<tr>");
+	document.write("<td>" + textJSON + "</td>");
+	var ok = false;
+	try {	
+		// encode
+		var jsonObjIn = JSON.parse(textJSON);
+		// var uint8Array = exify(jsonObjIn);; // EXI4JSON.exify(jsonObjIn);
+		var uint8Array = EXI4JSON.exify(jsonObjIn);
+		console.log("Write EXI4JSON " + textJSON + " in " + uint8Array.length + " Bytes.");
+		
+		// decode 
+		var jsonObjOut = EXI4JSON.parse(uint8Array);
+		
+		document.write("<td>" + JSON.stringify(jsonObjOut) + "</td>");
+		
+		// TODO compare json 
+		// ok = jsonObjOut != null;
+		ok = JSON.stringify(jsonObjIn) === JSON.stringify(jsonObjOut);
+	} catch(err) {
+		console.log("Error while testing EXI4JSON. " + textJSON + ": " + err);
+	}
+	if(ok) {
+		document.write("<td  style='background-color: green'>OK</td>");
+	} else {
+		document.write("<td style='background-color: red'>NOK</td>");
+	}
+	
+	document.write("</tr>");
+}
+</script> 
+
+
+
+
+
+
+
+<h1>Tests</h1>
+
+<script>
+document.write(new Date());
+</script>
+
+
+<h2>UnsignedInteger</h2>
+<table>
+<thead>
+  <tr>
+    <th>Input Value</th>
+    <th>Decoded to</th>
+    <th>OK / Not OK</th>
+  </tr>
+</thead>
+<tbody>
+  <script>
+  testUnsignedInteger(123);
+  testUnsignedInteger(0);
+  testUnsignedInteger(123456789);
+  // JavaScript shift works for 32 bits only
+  testUnsignedInteger(12345678910); // 5 blocks
+  // 190 --> 1 0111110
+  // 184 --> 1 0111000
+  // 240 --> 1 1110000
+  // 254 --> 1 1111110
+  // 45 -->  0  101101
+  testUnsignedInteger(12345678910111213);
+  </script> 
+</tbody>
+</table> 
+
+
+<h2>Integer</h2>
+<table>
+<thead>
+  <tr>
+    <th>Input Value</th>
+    <th>Decoded to</th>
+    <th>OK / Not OK</th>
+  </tr>
+</thead>
+<tbody>
+  <script>
+  testInteger(123);
+  testInteger(-345);
+  testInteger(-345321787980);
+  </script> 
+</tbody>
+</table> 
+
+
+
+
+
+<h2>Float</h2>
+<table>
+<thead>
+  <tr>
+    <th>Input Value</th>
+    <th>Decoded to </th>
+    <th>OK / Not OK</th>
+  </tr>
+</thead>
+<tfoot>
+    <tr>
+      <td colspan="3">@FloatRounding with <script>document.write(MAX_EXI_FLOAT_DIGITS); </script> precision digits</td>
+    </tr>
+</tfoot>
+<tbody>
+  <script>
+  testFloat(123.1);
+  testFloat(345);
+  testFloat(-344);
+  testFloat(0.002);
+  testFloat(3123E-2);
+  testFloat(40.707587626256554);
+  </script> 
+</tbody>
+</table> 
+
+
+
+<h2>EXI4JSON.exify() and EXI4JSON.parse()</h2>
+<table>
+<thead>
+  <tr>
+    <th>Input Value</th>
+    <th>Decoded to</th>
+    <th>OK / Not OK</th>
+  </tr>
+</thead>
+<tbody>
+  <script>
+  testEXI4JSON("{\"n\": null}");
+  testEXI4JSON("{\"widget\": {\n    \"debug\": \"on\",\n    \"window\": {\n        \"title\": \"Sample Konfabulator Widget\",\n        \"name\": \"main_window\",\n        \"width\": 500,\n        \"height\": 500\n    },\n    \"image\": { \n        \"src\": \"Images/Sun.png\",\n        \"name\": \"sun1\",\n        \"hOffset\": 250,\n        \"vOffset\": 250,\n        \"alignment\": \"center\"\n    },\n    \"text\": {\n        \"data\": \"Click Here\",\n        \"size\": 36,\n        \"style\": \"bold\",\n        \"name\": \"text1\",\n        \"hOffset\": 250,\n        \"vOffset\": 100,\n        \"alignment\": \"center\",\n        \"onMouseUp\": \"sun1.opacity = (sun1.opacity / 100) * 90;\"\n    }\n}}");
+  </script> 
+</tbody>
+</table> 
+
+
+
+
+ 
+
+</body>
+</html> 
