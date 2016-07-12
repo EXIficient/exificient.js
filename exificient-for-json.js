@@ -256,3 +256,35 @@ function JSONEventHandler() {
 
 	
 }
+
+
+
+
+
+
+function EXI4JSON() {
+}
+
+// EXI4JSON.encoder = new EXI4JSONEncoder();
+// var decoder = new EXI4JSONDecoder();
+
+EXI4JSON.exify = function(jsonObj) {
+	var encoder = new EXI4JSONEncoder();
+	encoder.encodeJsonObject(jsonObj);
+	// EXI4JSON.encoder.encodeJsonObject(jsonObj);
+	var uint8ArrayLength = encoder.getUint8ArrayLength();
+	var uint8Array = encoder.getUint8Array();
+	return uint8Array;
+}
+
+
+EXI4JSON.parse = function(uint8Array){
+	var decoder = new EXI4JSONDecoder();
+	var jsonHandler = new JSONEventHandler();
+	decoder.registerEventHandler(jsonHandler);
+	decoder.decode(uint8Array.buffer);
+	// var jsonText = JSON.stringify(jsonHandler.getJSON(), null, "\t");
+	return jsonHandler.getJSON();
+}
+
+
