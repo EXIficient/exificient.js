@@ -1,6 +1,7 @@
 /*! exificient.js v0.0.2-SNAPSHOT | (c) 2016 Siemens AG | The MIT License (MIT) */
 
-/* TODO How to realize proper error handling */
+//const
+MAX_EXI_FLOAT_DIGITS = 6; // -1 indicates no rounding
 
 /*******************************************************************************
  * 
@@ -1472,8 +1473,9 @@ function EXIEncoder(grammars) {
 		}
 		
 		// value = (Number(value)).doubleValue();
-		value = Number(Number(value).toFixed(6)); // at most 6 digits
-		
+		if(MAX_EXI_FLOAT_DIGITS >= 0) {
+			value = Number(Number(value).toFixed(MAX_EXI_FLOAT_DIGITS)); // at most XX digits
+		}
 		
 		// negative?
 		var isNegative = false;
