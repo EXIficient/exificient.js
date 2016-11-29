@@ -83,6 +83,20 @@ public class TestJSON extends TestCase {
 		String jsonTest = "{\n\"type\": \"FeatureCollection\",\n\"totalFeatures\": 2,\n\"features\": [\n{\n\"type\": \"Feature\",\n\"id\": \"poi.1\",\n\"geometry\": {\n\"type\": \"Point\",\n\"coordinates\": [\n40.707587626256554,\n-74.01046109936333\n]\n},\n\"geometry_name\": \"the_geom\",\n\"properties\": {\n\"NAME\": \"museam\",\n\"THUMBNAIL\": \"pics/22037827-Ti.jpg\",\n\"MAINPAGE\": \"pics/22037827-L.jpg\"\n}\n},\n{\n\"type\": \"Feature\",\n\"id\": \"poi.2\",\n\"geometry\": {\n\"type\": \"Point\",\n\"coordinates\": [\n40.70754683896324,\n-74.0108375113659\n]\n},\n\"geometry_name\": \"the_geom\",\n\"properties\": {\n\"NAME\": \"stock\",\n\"THUMBNAIL\": \"pics/22037829-Ti.jpg\",\n\"MAINPAGE\": \"pics/22037829-L.jpg\"\n}\n}\n],\n\"crs\": {\n\"type\": \"EPSG\",\n\"properties\": {\n\"code\": \"4326\"\n}\n}\n}";
 		_testJSONCode(jsonTest);
 	}
+	
+	@Test
+	public void testSample1() throws IOException, ScriptException, NoSuchMethodException, EXIException {
+		String jsonPath = "./data/json/sample1.json";
+		String jsonTest = file2String(jsonPath, StandardCharsets.UTF_8);
+		_testJSONCode(jsonTest);
+	}
+	
+	@Test
+	public void testSample1_Simple() throws IOException, ScriptException, NoSuchMethodException, EXIException {
+		String jsonPath = "./data/json/sample1_simple.json";
+		String jsonTest = file2String(jsonPath, StandardCharsets.UTF_8);
+		_testJSONCode(jsonTest);
+	}
 
 	protected static String url2String(URL url) throws IOException {
 		BufferedReader in = new BufferedReader(new InputStreamReader(url.openStream()));
@@ -308,7 +322,8 @@ public class TestJSON extends TestCase {
 	}
 
 	public static void main(String[] args) throws EXIException, IOException, NoSuchMethodException, ScriptException {
-		String jsonPath = "./data/json/ais.json";
+		// String jsonPath = "./data/json/ais.json";
+		String jsonPath = "./data/json/sample1.json";
 		String jsonTest = file2String(jsonPath, StandardCharsets.UTF_8);
 		TestJSON tj = new TestJSON();
 		tj.setUp();

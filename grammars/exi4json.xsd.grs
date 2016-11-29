@@ -1,12 +1,9 @@
 {
 	"qnames" : { 
-		"numberOfUris" : 5, 
-		"numberOfQNames" : 72, 
 		"namespaceContext" : [
 			{
 				"uriID" : 0 ,
 				"uri" : "", 
-				"numberOfLocalNames" : 0, 
 				"qnameContext" : [
 				]
 			}
@@ -14,7 +11,6 @@
 			{
 				"uriID" : 1 ,
 				"uri" : "http://www.w3.org/XML/1998/namespace", 
-				"numberOfLocalNames" : 4, 
 				"qnameContext" : [
 					{
 						"uriID" : 1 ,
@@ -45,7 +41,6 @@
 			{
 				"uriID" : 2 ,
 				"uri" : "http://www.w3.org/2001/XMLSchema-instance", 
-				"numberOfLocalNames" : 2, 
 				"qnameContext" : [
 					{
 						"uriID" : 2 ,
@@ -64,7 +59,6 @@
 			{
 				"uriID" : 3 ,
 				"uri" : "http://www.w3.org/2001/XMLSchema", 
-				"numberOfLocalNames" : 46, 
 				"qnameContext" : [
 					{
 						"uriID" : 3 ,
@@ -439,7 +433,6 @@
 			{
 				"uriID" : 4 ,
 				"uri" : "http://www.w3.org/2015/EXI/json", 
-				"numberOfLocalNames" : 20, 
 				"qnameContext" : [
 					{
 						"uriID" : 4 ,
