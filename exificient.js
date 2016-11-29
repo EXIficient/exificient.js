@@ -93,11 +93,20 @@ function AbtractEXICoder(grammars) {
 
 	this.stringTable;
 	this.sharedStrings;
+	
+	this.runtimeQNameContexts = [];
+	this.runtimeGlobalElements = [];
 
 	// WARNING: not specified in EXI 1.0 core (is extension)
 	AbtractEXICoder.prototype.setSharedStrings = function(sharedStrings) {
 		this.sharedStrings = sharedStrings;
 		console.log("Set sharedStrings: " + this.sharedStrings);
+	}
+	
+	
+	AbtractEXICoder.prototype.getNumberOfQNames = function() {
+		// static + runtime qnames
+		return this.grammars.qnames.numberOfQNames +  this.runtimeQNameContexts.length;
 	}
 	
 	AbtractEXICoder.prototype.init = function() {
@@ -109,6 +118,8 @@ function AbtractEXICoder(grammars) {
 				this.stringTable.addValue(-1, -1, this.sharedStrings[i]);
 			}
 		}
+		this.runtimeQNameContexts = [];
+		this.runtimeGlobalElements = [];
 	}
 
 	// returns the required number of bits for a given number of characteristics
@@ -204,6 +215,37 @@ function AbtractEXICoder(grammars) {
 			// unknown grammar type
 			throw new Error("Unknown grammar type: " + grammar.type);
 			return -1;
+		}
+	}
+	
+	AbtractEXICoder.prototype.getQNameContext = function(namespaceContext, localName) {
+		var qnameContext; // undefined by default
+		for (var i = 0; i < namespaceContext.qnameContext.length; i++) {
+			if (namespaceContext.qnameContext[i].localName === localName) {
+				qnameContext = namespaceContext.qnameContext[i];
+				return qnameContext;
+			}
+		}
+
+		return qnameContext;
+	}
+	
+	AbtractEXICoder.prototype.getGlobalStartElement = function(qnameContext) {
+		if(qnameContext.globalElementGrammarID !== undefined) {
+			// there is a global (static) element grammar
+			throw new Error("Todo get global element grammar for : " + qnameContext);
+		} else {
+			// check runtime global element grammars
+			var seGrammar; // undefined
+			for (var i = 0; i < this.runtimeGlobalElements.length; i++) {
+				// TODO retrieve the right one
+			}
+			
+			if(seGrammar === undefined) {
+				// create one
+				seGrammar = {"grammarID": -1, "type": "startTagContent", "production" : [ ] }; // TODO
+				return seGrammar;
+			}
 		}
 	}
 }
@@ -1291,20 +1333,33 @@ function EXIEncoder(grammars) {
 		}
 		console.log("SE {" + namespace + "}" + localName);
 
+		var isSE = 0;
+		var isSE_NS = 0;
+		var isSE_GENERIC = 0;
+		var namespaceContext;
+		
 		var ec = -1;
 		var prod;
 		var grammar = this.elementContext[this.elementContext.length - 1].grammar;
 		for (var i = 0; ec === -1 && i < grammar.production.length; i++) {
 			prod = grammar.production[i];
 			if (prod.event === "startElement") {
-				var namespaceContext = this.grammars.qnames.namespaceContext[prod.startElementNamespaceID];
+				namespaceContext = this.grammars.qnames.namespaceContext[prod.startElementNamespaceID];
 				var qnameContext = namespaceContext.qnameContext[prod.startElementLocalNameID];
 				if (qnameContext.localName === localName && namespaceContext.uri === namespace) {
 					ec = i;
+					isSE = 1;
+				}
+			} else if (prod.event === "startElementNS") {
+				namespaceContext = this.grammars.qnames.namespaceContext[prod.startElementNamespaceID];
+				if (namespaceContext.uri === namespace) {
+					ec = i;
+					isSE_NS = 1;
 				}
 			}
 		}
-		if (ec != -1) {
+		if (isSE && ec != -1) {
+			// SE(uri:localname)
 			// console.log("\t" + "Event Code == " + ec );
 			var codeLength = this.getCodeLengthForGrammar(grammar);
 			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength);
@@ -1312,13 +1367,61 @@ function EXIEncoder(grammars) {
 			// update current element context
 			var nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
 			this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
-			// push new element context
+			
+			// push element context
 			var startElementGrammar = grammars.grs.grammar[prod.startElementGrammarID];
 			this.elementContext.push(new ElementContextEntry(
 					prod.startElementNamespaceID, prod.startElementLocalNameID, startElementGrammar));
+		} else if (isSE_NS && ec != -1) {
+			// SE(uri:*)
+			var codeLength = this.getCodeLengthForGrammar(grammar);
+			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength);
+			
+			// encode local-name
+			var qnameContext = this.encodeLocalName(namespaceContext, localName);
+			
+			// update current element context
+			var nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
+			this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
+			
+			// push new element context
+			var startElementGrammar = this.getGlobalStartElement(qnameContext);
+			this.elementContext.push(new ElementContextEntry(
+					namespaceContext.uriID, qnameContext.localNameID, startElementGrammar));
 		} else {
 			throw new Error("No startElement event found for " + localName);
 		}
+	}
+	
+	EXIEncoder.prototype.encodeLocalName = function(namespaceContext, localName) {
+		// TODO 
+		var qnameContext = this.getQNameContext(namespaceContext, localName);
+		if(qnameContext === undefined) {
+			// string value was not found in local partition
+			// ==> string literal is encoded as a String
+			// with the length of the string incremented by one
+			this.bitStream.encodeUnsignedInteger(localName.length + 1);
+			this.bitStream.encodeStringOnly(localName);
+			// After encoding the string value, it is added to the string
+			// table partition and assigned the next available compact
+			// identifier
+			// TODO add to qname context
+			// qnc = ruc.addQNameContext(localName);
+			qnameContext = {"uriID": namespaceContext.uriID, "localNameID": this.getNumberOfQNames(), "localName": localName};
+			console.log("create new runtime qnameContext = '" + qnameContext + "'");
+			this.runtimeQNameContexts.push(qnameContext);
+		} else {
+			// string value found in local partition
+			// ==> string value is represented as zero (0) encoded as an
+			// Unsigned Integer followed by an the compact identifier of the
+			// string value as an n-bit unsigned integer n is log2 m and m is
+			// the number of entries in the string table partition
+			this.bitStream.encodeUnsignedInteger(0);
+			var n = this.getCodeLength(namespaceContext.qnameContext.length);
+			this.bitStream.encodeNBitUnsignedInteger(localNameID, n);
+		}
+		
+		return qnameContext;
 	}
 
 	EXIEncoder.prototype.endElement = function() {
