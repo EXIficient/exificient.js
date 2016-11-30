@@ -856,25 +856,36 @@ function EXIDecoder(grammars, options) {
 				popStack = true;
 				break;
 			case "startElement":
+			case "startElementNS":
 				// console.log("\t" + "StartElement qnameID " +
 				// prod.startElementQNameID );
 				// console.log("\t" + "StartElement name " +
 				// getQNameContext(prod.startElementQNameID).localName);
 
-				var seGrammar = grammars.grs.grammar[prod.startElementGrammarID];
+				var seGrammar;
+				var qnameContext;
 				var namespaceContext = this.grammars.qnames.namespaceContext[prod.startElementNamespaceID];
-				var qnameContext = namespaceContext.qnameContext[prod.startElementLocalNameID];
-				console.log(">> SE (" + qnameContext.localName + ")");
+				
+				if(prod.event == "startElement") {
+					seGrammar = grammars.grs.grammar[prod.startElementGrammarID];
+					qnameContext = namespaceContext.qnameContext[prod.startElementLocalNameID];
+					console.log(">> SE (" + qnameContext.localName + ")");
+				} else {
+					// SE_NS
+					// decode local-name
+					qnameContext = this.decodeLocalName(namespaceContext);
+					console.log(">> SE_NS (" + namespaceContext.uri + ", " + qnameContext.localName + ")");
+					seGrammar = this.getGlobalStartElement(qnameContext);
+				}
+
 				var i;
 				for (i = 0; i < this.eventHandler.length; i++) {
 					var eh = this.eventHandler[i];
 					eh.startElement(namespaceContext.uri, qnameContext.localName);
 				}
 
-				this.decodeElementContext(seGrammar, prod.startElementNamespaceID, prod.startElementLocalNameID);
-				break;
-			case "startElementNS":
-				throw new Error("TODO event " + prod.event);
+				console.log("seGrammar=" + seGrammar+ ", startElementNamespaceID=" + prod.startElementNamespaceID + ", startElementLocalNameID=" + qnameContext.localNameID);
+				this.decodeElementContext(seGrammar, prod.startElementNamespaceID, qnameContext.localNameID); // prod.startElementLocalNameID
 				break;
 			case "endElement":
 				var namespaceContextEE = this.grammars.qnames.namespaceContext[elementNamespaceID];
@@ -923,7 +934,39 @@ function EXIDecoder(grammars, options) {
 			grammar = grammars.grs.grammar[prod.nextGrammarID];
 
 		}
+	}
+	
+	
+	EXIDecoder.prototype.decodeLocalName = function(namespaceContext) {
+		var length = this.bitStream.decodeUnsignedInteger();
 
+		var qnameContext;
+
+		if (length > 0) {
+			// string value was not found in local partition
+			// ==> string literal is encoded as a String
+			// with the length of the string incremented by one
+			var localName = this.bitStream.decodeStringOnly(length - 1);
+			// After encoding the string value, it is added to the string table
+			// partition and assigned the next available compact identifier.
+			qnameContext = {"uriID": namespaceContext.uriID, "localNameID": namespaceContext.qnameContext.length, "localName": localName};
+			console.log("create new runtime qnameContext = '" + qnameContext + "'");
+			namespaceContext.qnameContext.push(qnameContext);
+		} else {
+			// string value found in local partition
+			// ==> string value is represented as zero (0) encoded as an
+			// Unsigned Integer
+			// followed by an the compact identifier of the string value as an
+			// n-bit unsigned integer
+			// n is log2 m and m is the number of entries in the string table
+			// partition
+			var n = this.getCodeLength(namespaceContext.qnameContext.length);
+			var localNameID = this.bitStream.decodeNBitUnsignedInteger(n, this.byteAligned);
+			console.log("decoded localName id = " + localNameID + " of existing localName " + namespaceContext.qnameContext[localNameID].localName);
+			qnameContext = namespaceContext.qnameContext[localNameID];
+		}
+		
+		return qnameContext;
 	}
 
 	EXIDecoder.prototype.decode = function(arrayBuffer) {

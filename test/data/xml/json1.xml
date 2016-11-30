@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+ xsi:schemaLocation="http://www.w3.org/2015/EXI/json ../../../grammars/exi4json.xsd" -->
+<ns4:map xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xmlns:ns4="http://www.w3.org/2015/EXI/json">
+    <ns4:keyNumber>
+        <ns4:number>123E0</ns4:number>
+    </ns4:keyNumber>
+<!--    <j:keyArrayStrings>
+        <j:array>
+            <j:string>s1</j:string>
+            <j:string>s2</j:string>
+        </j:array>
+    </j:keyArrayStrings>-->
+</ns4:map>
