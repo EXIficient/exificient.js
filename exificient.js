@@ -100,8 +100,6 @@ function AbtractEXICoder(grammars, options) {
 		}
 	}
 	
-	
-	
 	this.stringTable;
 	this.sharedStrings;
 	
@@ -244,18 +242,16 @@ function AbtractEXICoder(grammars, options) {
 			} else {
 				return this.getCodeLength(grammar.production.length + 1);
 			}
-		} else if (grammar.type === "startTagContent") {
+		} else if (grammar.type === "startTagContent" || grammar.type === "elementContent") {
+			// Note: has always second level
 			if (this.isStrict) {
 				return this.getCodeLength(grammar.production.length);
 			} else {
 				return this.getCodeLength(grammar.production.length + 1);
 			}
-		} else if (grammar.type === "elementContent") {
-			if (this.isStrict) {
-				return this.getCodeLength(grammar.production.length);
-			} else {
-				return this.getCodeLength(grammar.production.length + 1);
-			}
+		} else if (grammar.type === "builtInStartTagContent" || grammar.type === "builtInElementContent") {
+			// Note: has always second level
+			return this.getCodeLength(grammar.production.length + 1);
 		} else {
 			// unknown grammar type
 			throw new Error("Unknown grammar type: " + grammar.type);
@@ -264,11 +260,11 @@ function AbtractEXICoder(grammars, options) {
 	}
 	
 	AbtractEXICoder.prototype.get2ndCodeLengthForGrammar = function(grammar) {
-		if (grammar.type === "startTagContent") {
+		if (grammar.type === "builtInStartTagContent") {
 			// --> second level EE, AT(*), NS?, SC?, SE(*), CH, ER?, [CM?, PI?]
 			// 4 options
 			return 2;
-		} else if (grammar.type === "elementContent") {
+		} else if (grammar.type === "builtInElementContent") {
 			// --> second level EE, SE(*), CH, ER?, [CM?, PI?]
 			// 3 options
 			return 2;
@@ -280,7 +276,7 @@ function AbtractEXICoder(grammars, options) {
 	}
 	
 	AbtractEXICoder.prototype.get2ndEventCode = function(grammar, event) {
-		if (grammar.type === "startTagContent") {
+		if (grammar.type === "builtInStartTagContent") {
 			// --> second level EE, AT(*), NS?, SC?, SE(*), CH, ER?, [CM?, PI?]
 			// 4 options
 			if(event === "endElement") {
@@ -295,7 +291,7 @@ function AbtractEXICoder(grammars, options) {
 				throw new Error("Unknown/unhandled 2nd level event: " + event);
 				return -1;
 			}
-		} else if (grammar.type === "elementContent") {
+		} else if (grammar.type === "builtInElementContent") {
 			// --> second level EE, SE(*), CH, ER?, [CM?, PI?]
 			// 3 options
 			if(event === "endElement") {
@@ -350,8 +346,8 @@ function AbtractEXICoder(grammars, options) {
 //			if(seGrammar === undefined) {
 				// create Built-in Element Grammar (ids smaller than zero)
 				var id = ((this.runtimeGlobalElements*2)+1) * (-1);
-				seGrammar = {"grammarID": id, "type": "startTagContent", "production" : [ ] };
-				var elementContent = {"grammarID": id-1, "type": "elementContent", "production" : [ {"event" : "endElement", "nextGrammarID" : -1} ] };
+				seGrammar = {"grammarID": id, "type": "builtInStartTagContent", "production" : [ ] };
+				var elementContent = {"grammarID": id-1, "type": "builtInElementContent", "production" : [ {"event" : "endElement", "nextGrammarID" : -1} ] };
 				elementContent["elementContent"] = elementContent;
 				seGrammar["elementContent"] = elementContent;
 				
@@ -876,6 +872,9 @@ function EXIDecoder(grammars, options) {
 				}
 
 				this.decodeElementContext(seGrammar, prod.startElementNamespaceID, prod.startElementLocalNameID);
+				break;
+			case "startElementNS":
+				throw new Error("TODO event " + prod.event);
 				break;
 			case "endElement":
 				var namespaceContextEE = this.grammars.qnames.namespaceContext[elementNamespaceID];
@@ -1561,7 +1560,7 @@ function EXIEncoder(grammars, options) {
 			
 		} else {
 			// NO event-code found
-			if(grammar.type === "startTagContent") {
+			if(grammar.type === "builtInStartTagContent") {
 				// 1st level
 				var codeLength = this.getCodeLengthForGrammar(grammar);
 				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.byteAligned);
@@ -1584,7 +1583,7 @@ function EXIEncoder(grammars, options) {
 				this.elementContext.push(new ElementContextEntry(
 						qnameContext.uriID, qnameContext.localNameID, startElementGrammar));
 				
-			} else if(grammar.type === "elementContent") {
+			} else if(grammar.type === "builtInElementContent") {
 				throw new Error("TODO SE elementContent grammar. grammar.type = " + grammar.type);
 			} else {
 				throw new Error("No startElement event found for " + localName + ". grammar.type = " + grammar.type);
@@ -1747,7 +1746,7 @@ function EXIEncoder(grammars, options) {
 			var nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
 			this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
 		} else {
-			if(grammar.type === "startTagContent" || grammar.type === "elementContent" ) {
+			if(grammar.type === "builtInStartTagContent" || grammar.type === "builtInElementContent" ) {
 				// 1st level
 				var codeLength = this.getCodeLengthForGrammar(grammar);
 				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.byteAligned);
