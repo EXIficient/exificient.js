@@ -86,14 +86,22 @@ Inheritance_Manager.extend = function(subClass, baseClass) {
 	subClass.superClass = baseClass.prototype;
 }
 
-function AbtractEXICoder(grammars) {
+function AbtractEXICoder(grammars, options) {
 
 	this.grammars = grammars;
 	// copy to allow extending grammars and do re-set them
 	// TODO use a more elegant method
 	this.grammarsCopy = JSON.parse(JSON.stringify(grammars));
 	this.isStrict = true; // TODO
-
+	this.byteAligned = 0; // default is false
+	if(options !== undefined) {
+		if("byteAligned" in options) {
+			this.byteAligned = options["byteAligned"];
+		}
+	}
+	
+	
+	
 	this.stringTable;
 	this.sharedStrings;
 	
@@ -395,52 +403,69 @@ function BitInputStream(arrayBuffer) {
 	/**
 	 * Decodes and returns an n-bit unsigned integer.
 	 */
-	BitInputStream.prototype.decodeNBitUnsignedInteger = function(nbits) {
-		if (nbits < 0) {
-			throw new Error("Error in decodeNBitUnsignedInteger, nbits = " + nbits);
-			this.errn = -1;
-			return -1;
-		} else if (nbits === 0) {
-			return 0;
+	BitInputStream.prototype.decodeNBitUnsignedInteger = function(nbits, byteAligned) {
+		if(byteAligned !== undefined && byteAligned) {
+			while(nbits % 8 !== 0) {
+				nbits++;
+			}
+			
+			var bitsRead = 0;
+			var result = 0;
+
+			while (bitsRead < nbits) {
+				// result = (result << 8) | is.read();
+				result += (this.decodeNBitUnsignedInteger(8) << bitsRead);
+				bitsRead += 8;
+			}
+			return result;
+			
 		} else {
-			// check buffer
-			this.readBuffer();
+			if (nbits < 0) {
+				throw new Error("Error in decodeNBitUnsignedInteger, nbits = " + nbits);
+				this.errn = -1;
+				return -1;
+			} else if (nbits === 0) {
+				return 0;
+			} else {
+				// check buffer
+				this.readBuffer();
 
-			// read bits
-			if (this.errn === 0) {
-				if (nbits <= this.capacity) {
-					/* read the bits in one step */
-					this.capacity = this.capacity - nbits;
-					var b = (this.buffer >> this.capacity)
-							& (0xff >> (8 - nbits));
-					return b;
-				} else if (this.capacity === 0 && nbits === 8) {
-					/* possible to read direct byte, nothing else to do */
-					return this.uint8Array[this.pos];
-				} else {
-					/* read bits as much as possible */
-					var b = this.buffer & (0xff >> (8 - this.capacity));
-					nbits = nbits - this.capacity;
-					this.capacity = 0;
-
-					/* read whole bytes */
-					while (this.errn === 0 && nbits >= 8) {
-						this.readBuffer();
-						b = (b << 8) | this.buffer;
-						nbits = nbits - 8;
+				// read bits
+				if (this.errn === 0) {
+					if (nbits <= this.capacity) {
+						/* read the bits in one step */
+						this.capacity = this.capacity - nbits;
+						var b = (this.buffer >> this.capacity)
+								& (0xff >> (8 - nbits));
+						return b;
+					} else if (this.capacity === 0 && nbits === 8) {
+						/* possible to read direct byte, nothing else to do */
+						return this.uint8Array[this.pos];
+					} else {
+						/* read bits as much as possible */
+						var b = this.buffer & (0xff >> (8 - this.capacity));
+						nbits = nbits - this.capacity;
 						this.capacity = 0;
-					}
 
-					/* read the spare bits in the buffer */
-					if (this.errn === 0 && nbits > 0) {
-						this.readBuffer();
-						if (this.errn === 0) {
-							b = (b << nbits) | (this.buffer >> (8 - nbits));
-							this.capacity = 8 - nbits;
+						/* read whole bytes */
+						while (this.errn === 0 && nbits >= 8) {
+							this.readBuffer();
+							b = (b << 8) | this.buffer;
+							nbits = nbits - 8;
+							this.capacity = 0;
 						}
-					}
 
-					return b;
+						/* read the spare bits in the buffer */
+						if (this.errn === 0 && nbits > 0) {
+							this.readBuffer();
+							if (this.errn === 0) {
+								b = (b << nbits) | (this.buffer >> (8 - nbits));
+								this.capacity = 8 - nbits;
+							}
+						}
+
+						return b;
+					}
 				}
 			}
 		}
@@ -505,8 +530,8 @@ function BitInputStream(arrayBuffer) {
 	 * zero to indicate sequence termination. Only seven bits per octet are used
 	 * to store the integer's value.
 	 */
-	BitInputStream.prototype.decodeInteger = function() {
-		if (this.decodeNBitUnsignedInteger(1) === 0) {
+	BitInputStream.prototype.decodeInteger = function(byteAligned) {
+		if (this.decodeNBitUnsignedInteger(1, byteAligned) === 0) {
 			// positive
 			return this.decodeUnsignedInteger();
 		} else {
@@ -538,9 +563,9 @@ Inheritance_Manager.extend(EXIDecoder, AbtractEXICoder);
 
 // arrayBuffer EXI ArrayBuffer
 // grammars JSON
-function EXIDecoder(grammars) {
+function EXIDecoder(grammars, options) {
 
-	EXIDecoder.baseConstructor.call(this, grammars);
+	EXIDecoder.baseConstructor.call(this, grammars, options);
 
 	this.bitStream;
 
@@ -646,7 +671,7 @@ function EXIDecoder(grammars) {
 			/* local value hit */
 			var n = this.getCodeLength(this.stringTable
 					.getNumberOfLocalStrings(namespaceID, localNameID));
-			var localID = this.bitStream.decodeNBitUnsignedInteger(n);
+			var localID = this.bitStream.decodeNBitUnsignedInteger(n, this.byteAligned);
 			var lhit = this.stringTable.getLocalValue(namespaceID, localNameID, localID);
 			console.log("\t" + " String localValue hit '" + lhit.value
 					+ "'");
@@ -656,7 +681,7 @@ function EXIDecoder(grammars) {
 			/* global value hit */
 			var n = this.getCodeLength(this.stringTable
 					.getNumberOfGlobalStrings());
-			var globalID = this.bitStream.decodeNBitUnsignedInteger(n);
+			var globalID = this.bitStream.decodeNBitUnsignedInteger(n, this.byteAligned);
 			var ghit = this.stringTable.getGlobalValue(globalID);
 			console.log("\t" + " String globalValue hit '" + ghit.value
 					+ "'");
@@ -706,7 +731,7 @@ function EXIDecoder(grammars) {
 	}
 	
 	EXIDecoder.prototype.decodeDatatypeValueInteger = function(namespaceID, localNameID, isCharactersEvent) {
-		var int = this.bitStream.decodeInteger();
+		var int = this.bitStream.decodeInteger(this.byteAligned);
 		console.log("\t" + " INTEGER = " + int);
 		var i;
 		for (i = 0; i < this.eventHandler.length; i++) {
@@ -722,8 +747,8 @@ function EXIDecoder(grammars) {
 	}
 	
 	EXIDecoder.prototype.decodeDatatypeValueFloat = function(namespaceID, localNameID, isCharactersEvent) {
-		var mantissa = this.bitStream.decodeInteger();
-		var exponent = this.bitStream.decodeInteger();
+		var mantissa = this.bitStream.decodeInteger(this.byteAligned);
+		var exponent = this.bitStream.decodeInteger(this.byteAligned);
 		console.log("\t" + " float = " + mantissa + "E" + exponent);
 		var i;
 		for (i = 0; i < this.eventHandler.length; i++) {
@@ -740,7 +765,7 @@ function EXIDecoder(grammars) {
 	}
 	
 	EXIDecoder.prototype.decodeDatatypeValueBoolean = function(namespaceID, localNameID, isCharactersEvent) {
-		var b = this.bitStream.decodeNBitUnsignedInteger(1) === 0 ? false
+		var b = this.bitStream.decodeNBitUnsignedInteger(1, this.byteAligned) === 0 ? false
 				: true;
 		console.log("\t" + " boolean = " + b);
 		for (var i = 0; i < this.eventHandler.length; i++) {
@@ -767,9 +792,9 @@ function EXIDecoder(grammars) {
 			// YEAR_OFFSET = 2000
 			// NUMBER_BITS_MONTHDAY = 9
 			// MONTH_MULTIPLICATOR = 32
-			year = this.bitStream.decodeInteger() + 2000;
+			year = this.bitStream.decodeInteger(this.byteAligned) + 2000;
 			sDatetime += year;
-			monthDay = this.bitStream.decodeNBitUnsignedInteger(9);
+			monthDay = this.bitStream.decodeNBitUnsignedInteger(9, this.byteAligned);
 			var month = Math.floor(monthDay / 32);
 			if (month < 10) {
 				sDatetime += "-0" + month;
@@ -781,11 +806,11 @@ function EXIDecoder(grammars) {
 		} else {
 			throw new Error("Unsupported datetime type: " + datetimeType);
 		}
-		var presenceTimezone = this.bitStream.decodeNBitUnsignedInteger(1) === 0 ? false
+		var presenceTimezone = this.bitStream.decodeNBitUnsignedInteger(1, this.byteAligned) === 0 ? false
 				: true;
 		// console.log("\t" + " presenceTimezone = " + presenceTimezone);
 		if (presenceTimezone) {
-			var timeZone = this.bitStream.decodeNBitUnsignedInteger(11) - 896;
+			var timeZone = this.bitStream.decodeNBitUnsignedInteger(11, this.byteAligned) - 896;
 		}
 
 		console.log("\t" + " datetime = " + sDatetime);
@@ -810,7 +835,7 @@ function EXIDecoder(grammars) {
 
 			var codeLength = this.getCodeLengthForGrammar(grammar);
 
-			var ec = this.bitStream.decodeNBitUnsignedInteger(codeLength); //
+			var ec = this.bitStream.decodeNBitUnsignedInteger(codeLength, this.byteAligned); //
 			// console.log("\t" + "Event Code == " + ec );
 			var prod = grammar.production[ec];
 
@@ -1037,51 +1062,74 @@ function BitOutputStream() {
 	 * Encode n-bit unsigned integer. The n least significant bits of parameter
 	 * b starting with the most significant, i.e. from left to right.
 	 */
-	BitOutputStream.prototype.encodeNBitUnsignedInteger = function(b, n) {
-		var byteAligned = 0; // TODO add support for byte-aligned
-		
-		if(byteAligned) {
+	BitOutputStream.prototype.encodeNBitUnsignedInteger = function(b, n, byteAligned) {
+
+		if(byteAligned !== undefined && byteAligned) {
 			while(n % 8 !== 0) {
 				n++;
 			}
-		}
-		
-		
-		
-		if (n === 0) {
-			// nothing to write
-		} else if (n <= this.capacity) {
-			// all bits fit into the current buffer
-			this.buffer = (this.buffer << n) | (b & (0xff >> (8 - n)));
-			this.capacity -= n;
-			if (this.capacity === 0) {
+			
+			// TODO to check why we can't combine bit and byteAligned
+			if (n === 0) {
+				// 0 bytes
+			} else if (n < 9) {
+				// 1 byte
+				this.encodeNBitUnsignedInteger(b & 0xff, 8);
+			} else if (n < 17) {
+				// 2 bytes
+				this.encodeNBitUnsignedInteger(b & 0x00ff, 8);
+				this.encodeNBitUnsignedInteger((b & 0xff00) >> 8, 8);
+			} else if (n < 25) {
+				// 3 bytes
+				this.encodeNBitUnsignedInteger(b & 0x0000ff, 8);
+				this.encodeNBitUnsignedInteger((b & 0x00ff00) >> 8, 8);
+				this.encodeNBitUnsignedInteger((b & 0xff0000) >> 16, 8);
+			} else if (n < 33) {
+				// 4 bytes
+				this.encodeNBitUnsignedInteger(b & 0x000000ff, 8);
+				this.encodeNBitUnsignedInteger((b & 0x0000ff00) >> 8, 8);
+				this.encodeNBitUnsignedInteger((b & 0x00ff0000) >> 16, 8);
+				this.encodeNBitUnsignedInteger((b & 0xff000000) >> 24, 8);
+			} else {
+				throw new Error("nbit = " + n + " exceeds supported value range");
+			}
+			
+		} else {
+			if (n === 0) {
+				// nothing to write
+			} else if (n <= this.capacity) {
+				// all bits fit into the current buffer
+				this.buffer = (this.buffer << n) | (b & (0xff >> (8 - n)));
+				this.capacity -= n;
+				if (this.capacity === 0) {
+					this.checkBuffer();
+					this.uint8Array[this.len] = this.buffer;
+					this.capacity = 8;
+					this.len++;
+				}
+			} else {
+				// fill as many bits into buffer as possible
+				this.buffer = (this.buffer << this.capacity)
+						| ((b >>> (n - this.capacity)) & (0xff >> (8 - this.capacity)));
+				n -= this.capacity;
 				this.checkBuffer();
 				this.uint8Array[this.len] = this.buffer;
-				this.capacity = 8;
 				this.len++;
-			}
-		} else {
-			// fill as many bits into buffer as possible
-			this.buffer = (this.buffer << this.capacity)
-					| ((b >>> (n - this.capacity)) & (0xff >> (8 - this.capacity)));
-			n -= this.capacity;
-			this.checkBuffer();
-			this.uint8Array[this.len] = this.buffer;
-			this.len++;
 
-			// possibly write whole bytes
-			while (n >= 8) {
-				n -= 8;
-				this.checkBuffer();
-				this.uint8Array[this.len] = b >>> n;
-				this.len++;
-			}
+				// possibly write whole bytes
+				while (n >= 8) {
+					n -= 8;
+					this.checkBuffer();
+					this.uint8Array[this.len] = b >>> n;
+					this.len++;
+				}
 
-			// put the rest of bits into the buffer
-			this.buffer = b; // Note: the high bits will be shifted out
-			// during
-			// further filling
-			this.capacity = 8 - n;
+				// put the rest of bits into the buffer
+				this.buffer = b; // Note: the high bits will be shifted out
+				// during
+				// further filling
+				this.capacity = 8 - n;
+			}
 		}
 	}
 
@@ -1207,15 +1255,15 @@ function BitOutputStream() {
 	 * zero to indicate sequence termination. Only seven bits per octet are used
 	 * to store the integer's value.
 	 */
-	BitOutputStream.prototype.encodeInteger = function(n) {
+	BitOutputStream.prototype.encodeInteger = function(n, byteAligned) {
 		// signalize sign
 		if (n < 0) {
-			this.encodeNBitUnsignedInteger(1, 1);
+			this.encodeNBitUnsignedInteger(1, 1, byteAligned);
 			// For negative values, the Unsigned Integer holds the
 			// magnitude of the value minus 1
 			this.encodeUnsignedInteger((-n) - 1);
 		} else {
-			this.encodeNBitUnsignedInteger(0, 1);
+			this.encodeNBitUnsignedInteger(0, 1, byteAligned);
 			this.encodeUnsignedInteger(n);
 		}
 	}
@@ -1238,9 +1286,9 @@ function BitOutputStream() {
 Inheritance_Manager.extend(EXIEncoder, AbtractEXICoder);
 
 // grammars JSON
-function EXIEncoder(grammars) {
+function EXIEncoder(grammars, options) {
 
-	EXIEncoder.baseConstructor.call(this, grammars);
+	EXIEncoder.baseConstructor.call(this, grammars, options);
 
 	this.bitStream;
 	this.elementContext;
@@ -1405,7 +1453,7 @@ function EXIEncoder(grammars) {
 		if (ec != -1) {
 			// console.log("\t" + "Event Code == " + ec );
 			var codeLength = this.getCodeLengthForGrammar(docGr);
-			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength);
+			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.byteAligned);
 
 			var nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
 			this.elementContext.push(new ElementContextEntry(-1, -1, nextGrammar));
@@ -1427,7 +1475,7 @@ function EXIEncoder(grammars) {
 		if (ec != -1) {
 			// console.log("\t" + "Event Code == " + ec );
 			var codeLength = this.getCodeLengthForGrammar(grammar);
-			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength);
+			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.byteAligned);
 
 			// pop element stack
 			this.elementContext.pop();
@@ -1480,7 +1528,7 @@ function EXIEncoder(grammars) {
 			// event-code found
 			// console.log("\t" + "Event Code == " + ec );
 			var codeLength = this.getCodeLengthForGrammar(grammar);
-			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength);
+			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.byteAligned);
 			
 			var startElementGrammar;
 			
@@ -1516,11 +1564,11 @@ function EXIEncoder(grammars) {
 			if(grammar.type === "startTagContent") {
 				// 1st level
 				var codeLength = this.getCodeLengthForGrammar(grammar);
-				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength);
+				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.byteAligned);
 				// 2nd level
 				var codeLength = this.get2ndCodeLengthForGrammar(grammar);
 				var ec2 = this.get2ndEventCode(grammar, "startElement");
-				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength); //2 in 2 bits
+				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength, this.byteAligned); //2 in 2 bits
 				
 				// encode qname
 				var qnameContext = this.encodeQName(namespace, localName);
@@ -1559,7 +1607,7 @@ function EXIEncoder(grammars) {
 			// uri string value was not found
 			// ==> zero (0) as an n-nit unsigned integer
 			// followed by uri encoded as string
-			this.bitStream.encodeNBitUnsignedInteger(0, n);
+			this.bitStream.encodeNBitUnsignedInteger(0, n, this.byteAligned);
 			this.bitStream.encodeString(namespace);
 			// after encoding string value is added to table
 			namespaceContext = {"uriID": this.grammars.qnames.namespaceContext.length, "uri": namespace};
@@ -1567,7 +1615,7 @@ function EXIEncoder(grammars) {
 		} else {
 			// string value found
 			// ==> value(i+1) is encoded as n-bit unsigned integer
-			this.bitStream.encodeNBitUnsignedInteger(namespaceContext.uriID + 1, n);
+			this.bitStream.encodeNBitUnsignedInteger(namespaceContext.uriID + 1, n, this.byteAligned);
 		}
 		
 		return namespaceContext;
@@ -1598,7 +1646,7 @@ function EXIEncoder(grammars) {
 			// the number of entries in the string table partition
 			this.bitStream.encodeUnsignedInteger(0);
 			var n = this.getCodeLength(namespaceContext.qnameContext.length);
-			this.bitStream.encodeNBitUnsignedInteger(qnameContext.localNameID, n);
+			this.bitStream.encodeNBitUnsignedInteger(qnameContext.localNameID, n, this.byteAligned);
 		}
 		
 		return qnameContext;
@@ -1619,7 +1667,7 @@ function EXIEncoder(grammars) {
 		if (ec != -1) {
 			// console.log("\t" + "Event Code == " + ec );
 			var codeLength = this.getCodeLengthForGrammar(grammar);
-			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength);
+			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.byteAligned);
 
 			// pop element stack
 			this.elementContext.pop();
@@ -1656,7 +1704,7 @@ function EXIEncoder(grammars) {
 			if (ec != -1) {
 				// console.log("\t" + "Event Code == " + ec );
 				var codeLength = this.getCodeLengthForGrammar(grammar);
-				this.bitStream.encodeNBitUnsignedInteger(ec, codeLength);
+				this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.byteAligned);
 				// write value
 				var datatype = this.grammars.simpleDatatypes[prod.attributeDatatypeID];
 				this
@@ -1686,7 +1734,7 @@ function EXIEncoder(grammars) {
 		if (ec != -1) {
 			// console.log("\t" + "Event Code == " + ec );
 			var codeLength = this.getCodeLengthForGrammar(grammar);
-			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength);
+			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.byteAligned);
 			// write value
 			var datatype = this.grammars.simpleDatatypes[prod.charactersDatatypeID];
 			var elementContext = this.elementContext[this.elementContext.length - 1];
@@ -1702,11 +1750,11 @@ function EXIEncoder(grammars) {
 			if(grammar.type === "startTagContent" || grammar.type === "elementContent" ) {
 				// 1st level
 				var codeLength = this.getCodeLengthForGrammar(grammar);
-				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength);
+				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.byteAligned);
 				// 2nd level
 				var codeLength = this.get2ndCodeLengthForGrammar(grammar);
 				var ec2 = this.get2ndEventCode(grammar, "characters");
-				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength);
+				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength, this.byteAligned);
 				
 				// write value
 				var datatype = {"type": "STRING"};
@@ -1941,14 +1989,14 @@ function EXIEncoder(grammars) {
 				var n = this.getCodeLength(this.stringTable
 						.getNumberOfLocalStrings(namespaceID, localNameID));
 				this.bitStream.encodeNBitUnsignedInteger(
-						stEntry.localValueID, n);
+						stEntry.localValueID, n, this.byteAligned);
 			} else {
 				// global hit
 				this.bitStream.encodeUnsignedInteger(1);
 				var n = this.getCodeLength(this.stringTable
 						.getNumberOfGlobalStrings());
 				this.bitStream.encodeNBitUnsignedInteger(
-						stEntry.globalValueID, n);
+						stEntry.globalValueID, n, this.byteAligned);
 			}
 		}
 	}
@@ -1960,7 +2008,7 @@ function EXIEncoder(grammars) {
 	
 	EXIEncoder.prototype.encodeDatatypeValueInteger = function(value, namespaceID, localNameID) {
 		console.log("\t" + " INTEGER = " + value);
-		this.bitStream.encodeInteger(value);
+		this.bitStream.encodeInteger(value, this.byteAligned);
 	}
 	
 	EXIEncoder.prototype.encodeDatatypeValueFloat = function(value, namespaceID, localNameID) {
@@ -1971,8 +2019,8 @@ function EXIEncoder(grammars) {
 		// var fl = getNumberParts(f);
 		var fl = getEXIFloat(f);
 		// mantissa followed by exponent
-		this.bitStream.encodeInteger(fl.mantissa);
-		this.bitStream.encodeInteger(fl.exponent);
+		this.bitStream.encodeInteger(fl.mantissa, this.byteAligned);
+		this.bitStream.encodeInteger(fl.exponent, this.byteAligned);
 		console
 				.log("\t" + " floatB = " + fl.mantissa + " E "
 						+ fl.exponent);
@@ -1980,9 +2028,9 @@ function EXIEncoder(grammars) {
 	
 	EXIEncoder.prototype.encodeDatatypeValueBoolean = function(value, namespaceID, localNameID) {
 		if (value) { // == "true" || value == "1"
-			this.bitStream.encodeNBitUnsignedInteger(1, 1);
+			this.bitStream.encodeNBitUnsignedInteger(1, 1, this.byteAligned);
 		} else {
-			this.bitStream.encodeNBitUnsignedInteger(0, 1);
+			this.bitStream.encodeNBitUnsignedInteger(0, 1, this.byteAligned);
 		}
 	}
 	
@@ -2001,19 +2049,19 @@ function EXIEncoder(grammars) {
 			pos = checkCharacter(value, pos, '-', dateTimeValue); // hyphen
 			pos = parseMonthDay(value, pos, dateTimeValue);
 			// TODO timezone
-			this.bitStream.encodeInteger(dateTimeValue.year - 2000);
+			this.bitStream.encodeInteger(dateTimeValue.year - 2000, this.byteAligned);
 			this.bitStream.encodeNBitUnsignedInteger(
-					dateTimeValue.monthDay, 9);
+					dateTimeValue.monthDay, 9, this.byteAligned);
 		} else {
 			throw new Error("Unsupported datetime type: " + datetimeType);
 		}
 
 		var presenceTimezone = false; // TODO
 		if (presenceTimezone) {
-			this.bitStream.encodeNBitUnsignedInteger(1, 1);
+			this.bitStream.encodeNBitUnsignedInteger(1, 1, this.byteAligned);
 			throw new Error("Unsupported datetime timezone");
 		} else {
-			this.bitStream.encodeNBitUnsignedInteger(0, 1);
+			this.bitStream.encodeNBitUnsignedInteger(0, 1, this.byteAligned);
 		}
 		// console.log("\t" + " presenceTimezone = " + presenceTimezone);
 		console.log("\t" + " datetime = " + sDatetime);

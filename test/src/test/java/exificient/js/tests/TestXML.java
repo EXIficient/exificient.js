@@ -33,6 +33,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import org.xml.sax.helpers.XMLReaderFactory;
 
+import com.siemens.ct.exi.CodingMode;
 import com.siemens.ct.exi.EXIFactory;
 import com.siemens.ct.exi.FidelityOptions;
 import com.siemens.ct.exi.api.sax.EXIResult;
@@ -75,9 +76,9 @@ public class TestXML extends XMLTestCase {
 	}
 
 	@Test
-	public void testNotebook() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
-		String xmlPath = "./data/xml/notebook.xml";
-		String xsdPath = "../grammars/notebook.xsd"; 
+	public void testTest1() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/test1.xml";
+		String xsdPath = "./data/xml/test1.xsd"; 
 		
 		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
 		
@@ -85,9 +86,20 @@ public class TestXML extends XMLTestCase {
 	}
 	
 	@Test
-	public void testUnsignedInteger() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+	public void testUnsignedInteger1() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
 		String xmlPath = "./data/xml/unsignedInteger.xml";
 		String xsdPath = "./data/xml/unsignedInteger.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
+	
+	
+	@Test
+	public void testNotebook() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/notebook.xml";
+		String xsdPath = "../grammars/notebook.xsd"; 
 		
 		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
 		
@@ -118,11 +130,13 @@ public class TestXML extends XMLTestCase {
 
 	
 	protected void _testXMLCode(String xmlTest, String xsdPath) throws NoSuchMethodException, IOException, ScriptException, EXIException, TransformerException, SAXException {
-		_testXMLEncode(xmlTest, xsdPath);
-		_testXMLDecode(xmlTest, xsdPath);
+		_testXMLEncode(xmlTest, xsdPath, CodingMode.BYTE_PACKED);
+		_testXMLEncode(xmlTest, xsdPath, CodingMode.BIT_PACKED);
+		_testXMLDecode(xmlTest, xsdPath, CodingMode.BYTE_PACKED);
+		_testXMLDecode(xmlTest, xsdPath, CodingMode.BIT_PACKED);
 	}
 
-	protected void _testXMLEncode(String xmlTest, String xsdPath)
+	protected void _testXMLEncode(String xmlTest, String xsdPath, CodingMode codingMode)
 			throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
 		String grammars = parseGrammars(xsdPath);
 		
@@ -135,7 +149,11 @@ public class TestXML extends XMLTestCase {
 		engine.eval("var jsonTextGrammar = '" + grammars + "';");
 		engine.eval("var grammars = JSON.parse(jsonTextGrammar);");
 		
-		engine.eval("var exiEncoder = new EXIEncoder(grammars);");
+		engine.eval("var options = {};");
+		if(codingMode == CodingMode.BYTE_PACKED) {
+			engine.eval("options['byteAligned'] = true;");
+		}
+		engine.eval("var exiEncoder = new EXIEncoder(grammars, options);");
 		Object obj = engine.get("exiEncoder");
 		Invocable inv = (Invocable) engine;
 		inv.invokeMethod(obj, "encodeXmlText", xmlTest);
@@ -172,6 +190,7 @@ public class TestXML extends XMLTestCase {
 				
 				// decode
 				EXIFactory exiFactory = getEXIFactory(xsdPath);
+				exiFactory.setCodingMode(codingMode);
 				StringWriter sw = new StringWriter();
 				Result result = new StreamResult(sw);
 				InputSource is = new InputSource(new ByteArrayInputStream(foo));
@@ -197,10 +216,11 @@ public class TestXML extends XMLTestCase {
 	}
 	
 	
-	protected void _testXMLDecode(String xmlTest, String xsdPath)
+	protected void _testXMLDecode(String xmlTest, String xsdPath, CodingMode codingMode)
 			throws IOException, ScriptException, NoSuchMethodException, EXIException, SAXException {
 		
 		EXIFactory exiFactory = getEXIFactory(xsdPath);
+		exiFactory.setCodingMode(codingMode);
 		ByteArrayOutputStream osEXI = new ByteArrayOutputStream();
 		EXIResult exiResult = new EXIResult(exiFactory);
 		exiResult.setOutputStream(osEXI);
@@ -224,7 +244,11 @@ public class TestXML extends XMLTestCase {
 		engine.eval("var jsonTextGrammar = '" + grammars + "';");
 		engine.eval("var grammars = JSON.parse(jsonTextGrammar);");
 
-		engine.eval("var exiDecoder = new EXIDecoder(grammars);");
+		engine.eval("var options = {};");
+		if(codingMode == CodingMode.BYTE_PACKED) {
+			engine.eval("options['byteAligned'] = true;");
+		}
+		engine.eval("var exiDecoder = new EXIDecoder(grammars, options);");
 		engine.eval("var xmlHandler = new XMLEventHandler();");
 		engine.eval("exiDecoder.registerEventHandler(xmlHandler);");
 		
