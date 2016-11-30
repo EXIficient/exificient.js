@@ -281,11 +281,11 @@ function AbtractEXICoder(grammars, options) {
 			// 4 options
 			if(event === "endElement") {
 				return 0;
-			} else  if(event === "attribute") {
+			} else  if(event === "attributeGeneric") {
 				return 1;
-			} else if(event === "startElement") {
+			} else if(event === "startElementGeneric") {
 				return 2;
-			} else if(event === "characters") {
+			} else if(event === "charactersGeneric") {
 				return 3;
 			} else {
 				throw new Error("Unknown/unhandled 2nd level event: " + event);
@@ -296,13 +296,57 @@ function AbtractEXICoder(grammars, options) {
 			// 3 options
 			if(event === "endElement") {
 				return 0;
-			} else  if(event === "startElement") {
+			} else  if(event === "startElementGeneric") {
 				return 1;
-			} else if(event === "characters") {
+			} else if(event === "charactersGeneric") {
 				return 2;
 			} else {
 				throw new Error("Unknown/unhandled 2nd level event: " + event);
 				return -1;
+			}
+		} else {
+			// unknown/unhandled grammar type
+			throw new Error("Unknown/unhandled 2nd grammar type: " + grammar.type);
+			return -1;
+		}
+	}
+	
+	
+	AbtractEXICoder.prototype.get2ndEvent = function(grammar, ec2) {
+		if (grammar.type === "builtInStartTagContent") {
+			// --> second level EE, AT(*), NS?, SC?, SE(*), CH, ER?, [CM?, PI?]
+			// 4 options
+			switch(ec2) {
+			case 0:
+				return "endElement";
+				break;
+			case 1:
+				return "attributeGeneric";
+				break;
+			case 2:
+				return "startElementGeneric";
+				break;
+			case 3:
+				return "charactersGeneric";
+				break;
+			default:
+				throw new Error("Unsupported event-code=" + ec2 + "in " + grammar);
+			}
+		} else if (grammar.type === "builtInElementContent") {
+			// --> second level EE, SE(*), CH, ER?, [CM?, PI?]
+			// 3 options
+			switch(ec2) {
+			case 0:
+				return "endElement";
+				break;
+			case 1:
+				return "startElement";
+				break;
+			case 2:
+				return "characters";
+				break;
+			default:
+				throw new Error("Unsupported event-code="+ ec2 + "in " + grammar);
 			}
 		} else {
 			// unknown/unhandled grammar type
@@ -552,6 +596,16 @@ function BitInputStream(arrayBuffer) {
 		}
 
 		return s;
+	}
+	
+	/**
+	 * Decode a string as a length-prefixed sequence of UCS codepoints, each of
+	 * which is encoded as an integer. 
+	 * 
+	 *  @return The character sequence as a string.
+	 */
+	BitInputStream.prototype.decodeString = function() {
+		return this.decodeStringOnly(this.decodeUnsignedInteger());
 	}
 }
 
@@ -833,11 +887,29 @@ function EXIDecoder(grammars, options) {
 
 			var ec = this.bitStream.decodeNBitUnsignedInteger(codeLength, this.byteAligned); //
 			// console.log("\t" + "Event Code == " + ec );
-			var prod = grammar.production[ec];
-
+			
+			var event;
+			var prod;
+			if(ec >= grammar.production.length) {
+				// second level
+				var codeLength2 = this.get2ndCodeLengthForGrammar(grammar);
+				var ec2 = this.bitStream.decodeNBitUnsignedInteger(codeLength2, this.byteAligned); //
+				event = this.get2ndEvent(grammar, ec2);
+				// TODO prod
+				// throw new Error("TODO Second event-code level " + grammar.type + ", ec2="+ec2 + " --> " + event);
+			} else {
+				prod = grammar.production[ec];
+				event = prod.event;
+			}
+			
+			
+			var nextGrammar;
+			if(prod !== undefined) {
+				nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
+			}
 			// console.log("\t" + "Event Production " + prod.event);
 
-			switch (prod.event) {
+			switch (event) {
 			case "startDocument":
 				console.log("> SD");
 				var i;
@@ -857,6 +929,7 @@ function EXIDecoder(grammars, options) {
 				break;
 			case "startElement":
 			case "startElementNS":
+			case "startElementGeneric":
 				// console.log("\t" + "StartElement qnameID " +
 				// prod.startElementQNameID );
 				// console.log("\t" + "StartElement name " +
@@ -864,28 +937,40 @@ function EXIDecoder(grammars, options) {
 
 				var seGrammar;
 				var qnameContext;
-				var namespaceContext = this.grammars.qnames.namespaceContext[prod.startElementNamespaceID];
+				var namespaceContext;
+				if(prod !== undefined) {
+					// SE and SE_NS
+					namespaceContext = this.grammars.qnames.namespaceContext[prod.startElementNamespaceID];
+				}
 				
-				if(prod.event == "startElement") {
+				if(event == "startElement") {
 					seGrammar = grammars.grs.grammar[prod.startElementGrammarID];
 					qnameContext = namespaceContext.qnameContext[prod.startElementLocalNameID];
 					console.log(">> SE (" + qnameContext.localName + ")");
-				} else {
+				} else if (event == "startElementNS") {
 					// SE_NS
 					// decode local-name
 					qnameContext = this.decodeLocalName(namespaceContext);
 					console.log(">> SE_NS (" + namespaceContext.uri + ", " + qnameContext.localName + ")");
 					seGrammar = this.getGlobalStartElement(qnameContext);
+				} else {
+					// SE(*)
+					qnameContext = this.decodeQName();
+					seGrammar = this.getGlobalStartElement(qnameContext);
+					nextGrammar = grammar.elementContent; // TODO check which grammar it is (BuiltIn?)
+					// throw new Error("TODO SE(*) handling");
 				}
 
 				var i;
 				for (i = 0; i < this.eventHandler.length; i++) {
 					var eh = this.eventHandler[i];
-					eh.startElement(namespaceContext.uri, qnameContext.localName);
+					var uri = this.grammars.qnames.namespaceContext[qnameContext.uriID].uri;
+					// console.log("inform handler (" + uri + ", " + qnameContext.localName + ")");
+					eh.startElement(uri, qnameContext.localName);
 				}
 
-				console.log("seGrammar=" + seGrammar+ ", startElementNamespaceID=" + prod.startElementNamespaceID + ", startElementLocalNameID=" + qnameContext.localNameID);
-				this.decodeElementContext(seGrammar, prod.startElementNamespaceID, qnameContext.localNameID); // prod.startElementLocalNameID
+				console.log("seGrammar=" + seGrammar+ ", startElementNamespaceID=" + qnameContext.uriID + ", startElementLocalNameID=" + qnameContext.localNameID);
+				this.decodeElementContext(seGrammar, qnameContext.uriID, qnameContext.localNameID); // prod.startElementNamespaceID, prod.startElementLocalNameID
 				break;
 			case "endElement":
 				var namespaceContextEE = this.grammars.qnames.namespaceContext[elementNamespaceID];
@@ -924,18 +1009,49 @@ function EXIDecoder(grammars, options) {
 				this.decodeDatatypeValue(datatype, elementNamespaceID, elementLocalNameID, true);
 				break;
 			default:
-				console.log("\t" + "Unknown event " + prod.event);
-				throw new Error("Unknown event " + prod.event);
+				console.log("\t" + "Unknown event " + event);
+				throw new Error("Unknown event " + event);
 				// TODO error!
 				popStack = true;
 			}
 
 			// console.log("\t" + "Event NextGrammarId " + prod.nextGrammarID);
-			grammar = grammars.grs.grammar[prod.nextGrammarID];
+			grammar = nextGrammar; // grammars.grs.grammar[prod.nextGrammarID];
 
 		}
 	}
 	
+	
+	EXIDecoder.prototype.decodeQName = function() {
+		// decode uri & local-name
+		return this.decodeLocalName(this.decodeUri());
+	}
+	
+	EXIDecoder.prototype.decodeUri = function() {
+		var n = this.getCodeLength(this.grammars.qnames.namespaceContext.length + 1); // numberEntries+1
+		var uriID = this.bitStream.decodeNBitUnsignedInteger(n, this.byteAligned);
+		console.log("n = " + n + ", uriID = " + uriID );
+
+		var namespaceContext;
+
+		if (uriID == 0) {
+			// string value was not found
+			// ==> zero (0) as an n-nit unsigned integer
+			// followed by uri encoded as string
+			var uri = this.bitStream.decodeString();
+			console.log("decoded uri string = '" + uri + "'");
+			// after encoding string value is added to table
+			namespaceContext = {"uriID": this.grammars.qnames.namespaceContext.length, "uri": uri};
+			this.grammars.qnames.namespaceContext.push(namespaceContext);
+		} else {
+			// string value found
+			// ==> value(i+1) is encoded as n-bit unsigned integer
+			namespaceContext = this.grammars.qnames.namespaceContext[uriID-1];
+			console.log("found existing uri = '" + namespaceContext.uri + "'");
+		}
+
+		return namespaceContext;
+	}
 	
 	EXIDecoder.prototype.decodeLocalName = function(namespaceContext) {
 		var length = this.bitStream.decodeUnsignedInteger();
@@ -960,6 +1076,7 @@ function EXIDecoder(grammars, options) {
 			// n-bit unsigned integer
 			// n is log2 m and m is the number of entries in the string table
 			// partition
+			console.log("namespaceContext.qnameContext = '" + namespaceContext.qnameContext + "'");
 			var n = this.getCodeLength(namespaceContext.qnameContext.length);
 			var localNameID = this.bitStream.decodeNBitUnsignedInteger(n, this.byteAligned);
 			console.log("decoded localName id = " + localNameID + " of existing localName " + namespaceContext.qnameContext[localNameID].localName);
@@ -1012,13 +1129,36 @@ function XMLEventHandler() {
 
 	this.xml;
 	this.seOpen = false;
+	this.xmlDecls;
 
 	XMLEventHandler.prototype.getXML = function() {
 		return this.xml;
 	}
+	XMLEventHandler.prototype.getPrefix = function(namespace) {
+		// TODO more accurate namespace/prefix handling
+		var pfx = "";
+		if(namespace === undefined || namespace.length === 0) {
+			// do nothing
+		} else {
+			// check if declared already
+			if(namespace in this.xmlDecls.decls) {
+				// get existing prefix
+				// TODO assumption declared already (Note: not always the case for nested elements!!!)
+				pfx = this.xmlDecls.decls[namespace];
+			} else {
+				// create new prefix
+				pfx = "ns" + this.xmlDecls.cnt;
+				this.xmlDecls.decls[namespace]  = pfx;
+				this.xmlDecls.cnt++;
+			}
+		}
+		
+		return pfx;
+	}
 
 	XMLEventHandler.prototype.startDocument = function() {
 		this.xml = "";
+		this.xmlDecls = {"cnt": 0, "decls": {}};
 	}
 	XMLEventHandler.prototype.endDocument = function() {
 	}
@@ -1026,15 +1166,34 @@ function XMLEventHandler() {
 		if (this.seOpen) {
 			this.xml += ">";
 		}
-		this.xml += "<" + localName;
+
+		var pfx = this.getPrefix(namespace);
+		if(pfx.length > 0) {
+			this.xml += "<" + pfx + ":" + localName;
+		} else {
+			this.xml += "<" + localName;
+		}
 		this.seOpen = true;
+		
+		if(pfx.length > 0) {
+			this.xml += " xmlns:" + pfx + "='"  + namespace + "'";
+		}
+
 	}
 	XMLEventHandler.prototype.endElement = function(namespace, localName) {
 		if (this.seOpen) {
 			this.xml += ">";
 			this.seOpen = false;
 		}
-		this.xml += "</" + localName + ">";
+		
+		var pfx = this.getPrefix(namespace);
+		if(pfx.length > 0) {
+			this.xml += "</" + pfx + ":" + localName + ">";
+		} else {
+			this.xml += "</" + localName + ">";
+		}
+		
+		
 	}
 	XMLEventHandler.prototype.characters = function(chars) {
 		if (this.seOpen) {
@@ -1609,7 +1768,7 @@ function EXIEncoder(grammars, options) {
 				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.byteAligned);
 				// 2nd level
 				var codeLength = this.get2ndCodeLengthForGrammar(grammar);
-				var ec2 = this.get2ndEventCode(grammar, "startElement");
+				var ec2 = this.get2ndEventCode(grammar, "startElementGeneric");
 				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength, this.byteAligned); //2 in 2 bits
 				
 				// encode qname
@@ -1653,7 +1812,7 @@ function EXIEncoder(grammars, options) {
 			this.bitStream.encodeString(namespace);
 			// after encoding string value is added to table
 			namespaceContext = {"uriID": this.grammars.qnames.namespaceContext.length, "uri": namespace};
-			ruc = this.grammars.qnames.namespaceContext.push(namespaceContext);
+			this.grammars.qnames.namespaceContext.push(namespaceContext);
 		} else {
 			// string value found
 			// ==> value(i+1) is encoded as n-bit unsigned integer
@@ -1795,7 +1954,7 @@ function EXIEncoder(grammars, options) {
 				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.byteAligned);
 				// 2nd level
 				var codeLength = this.get2ndCodeLengthForGrammar(grammar);
-				var ec2 = this.get2ndEventCode(grammar, "characters");
+				var ec2 = this.get2ndEventCode(grammar, "charactersGeneric");
 				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength, this.byteAligned);
 				
 				// write value

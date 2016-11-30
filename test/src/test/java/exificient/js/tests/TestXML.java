@@ -139,8 +139,38 @@ public class TestXML extends XMLTestCase {
 	}
 	
 	@Test
+	public void testJson0() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/json0.xml";
+		String xsdPath = "../grammars/exi4json.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
+	
+	@Test
 	public void testJson1() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
 		String xmlPath = "./data/xml/json1.xml";
+		String xsdPath = "../grammars/exi4json.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
+	
+	@Test
+	public void testJson2() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/json2.xml";
+		String xsdPath = "../grammars/exi4json.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
+	
+	@Test
+	public void testJson3() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/json3.xml";
 		String xsdPath = "../grammars/exi4json.xsd"; 
 		
 		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));

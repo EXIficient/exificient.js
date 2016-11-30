@@ -6,10 +6,4 @@
     <ns4:keyNumber>
         <ns4:number>123E0</ns4:number>
     </ns4:keyNumber>
-    <ns4:keyArrayStrings>
-        <ns4:array>
-            <ns4:string>s1</ns4:string>
-            <ns4:string>s2</ns4:string>
-        </ns4:array>
-    </ns4:keyArrayStrings>
 </ns4:map>

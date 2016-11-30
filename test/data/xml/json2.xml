@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns4:map xmlns:ns4="http://www.w3.org/2015/EXI/json">
+    <ns4:glossary>
+        <ns4:map>
+            <ns4:title>
+                <ns4:string>example glossary</ns4:string>
+            </ns4:title>
+            <ns4:GlossDiv>
+                <ns4:map>
+                    <ns4:title>
+                        <ns4:string>S</ns4:string>
+                    </ns4:title>
+                    <ns4:GlossList>
+                        <ns4:map>
+                            <ns4:GlossEntry>
+                                <ns4:map>
+                                    <ns4:ID>
+                                        <ns4:string>SGML</ns4:string>
+                                    </ns4:ID>
+                                    <ns4:SortAs>
+                                        <ns4:string>SGML</ns4:string>
+                                    </ns4:SortAs>
+                                    <ns4:GlossTerm>
+                                        <ns4:string>Standard Generalized Markup Language</ns4:string>
+                                    </ns4:GlossTerm>
+                                    <ns4:Acronym>
+                                        <ns4:string>SGML</ns4:string>
+                                    </ns4:Acronym>
+                                    <ns4:Abbrev>
+                                        <ns4:string>ISO 8879:1986</ns4:string>
+                                    </ns4:Abbrev>
+                                    <ns4:GlossDef>
+                                        <ns4:map>
+                                            <ns4:para>
+                                                <ns4:string>A meta-markup language, used to create
+                                                    markup languages such as DocBook.</ns4:string>
+                                            </ns4:para>
+                                            <ns4:GlossSeeAlso>
+                                                <ns4:array>
+                                                    <ns4:string>GML</ns4:string>
+                                                    <ns4:string>XML</ns4:string>
+                                                </ns4:array>
+                                            </ns4:GlossSeeAlso>
+                                        </ns4:map>
+                                    </ns4:GlossDef>
+                                    <ns4:GlossSee>
+                                        <ns4:string>markup</ns4:string>
+                                    </ns4:GlossSee>
+                                </ns4:map>
+                            </ns4:GlossEntry>
+                        </ns4:map>
+                    </ns4:GlossList>
+                </ns4:map>
+            </ns4:GlossDiv>
+        </ns4:map>
+    </ns4:glossary>
+</ns4:map>
