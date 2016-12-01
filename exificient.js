@@ -105,6 +105,7 @@ function AbtractEXICoder(grammars, options) {
 	
 	// this.runtimeQNameContexts = [];
 	this.runtimeGlobalElements = {}; // Map
+	this.runtimeGrammars = [];
 
 	// WARNING: not specified in EXI 1.0 core (is extension)
 	AbtractEXICoder.prototype.setSharedStrings = function(sharedStrings) {
@@ -135,6 +136,7 @@ function AbtractEXICoder(grammars, options) {
 		// TODO init grammars that have been extended before by learning
 		// this.runtimeQNameContexts = [];
 		this.runtimeGlobalElements = {};
+		this.runtimeGrammars = [];
 	}
 	
 	AbtractEXICoder.prototype.getUri = function(namespace) {
@@ -389,13 +391,17 @@ function AbtractEXICoder(grammars, options) {
 			
 //			if(seGrammar === undefined) {
 				// create Built-in Element Grammar (ids smaller than zero)
-				var id = ((this.runtimeGlobalElements*2)+1) * (-1);
+				// var id = ((this.runtimeGrammars.length*2)+1) * (-1);
+				var id = (this.runtimeGrammars.length+1) * (-1);
 				seGrammar = {"grammarID": id, "type": "builtInStartTagContent", "production" : [ ] };
 				var elementContent = {"grammarID": id-1, "type": "builtInElementContent", "production" : [ {"event" : "endElement", "nextGrammarID" : -1} ] };
 				elementContent["elementContent"] = elementContent;
 				seGrammar["elementContent"] = elementContent;
 				
 				this.runtimeGlobalElements[key] = seGrammar;
+				
+				this.runtimeGrammars.push(seGrammar); // e.g., -1
+				this.runtimeGrammars.push(elementContent);  // e.g., -2
 				
 				return seGrammar;
 //			}
@@ -905,7 +911,16 @@ function EXIDecoder(grammars, options) {
 			
 			var nextGrammar;
 			if(prod !== undefined) {
-				nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
+				if(prod.nextGrammarID >= 0) {
+					// static grammars
+					nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
+				} else {
+					// runtime grammars
+					var rid = (prod.nextGrammarID+1) *(-1);
+					nextGrammar = this.runtimeGrammars[rid];
+				}
+				
+				// nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
 			}
 			// console.log("\t" + "Event Production " + prod.event);
 
@@ -956,9 +971,20 @@ function EXIDecoder(grammars, options) {
 				} else {
 					// SE(*)
 					qnameContext = this.decodeQName();
-					seGrammar = this.getGlobalStartElement(qnameContext);
-					nextGrammar = grammar.elementContent; // TODO check which grammar it is (BuiltIn?)
-					// throw new Error("TODO SE(*) handling");
+//					seGrammar = this.getGlobalStartElement(qnameContext);
+//					nextGrammar = grammar.elementContent; // TODO check which grammar it is (BuiltIn?)
+
+					if(grammar.type === "builtInStartTagContent" || grammar.type === "builtInElementContent") {
+						seGrammar = this.getGlobalStartElement(qnameContext);
+						nextGrammar = grammar.elementContent; // TODO check which grammar it is (BuiltIn?)
+						console.log("NextGrammar after SE(*) is " + nextGrammar);
+						
+						// learn SE
+						var ng = {"event": "startElement", "startElementGrammarID" : seGrammar.grammarID, "startElementNamespaceID" : qnameContext.uriID, "startElementLocalNameID" : qnameContext.localNameID, "nextGrammarID" : grammar.elementContent.grammarID};
+						grammar.production.push(ng);
+					} else {
+						throw new Error("Unsupported grammar-type = " + grammar.type + " for SE " +  qnameContext.localName);
+					}
 				}
 
 				var i;
@@ -1742,8 +1768,19 @@ function EXIEncoder(grammars, options) {
 			}
 			
 			// update current element context
-			var nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
+			var nextGrammar;
+			if(prod.nextGrammarID >= 0) {
+				// static grammars
+				nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
+			} else {
+				// runtime grammars
+				var rid = (prod.nextGrammarID+1) *(-1);
+				nextGrammar = this.runtimeGrammars[rid];
+			}
+			
 			this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
+			
+			console.log("NextGrammar after SE/SE_NS " + localName + " is " + nextGrammar);
 			
 			// push new element context
 			if (isSE) {
@@ -1781,6 +1818,7 @@ function EXIEncoder(grammars, options) {
 				
 				// update current element context
 				this.elementContext[this.elementContext.length - 1].grammar = grammar.elementContent;
+				console.log("NextGrammar after SE_Generic_Undefined " + localName + " is " + this.elementContext[this.elementContext.length - 1].grammar);
 				
 				this.elementContext.push(new ElementContextEntry(
 						qnameContext.uriID, qnameContext.localNameID, startElementGrammar));
@@ -1948,37 +1986,37 @@ function EXIEncoder(grammars, options) {
 			var nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
 			this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
 		} else {
-			if(grammar.type === "builtInStartTagContent" || grammar.type === "builtInElementContent" ) {
-				// 1st level
-				var codeLength = this.getCodeLengthForGrammar(grammar);
-				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.byteAligned);
-				// 2nd level
-				var codeLength = this.get2ndCodeLengthForGrammar(grammar);
-				var ec2 = this.get2ndEventCode(grammar, "charactersGeneric");
-				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength, this.byteAligned);
-				
-				// write value
-				var datatype = {"type": "STRING"};
-				var elementContext = this.elementContext[this.elementContext.length - 1];
-				this
-						.encodeDatatypeValue(
-								chars,
-								datatype,
-								elementContext.namespaceID, elementContext.localNameID);
-				
-				// learn CH
-				// TODO check charactersDatatypeID is STRING
-				if(this.grammars.simpleTypes[0].type !== "STRING") {
-					throw new Error("TODO simpleType ID 0 is not STRING");
-				}
-				var ng = {"event": "characters",  "charactersDatatypeID" : 0, "nextGrammarID" : grammar.elementContent.grammarID};
-				grammar.production.push(ng);
-				
-				// update current element context
-				this.elementContext[this.elementContext.length - 1].grammar = grammar.elementContent;
-			} else {
+//			if(grammar.type === "builtInStartTagContent" || grammar.type === "builtInElementContent" ) {
+//				// 1st level
+//				var codeLength = this.getCodeLengthForGrammar(grammar);
+//				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.byteAligned);
+//				// 2nd level
+//				var codeLength = this.get2ndCodeLengthForGrammar(grammar);
+//				var ec2 = this.get2ndEventCode(grammar, "charactersGeneric");
+//				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength, this.byteAligned);
+//				
+//				// write value
+//				var datatype = {"type": "STRING"};
+//				var elementContext = this.elementContext[this.elementContext.length - 1];
+//				this
+//						.encodeDatatypeValue(
+//								chars,
+//								datatype,
+//								elementContext.namespaceID, elementContext.localNameID);
+//				
+//				// learn CH
+//				// TODO check charactersDatatypeID is STRING
+//				if(this.grammars.simpleTypes[0].type !== "STRING") {
+//					throw new Error("TODO simpleType ID 0 is not STRING");
+//				}
+//				var ng = {"event": "characters",  "charactersDatatypeID" : 0, "nextGrammarID" : grammar.elementContent.grammarID};
+//				grammar.production.push(ng);
+//				
+//				// update current element context
+//				this.elementContext[this.elementContext.length - 1].grammar = grammar.elementContent;
+//			} else {
 				throw new Error("No characters event found for '" + chars + "'");
-			}
+//			}
 		}
 	}
 	
