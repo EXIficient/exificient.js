@@ -153,6 +153,7 @@ function JSONEventHandler() {
 	this.json;
 	this.jsonStack;
 	// this.lastElement;
+	this.chars;
 	
 	JSONEventHandler.prototype.getJSON = function(){
 		return this.json;
@@ -168,34 +169,34 @@ function JSONEventHandler() {
 	JSONEventHandler.prototype.endDocument = function(){
 	}
 		
-	JSONEventHandler.prototype.checkOpenElement = function(){
-		if(this.openTag != null) {
-			var top = this.jsonStack[this.jsonStack.length-1];
-			
-			var el = null;
-			if(this.openTag === "map") {
-				el = new Object();
-				this.jsonStack.push(el);
-			} else if(this.openTag === "array") {
-				el = new Array();
-				this.jsonStack.push(el);
-			}
-			
-			if(el != null) {
-				if(this.openTagKey === null) {
-					// outer array
-					top.push(el);
-				} else {
-					// outer object
-					top[this.openTagKey] = el;
-				}
-				
-				
-				this.openTag = null;
-				this.openTagKey = null;
-			}
-		}
-	}
+//	JSONEventHandler.prototype.checkOpenElement = function(){
+//		if(this.openTag != null) {
+//			var top = this.jsonStack[this.jsonStack.length-1];
+//			
+//			var el = null;
+//			if(this.openTag === "map") {
+//				el = new Object();
+//				this.jsonStack.push(el);
+//			} else if(this.openTag === "array") {
+//				el = new Array();
+//				this.jsonStack.push(el);
+//			}
+//			
+//			if(el != null) {
+//				if(this.openTagKey === null) {
+//					// outer array
+//					top.push(el);
+//				} else {
+//					// outer object
+//					top[this.openTagKey] = el;
+//				}
+//				
+//				
+//				this.openTag = null;
+//				this.openTagKey = null;
+//			}
+//		}
+//	}
 	
 	JSONEventHandler.prototype.startElement = function(namespace, localName){
 		if(this.json === null) {
@@ -206,70 +207,152 @@ function JSONEventHandler() {
 			} else if(localName === "array") {
 				this.json = new Array();
 				this.jsonStack.push(this.json);
+			} else {
+				throw new Error("Unexpected root element = " + localName);
 			}
 		} else {
-			this.checkOpenElement();
-			this.openTag = localName;
-			this.openTagKey = null;
+			if(localName === "map" || localName === "array") {
+				var value;
+				
+				if(localName === "map") {
+					value = new Object();
+				} else {
+					value = new Array();
+				}
+				
+				
+				// var o = new Object();
+				this.jsonStack.push(value);
+				
+				var top2 = this.jsonStack[this.jsonStack.length-2];
+				var top3 = this.jsonStack[this.jsonStack.length-3];
+				if(top3 instanceof Array) {
+					top3.push(value);
+				} else if(top3 instanceof Object) {
+					top3[top2] = value;
+				} else if(top2 instanceof Array) {
+					top2.push(value);
+				} else {
+					throw new Error("Unexpected SE top3  instance = " + top3);
+				}
+				
+				
+//			} else if(localName === "array") {
+//				var a = new Array();
+//				this.jsonStack.push(a);
+			} else {
+				this.jsonStack.push(localName);
+			}
+			
+			
+			
+			
+//			this.checkOpenElement();
+//			this.openTag = localName;
+//			// this.openTagKey = null;
+//			
+//			if(this.openTagKey === null && !( localName === "map" ||  localName === "array" ||  localName === "string" || localName === "number" ||  localName === "boolean" ||  localName === "null" ||  localName === "other")) {
+//				this.openTagKey = localName;
+//			}
+			
 		}
 	}
 	JSONEventHandler.prototype.endElement = function(namespace, localName) {
-		if(this.openTag === "null") {
-			var top = this.jsonStack[this.jsonStack.length-1];
-			
-			if(top instanceof Array) {
-				top.push(null);
-			} else if(top instanceof Object) {
-				top[this.openTagKey] = null;
+		
+		var top = this.jsonStack[this.jsonStack.length-1];
+		
+		
+		var value;
+		
+		if(top === "number") {
+			value = new Number(this.chars);
+		} else if (top === "string") {
+			value = new String(this.chars);
+		} else if (top === "boolean") {
+			value = new Boolean(this.chars);
+		} else if (top === "null") {
+			value = null;
+		}
+		
+		if(value !== undefined) {
+			var top2 = this.jsonStack[this.jsonStack.length-2];
+			var top3 = this.jsonStack[this.jsonStack.length-3];
+			if(top3 instanceof Array) {
+				top3.push(value);
+			} else if(top3 instanceof Object) {
+				top3[top2] = value;
+			} else if(top2 instanceof Array) {
+				top2.push(value);
+			} else {
+				throw new Error("Unexpected EE top3  instance = " + top3);
 			}
+			
+			this.chars = null;
 		}
 		
-		this.checkOpenElement();
 		
-		if(localName === "map") {
-			this.jsonStack.pop();
-		} else if(localName === "array") {
-			this.jsonStack.pop();
-		}
+		this.jsonStack.pop();
+		
+//		if(this.openTag === "null") {
+//			var top = this.jsonStack[this.jsonStack.length-1];
+//			
+//			if(top instanceof Array) {
+//				top.push(null);
+//			} else if(top instanceof Object) {
+//				top[this.openTagKey] = null;
+//			}
+//		}
+//		
+//		this.checkOpenElement();
+//		
+//		if(localName === "map") {
+//			this.jsonStack.pop();
+//		} else if(localName === "array") {
+//			this.jsonStack.pop();
+//		}
 	}
 
 		
 	JSONEventHandler.prototype.attribute = function(namespace, localName, value){
-		if(localName === "key") {
-			this.openTagKey = value;
-		}
+//		if(localName === "key") {
+//			this.openTagKey = value;
+//		}
 	}
+	
+	
 	
 	JSONEventHandler.prototype.characters = function(chars){
 		// this.checkOpenElement();
 		
 		console.log("chars: " + chars);
-		var top = this.jsonStack[this.jsonStack.length-1];
+		this.chars = chars;
 		
-		if(this.openTag === "number") {
-			var n = new Number(chars);
-			if(top instanceof Array) {
-				top.push(n);
-			} else if(top instanceof Object) {
-				top[this.openTagKey] = n;
-			}
-		} else if(this.openTag === "string") {
-			var s = new String(chars);
-			if(top instanceof Array) {
-				top.push(s);
-			} else if(top instanceof Object) {
-				top[this.openTagKey] = s;
-			}
-		} else if(this.openTag === "boolean") {
-			var b = new Boolean(chars);
-			if(top instanceof Array) {
-				top.push(b);
-			} else if(top instanceof Object) {
-				top[this.openTagKey] = b;
-			}
-		} else {
-			throw new Error("Unsupported characters type: " + this.openTag);
-		}
+//		var top = this.jsonStack[this.jsonStack.length-1];
+		
+//		if(this.openTag === "number") {
+//			var n = new Number(chars);
+//			if(top instanceof Array) {
+//				top.push(n);
+//			} else if(top instanceof Object) {
+//				top[this.openTagKey] = n;
+//			}
+//		} else if(this.openTag === "string") {
+//			var s = new String(chars);
+//			if(top instanceof Array) {
+//				top.push(s);
+//			} else if(top instanceof Object) {
+//				top[this.openTagKey] = s;
+//			}
+//		} else if(this.openTag === "boolean") {
+//			var b = new Boolean(chars);
+//			if(top instanceof Array) {
+//				top.push(b);
+//			} else if(top instanceof Object) {
+//				top[this.openTagKey] = b;
+//			}
+//		} else {
+//			throw new Error("Unsupported characters type: " + this.openTag);
+//		}
 	}
 
 	
