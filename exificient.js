@@ -91,7 +91,10 @@ function AbtractEXICoder(grammars, options) {
 	this.grammars = grammars;
 	// copy to allow extending grammars and do re-set them
 	// TODO use a more elegant method
-	this.grammarsCopy = JSON.parse(JSON.stringify(grammars));
+	if(grammars !== undefined) { // for test.js
+		this.grammarsCopy = JSON.parse(JSON.stringify(grammars));
+	}
+	
 	this.isStrict = true; // TODO
 	this.byteAligned = 0; // default is false
 	if(options !== undefined) {

@@ -357,7 +357,8 @@ function EXI4JSONEncoder() {
 	}
 
 	EXI4JSONEncoder.prototype._charInRange = function(c, start, end) {
-		return c >= start && c <= end;
+		var ccode = c.charCodeAt(0);
+		return ccode >= start && ccode <= end;
 		
 		// charCodeAt
 	}
@@ -492,7 +493,7 @@ function JSONEventHandler() {
 						if(sb.length == 0)  {
 							sb += key.substring(0, i);
 						}
-						sb += "" + cp;
+						sb += String.fromCharCode(cp);
 						i += (endIndex-i);
 					}
 				} else {

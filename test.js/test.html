@@ -261,6 +261,45 @@ function testEXI4JSON(textJSON) {
 	
 	document.write("</tr>");
 }
+
+
+function testEXI4JSONEscape(key, expected) {
+	document.write("<tr>");
+	document.write("<td>" + key + "</td>");
+	var ok = false;
+	try {	
+		// encode
+		var encoder = new EXI4JSONEncoder();
+		var ekey = encoder.escapeKey(key);
+		
+		document.write("<td>" + expected + "</td>");
+		if(ekey != expected) {
+			throw new Error("Expected '" + expected +"' and got '" + ekey + "''");
+		}
+		
+		// decode
+		var decoder = new JSONEventHandler();
+		var key2 = decoder.unescapeKey(ekey);
+		
+		document.write("<td>" + key2 + "</td>");
+		
+		// TODO compare json 
+		// ok = jsonObjOut != null;
+		
+		ok = key == key2;
+	} catch(err) {
+		console.log("Error while testing testEXI4JSONEscape. " + key + ": " + err);
+		document.write("<td> Err=" + err+ "</td>");
+	}
+	if(ok) {
+		document.write("<td  style='background-color: green'>OK</td>");
+	} else {
+		document.write("<td style='background-color: red'>NOK</td>");
+	}
+	
+	document.write("</tr>");
+}
+
 </script> 
 
 
@@ -353,6 +392,27 @@ document.write(new Date());
 
 
 
+<h2>EXI4JSON.unescape() and EXI4JSON.escape()</h2>
+<table>
+<thead>
+  <tr>
+    <th>Input Value</th>
+    <th>Expected</th>
+    <th>Decoded to</th>
+    <th>OK / Not OK</th>
+  </tr>
+</thead>
+<tbody>
+  <script>
+  testEXI4JSONEscape("n", "n");
+  testEXI4JSONEscape("map", "_.map");
+  testEXI4JSONEscape("a number", "a_32.number");
+  testEXI4JSONEscape("_foo", "_95.foo");
+  </script> 
+</tbody>
+</table> 
+
+
 <h2>EXI4JSON.exify() and EXI4JSON.parse()</h2>
 <table>
 <thead>
@@ -369,8 +429,6 @@ document.write(new Date());
   </script> 
 </tbody>
 </table> 
-
-
 
 
  
