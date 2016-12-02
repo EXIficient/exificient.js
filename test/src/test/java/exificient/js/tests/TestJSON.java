@@ -300,6 +300,8 @@ public class TestJSON extends TestCase {
 
 		// compare both JSON documents
 		JsonAssert.setTolerance(NUMBER_TOLERANCE);
+		System.out.println("Original: " + jsonTest);
+		System.out.println("Decoded: " + jtext.toString());
 		JsonAssert.assertJsonEquals(jsonTest, jtext.toString());
 		// JSONAssert.assertEquals(jsonTest, jtext.toString(), true);
 
