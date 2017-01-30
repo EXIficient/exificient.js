@@ -3,11 +3,30 @@ JavaScript Implementation of [EXI](https://www.w3.org/TR/exi/) and [EXI for JSON
 
 [![Build Status](https://travis-ci.org/EXIficient/exificient.js.svg?branch=master)](https://travis-ci.org/EXIficient/exificient.js)
 
+## How to get
+
+### NPM
+
+https://www.npmjs.com/package/exificient.js
+
+```
+npm install exificient.js
+```
+
+### unpkg, CDN (content delivery network)
+
+```
+https://unpkg.com/exificient.js@0.0.2/exificient.js
+https://unpkg.com/exificient.js@0.0.2/exificient-for-json.js
+```
+
 ## Demo
 
 An online demonstration can be found here: <http://exificient.github.io/javascript/demo/>.
 
-## HowTo for EXIforJSON
+## How to use
+
+### HowTo for EXIforJSON
 
 ```javascript
 // encode JSON object
@@ -18,7 +37,7 @@ var jsonObjOut = EXI4JSON.parse(uint8Array);
 ```
 
 
-## HowTo for EXI
+### HowTo for EXI
 
 ```javascript
 // Note: the necessary grammars can be generated from XML schema using
