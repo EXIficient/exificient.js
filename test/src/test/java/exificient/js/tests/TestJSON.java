@@ -283,15 +283,16 @@ public class TestJSON extends TestCase {
 				// case
 				String jsonTestResult = new String(bytes);
 
-				System.out.println(jsonTestResult);
+				// System.out.println(jsonTestResult);
 
 				// compare both JSON documents
-				// JSONAssert.assertEquals(jsonTest, jsonTestResult, true);
-
-				JsonAssert.setTolerance(NUMBER_TOLERANCE);
-				JsonAssert.assertJsonEquals(jsonTest, jsonTestResult);
-				// JsonAssert.assertJsonEquals("1", "\n1.009\n"); // ,
-				// withTolerance(0.01));
+				compare(jsonTest, jsonTestResult);
+				
+//				// JSONAssert.assertEquals(jsonTest, jsonTestResult, true);
+//				JsonAssert.setTolerance(NUMBER_TOLERANCE);
+//				JsonAssert.assertJsonEquals(jsonTest, jsonTestResult);
+//				// JsonAssert.assertJsonEquals("1", "\n1.009\n"); // ,
+//				// withTolerance(0.01));
 
 				return ni;
 			} else {
@@ -380,11 +381,13 @@ public class TestJSON extends TestCase {
 		Object jtext = engine.eval("JSON.stringify(jsonHandler.getJSON(), null);");
 
 		// compare both JSON documents
-		JsonAssert.setTolerance(NUMBER_TOLERANCE);
-		System.out.println("Original: " + jsonTest);
-		System.out.println("Decoded: " + jtext.toString());
-		JsonAssert.assertJsonEquals(jsonTest, jtext.toString());
-		// JSONAssert.assertEquals(jsonTest, jtext.toString(), true);
+		compare(jsonTest, jtext.toString());
+		
+//		JsonAssert.setTolerance(NUMBER_TOLERANCE);
+//		System.out.println("Original: " + jsonTest);
+//		System.out.println("Decoded: " + jtext.toString());
+//		JsonAssert.assertJsonEquals(jsonTest, jtext.toString());
+//		// JSONAssert.assertEquals(jsonTest, jtext.toString(), true);
 
 		// /////////////////////////////////////////////////
 		// // TODO how to call function properly!?
@@ -402,6 +405,13 @@ public class TestJSON extends TestCase {
 		//// inv.invokeMethod(obj, "decode", ilist);
 		// // System.out.println(obj2);
 
+	}
+	
+	void compare(String jsonOriginal, String jsonEXI4JSON) {
+		JsonAssert.setTolerance(NUMBER_TOLERANCE);
+		System.out.println("Original: " + jsonOriginal);
+		System.out.println("Processed: " + jsonEXI4JSON);
+		JsonAssert.assertJsonEquals(jsonOriginal, jsonEXI4JSON);
 	}
 
 	public static void main(String[] args) throws EXIException, IOException, NoSuchMethodException, ScriptException {
