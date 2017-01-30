@@ -24,6 +24,7 @@ import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import javax.script.SimpleBindings;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.siemens.ct.exi.EXIFactory;
@@ -76,6 +77,85 @@ public class TestJSON extends TestCase {
 		String jsonTest = "{\"menu\": {\r\n    \"header\": \"SVG Viewer\",\r\n    \"items\": [\r\n        {\"id\": \"Open\"},\r\n        {\"id\": \"OpenNew\", \"label\": \"Open New\"},\r\n        null,\r\n        {\"id\": \"ZoomIn\", \"label\": \"Zoom In\"},\r\n        {\"id\": \"ZoomOut\", \"label\": \"Zoom Out\"},\r\n        {\"id\": \"OriginalView\", \"label\": \"Original View\"},\r\n        null,\r\n        {\"id\": \"Quality\"},\r\n        {\"id\": \"Pause\"},\r\n        {\"id\": \"Mute\"},\r\n        null,\r\n        {\"id\": \"Find\", \"label\": \"Find...\"},\r\n        {\"id\": \"FindAgain\", \"label\": \"Find Again\"},\r\n        {\"id\": \"Copy\"},\r\n        {\"id\": \"CopyAgain\", \"label\": \"Copy Again\"},\r\n        {\"id\": \"CopySVG\", \"label\": \"Copy SVG\"},\r\n        {\"id\": \"ViewSVG\", \"label\": \"View SVG\"},\r\n        {\"id\": \"ViewSource\", \"label\": \"View Source\"},\r\n        {\"id\": \"SaveAs\", \"label\": \"Save As\"},\r\n        null,\r\n        {\"id\": \"Help\"},\r\n        {\"id\": \"About\", \"label\": \"About Adobe CVG Viewer...\"}\r\n    ]\r\n}}";
 		_testJSONCode(jsonTest);
 	}
+	
+	@Test
+	public void testJSON4() throws IOException, ScriptException, NoSuchMethodException, EXIException {
+		String sFancyLed = "{\r\n" + 
+				"  \"@context\": \"http://w3c.github.io/wot/w3c-wot-td-context.jsonld\",\r\n" + 
+				"  \"metadata\": {\r\n" + 
+				"    \"name\": \"MyLED\",\r\n" + 
+				"    \"protocols\" : {\r\n" + 
+				"      \"CoAP\" : {\r\n" + 
+				"        \"uri\" : \"coap://192.168.1.123:5683/things/MyLED\",\r\n" + 
+				"        \"priority\" : 1\r\n" + 
+				"		  },\r\n" + 
+				"      \"HTTP\" : {\r\n" + 
+				"        \"uri\" : \"http://192.168.1.123:8080/things/MyLED\",\r\n" + 
+				"        \"priority\" : 2\r\n" + 
+				"      }\r\n" + 
+				"	  },\r\n" + 
+				"    \"encodings\": [\r\n" + 
+				"      \"JSON\"\r\n" + 
+				"    ]\r\n" + 
+				"  },\r\n" + 
+				"  \"interactions\": [\r\n" + 
+				"     {\r\n" + 
+				"      \"@type\": \"Property\",\r\n" + 
+				"      \"name\": \"brightness\",\r\n" + 
+				"      \"outputData\": \"xsd:unsignedByte\",\r\n" + 
+				"      \"writable\": true\r\n" + 
+				"     }, {\r\n" + 
+				"      \"@type\": \"Property\",\r\n" + 
+				"      \"name\": \"colorTemperature\",\r\n" + 
+				"      \"outputData\": \"xsd:unsignedShort\",\r\n" + 
+				"      \"writable\": true\r\n" + 
+				"    }, {\r\n" + 
+				"      \"@type\": \"Property\",\r\n" + 
+				"      \"name\": \"rgbValueRed\",\r\n" + 
+				"      \"outputData\": \"xsd:unsignedByte\",\r\n" + 
+				"      \"writable\": true\r\n" + 
+				"    }, {\r\n" + 
+				"      \"@type\": \"Property\",\r\n" + 
+				"      \"name\": \"rgbValueGreen\",\r\n" + 
+				"      \"outputData\": \"xsd:unsignedByte\",\r\n" + 
+				"      \"writable\": true\r\n" + 
+				"    }, {\r\n" + 
+				"      \"@type\": \"Property\",\r\n" + 
+				"      \"name\": \"rgbValueBlue\",\r\n" + 
+				"      \"outputData\": \"xsd:unsignedByte\",\r\n" + 
+				"      \"writable\": true\r\n" + 
+				"    }, {\r\n" + 
+				"      \"@type\": \"Action\",\r\n" + 
+				"      \"name\": \"ledOnOff\",\r\n" + 
+				"      \"inputData\": \"xsd:boolean\",\r\n" + 
+				"      \"outputData\": \"\"\r\n" + 
+				"    }, {\r\n" + 
+				"      \"@type\": \"Action\",\r\n" + 
+				"      \"name\": \"fadeIn\",\r\n" + 
+				"      \"inputData\": \"xsd:unsignedByte\",\r\n" + 
+				"      \"outputData\": \"\"\r\n" + 
+				"    },  {\r\n" + 
+				"      \"@type\": \"Action\",\r\n" + 
+				"      \"name\": \"fadeOut\",\r\n" + 
+				"      \"inputData\": \"xsd:unsignedByte\",\r\n" + 
+				"      \"outputData\": \"\"\r\n" + 
+				"    },  {\r\n" + 
+				"      \"@type\": \"Action\",\r\n" + 
+				"      \"name\": \"trafficLight\",\r\n" + 
+				"      \"inputData\": \"xsd:boolean\",\r\n" + 
+				"      \"outputData\": \"\"\r\n" + 
+				"    }, {\r\n" + 
+				"      \"@type\": \"Event\",\r\n" + 
+				"      \"outputData\": \"xsd:unsignedShort\",\r\n" + 
+				"      \"name\": \"colorTemperatureChanged\"\r\n" + 
+				"    }\r\n" + 
+				"  ]\r\n" + 
+				"}";
+		_testJSONCode(sFancyLed);
+	}
+	
+	
+
 
 	@Test
 	public void testIssue1() throws IOException, ScriptException, NoSuchMethodException, EXIException {
@@ -118,12 +198,13 @@ public class TestJSON extends TestCase {
 		return new String(encoded, encoding);
 	}
 
-	@Test
-	public void testJSONLD_URL1() throws IOException, ScriptException, NoSuchMethodException, EXIException {
-		URL jsonld = new URL("https://raw.githubusercontent.com/w3c/wot/master/TF-TD/TD%20Samples/led.jsonld");
-		String jsonTest = url2String(jsonld);
-		_testJSONCode(jsonTest);
-	}
+//	@Ignore // Give that URL is not reachable anymore
+//	@Test 
+//	public void testJSONLD_URL1() throws IOException, ScriptException, NoSuchMethodException, EXIException {
+//		URL jsonld = new URL("https://raw.githubusercontent.com/w3c/wot/master/TF-TD/TD%20Samples/led.jsonld");
+//		String jsonTest = url2String(jsonld);
+//		_testJSONCode(jsonTest);
+//	}
 
 	protected void _testJSONCode(String jsonTest)
 			throws NoSuchMethodException, IOException, ScriptException, EXIException {
