@@ -1,4 +1,4 @@
-/*! exificient.js v0.0.2-SNAPSHOT | (c) 2016 Siemens AG | The MIT License (MIT) */
+/*! exificient.js v0.0.2 | (c) 2016 Siemens AG | The MIT License (MIT) */
 
 //const
 MAX_EXI_FLOAT_DIGITS = 6; // -1 indicates no rounding
