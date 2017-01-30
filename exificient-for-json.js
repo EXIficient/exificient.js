@@ -1,4 +1,4 @@
-/*! exificient-for-json.js v0.0.2 | (c) 2016 Siemens AG | The MIT License (MIT) */
+/*! exificient-for-json.js v0.0.3-SNAPSHOT | (c) 2016 Siemens AG | The MIT License (MIT) */
 /*! JSON components for exificient.js */
 
 //const
