@@ -23,6 +23,10 @@
     "url": "https://github.com/EXIficient/exificient.js/issues"
   },
   "homepage": "https://github.com/EXIficient/exificient.js#readme",
+  "files" : [
+	"exificient.js",
+	"exificient-for-json.js"
+  ],
   "dependencies": {
     "del": "^2.2.0",
     "gulp": "^3.9.1",
