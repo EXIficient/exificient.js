@@ -1,14 +1,12 @@
 {
 	"qnames" : { 
-		"numberOfUris" : 4, 
-		"numberOfQNames" : 59, 
 		"namespaceContext" : [
 			{
-				"uriID" : "0" ,
+				"uriID" : 0 ,
 				"uri" : "", 
-				"numberOfLocalNames" : 7, 
 				"qnameContext" : [
 					{
+						"uriID" : 0 ,
 						"localNameID" : 0 ,
 						"localName" : "Note"
 						,
@@ -16,16 +14,19 @@
 					}
 					, 
 					{
+						"uriID" : 0 ,
 						"localNameID" : 1 ,
 						"localName" : "body"
 					}
 					, 
 					{
+						"uriID" : 0 ,
 						"localNameID" : 2 ,
 						"localName" : "category"
 					}
 					, 
 					{
+						"uriID" : 0 ,
 						"localNameID" : 3 ,
 						"localName" : "date"
 						,
@@ -33,11 +34,13 @@
 					}
 					, 
 					{
+						"uriID" : 0 ,
 						"localNameID" : 4 ,
 						"localName" : "note"
 					}
 					, 
 					{
+						"uriID" : 0 ,
 						"localNameID" : 5 ,
 						"localName" : "notebook"
 						,
@@ -45,6 +48,7 @@
 					}
 					, 
 					{
+						"uriID" : 0 ,
 						"localNameID" : 6 ,
 						"localName" : "subject"
 					}
@@ -52,26 +56,29 @@
 			}
 			, 
 			{
-				"uriID" : "1" ,
+				"uriID" : 1 ,
 				"uri" : "http://www.w3.org/XML/1998/namespace", 
-				"numberOfLocalNames" : 4, 
 				"qnameContext" : [
 					{
+						"uriID" : 1 ,
 						"localNameID" : 0 ,
 						"localName" : "base"
 					}
 					, 
 					{
+						"uriID" : 1 ,
 						"localNameID" : 1 ,
 						"localName" : "id"
 					}
 					, 
 					{
+						"uriID" : 1 ,
 						"localNameID" : 2 ,
 						"localName" : "lang"
 					}
 					, 
 					{
+						"uriID" : 1 ,
 						"localNameID" : 3 ,
 						"localName" : "space"
 					}
@@ -79,16 +86,17 @@
 			}
 			, 
 			{
-				"uriID" : "2" ,
+				"uriID" : 2 ,
 				"uri" : "http://www.w3.org/2001/XMLSchema-instance", 
-				"numberOfLocalNames" : 2, 
 				"qnameContext" : [
 					{
+						"uriID" : 2 ,
 						"localNameID" : 0 ,
 						"localName" : "nil"
 					}
 					, 
 					{
+						"uriID" : 2 ,
 						"localNameID" : 1 ,
 						"localName" : "type"
 					}
@@ -96,11 +104,11 @@
 			}
 			, 
 			{
-				"uriID" : "3" ,
+				"uriID" : 3 ,
 				"uri" : "http://www.w3.org/2001/XMLSchema", 
-				"numberOfLocalNames" : 46, 
 				"qnameContext" : [
 					{
+						"uriID" : 3 ,
 						"localNameID" : 0 ,
 						"localName" : "ENTITIES"
 						,
@@ -108,6 +116,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 1 ,
 						"localName" : "ENTITY"
 						,
@@ -115,6 +124,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 2 ,
 						"localName" : "ID"
 						,
@@ -122,6 +132,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 3 ,
 						"localName" : "IDREF"
 						,
@@ -129,6 +140,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 4 ,
 						"localName" : "IDREFS"
 						,
@@ -136,6 +148,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 5 ,
 						"localName" : "NCName"
 						,
@@ -143,6 +156,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 6 ,
 						"localName" : "NMTOKEN"
 						,
@@ -150,6 +164,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 7 ,
 						"localName" : "NMTOKENS"
 						,
@@ -157,6 +172,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 8 ,
 						"localName" : "NOTATION"
 						,
@@ -164,6 +180,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 9 ,
 						"localName" : "Name"
 						,
@@ -171,6 +188,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 10 ,
 						"localName" : "QName"
 						,
@@ -178,6 +196,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 11 ,
 						"localName" : "anySimpleType"
 						,
@@ -185,6 +204,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 12 ,
 						"localName" : "anyType"
 						,
@@ -192,6 +212,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 13 ,
 						"localName" : "anyURI"
 						,
@@ -199,6 +220,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 14 ,
 						"localName" : "base64Binary"
 						,
@@ -206,6 +228,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 15 ,
 						"localName" : "boolean"
 						,
@@ -213,6 +236,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 16 ,
 						"localName" : "byte"
 						,
@@ -220,6 +244,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 17 ,
 						"localName" : "date"
 						,
@@ -227,6 +252,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 18 ,
 						"localName" : "dateTime"
 						,
@@ -234,6 +260,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 19 ,
 						"localName" : "decimal"
 						,
@@ -241,6 +268,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 20 ,
 						"localName" : "double"
 						,
@@ -248,6 +276,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 21 ,
 						"localName" : "duration"
 						,
@@ -255,6 +284,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 22 ,
 						"localName" : "float"
 						,
@@ -262,6 +292,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 23 ,
 						"localName" : "gDay"
 						,
@@ -269,6 +300,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 24 ,
 						"localName" : "gMonth"
 						,
@@ -276,6 +308,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 25 ,
 						"localName" : "gMonthDay"
 						,
@@ -283,6 +316,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 26 ,
 						"localName" : "gYear"
 						,
@@ -290,6 +324,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 27 ,
 						"localName" : "gYearMonth"
 						,
@@ -297,6 +332,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 28 ,
 						"localName" : "hexBinary"
 						,
@@ -304,6 +340,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 29 ,
 						"localName" : "int"
 						,
@@ -311,6 +348,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 30 ,
 						"localName" : "integer"
 						,
@@ -318,6 +356,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 31 ,
 						"localName" : "language"
 						,
@@ -325,6 +364,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 32 ,
 						"localName" : "long"
 						,
@@ -332,6 +372,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 33 ,
 						"localName" : "negativeInteger"
 						,
@@ -339,6 +380,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 34 ,
 						"localName" : "nonNegativeInteger"
 						,
@@ -346,6 +388,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 35 ,
 						"localName" : "nonPositiveInteger"
 						,
@@ -353,6 +396,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 36 ,
 						"localName" : "normalizedString"
 						,
@@ -360,6 +404,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 37 ,
 						"localName" : "positiveInteger"
 						,
@@ -367,6 +412,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 38 ,
 						"localName" : "short"
 						,
@@ -374,6 +420,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 39 ,
 						"localName" : "string"
 						,
@@ -381,6 +428,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 40 ,
 						"localName" : "time"
 						,
@@ -388,6 +436,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 41 ,
 						"localName" : "token"
 						,
@@ -395,6 +444,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 42 ,
 						"localName" : "unsignedByte"
 						,
@@ -402,6 +452,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 43 ,
 						"localName" : "unsignedInt"
 						,
@@ -409,6 +460,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 44 ,
 						"localName" : "unsignedLong"
 						,
@@ -416,6 +468,7 @@
 					}
 					, 
 					{
+						"uriID" : 3 ,
 						"localNameID" : 45 ,
 						"localName" : "unsignedShort"
 						,
