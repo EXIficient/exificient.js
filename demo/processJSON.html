@@ -2,8 +2,8 @@
 <html>
 <head>
 <title>Process EXI for JSON</title>
-<script type="text/javascript" src="../exificient.js"></script>
-<script type="text/javascript" src="../exificient-for-json.js"></script>
+<script type="text/javascript" src="../dist/exificient-ts.js"></script>
+<!-- <script type="text/javascript" src="../dist/exificient-for-json-ts.js"></script> -->
 <script type="text/javascript" src="demo.js"></script>
 <link rel="stylesheet" href="demo.css" />
 
@@ -122,10 +122,10 @@ function decodeEXI4JSON() {
 			textEXI = textEXI.replace(/ +(?= )/g,'');
 			var sp = textEXI.split(" "); 
 			var arrayBuffer = new ArrayBuffer(sp.length);
-			var arrayBufferView = new Uint8Array(arrayBuffer);
+			var uint8Array = new Uint8Array(arrayBuffer);
 			// alert("TODO EXI " + sp.length + ": " + sp);
 			for(var i=0; i<sp.length; i++) {
-				arrayBufferView[i] = parseInt(sp[i], 16);
+				uint8Array[i] = parseInt(sp[i], 16);
 			}
 			
 			var exiDecoder = new EXI4JSONDecoder();
@@ -139,7 +139,7 @@ function decodeEXI4JSON() {
 			var te0 = performance.now();
 			var times = document.getElementById('performanceRuns').value;
 			for(i=0; i<times; i++) {
-				exiDecoder.decode(arrayBuffer);
+				exiDecoder.decode(uint8Array);
 			}
 			var te1 = performance.now();
 			var tj0;

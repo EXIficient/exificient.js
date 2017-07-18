@@ -60,7 +60,6 @@ function getXMLDocument(textXML) {
 	}
 	
 	return xmlDoc;
-	// this.encodeXmlDocument(xmlDoc);
 }
 
 
@@ -141,18 +140,18 @@ function decodeEXI(grammars) {
 			textEXI = textEXI.replace(/ +(?= )/g,'');
 			var sp = textEXI.split(" "); 
 			var arrayBuffer = new ArrayBuffer(sp.length);
-			var arrayBufferView = new Uint8Array(arrayBuffer);
+			var uint8Array = new Uint8Array(arrayBuffer);
 			// alert("TODO EXI " + sp.length + ": " + sp);
 			for(var i=0; i<sp.length; i++) {
-				arrayBufferView[i] = parseInt(sp[i], 16);
+				uint8Array[i] = parseInt(sp[i], 16);
 			}
 			
-			var exiDecoder = new EXIDecoder(grammars);
+			var exiDecoder = new EXIDecoder(Grammars.fromJson(grammars));
 			
 			// register XML handler
 			var xmlHandler = new XMLEventHandler();
 			exiDecoder.registerEventHandler(xmlHandler);
-			exiDecoder.decode(arrayBuffer);
+			exiDecoder.decode(uint8Array);
 			editorXML.setValue(xmlHandler.getXML());
 			// pretty-print XML
 			autoFormat(); 
