@@ -3,6 +3,7 @@
 <head>
 <title>Process XML</title>
 <script type="text/javascript" src="../dist/exificient-ts.js"></script>
+<script type="text/javascript" src="../dist/xml-parser.js"></script>
 <script type="text/javascript" src="demo.js"></script>
 <link rel="stylesheet" href="demo.css" />
 
@@ -27,41 +28,6 @@
 
 
 <script>
-
-function getXMLDocument(textXML) {
-	/*
-	 * should allow parsing XML string into an XML document in all major
-	 * browsers, including Internet Explorer 6 and Java Nashorn.
-	 */
-	var xmlDoc;
-	if (typeof window !== 'undefined' && typeof window.DOMParser != "undefined") {
-		var parseXml = function(xmlStr) {
-			return (new window.DOMParser()).parseFromString(xmlStr,
-					"text/xml");
-		};
-		xmlDoc = parseXml(textXML);
-	} else if (typeof window !== 'undefined' && typeof window.ActiveXObject != "undefined"
-			&& new window.ActiveXObject("Microsoft.XMLDOM")) {
-		var parseXml = function(xmlStr) {
-			var xmlDoc = new window.ActiveXObject("Microsoft.XMLDOM");
-			xmlDoc.async = "false";
-			xmlDoc.loadXML(xmlStr);
-			return xmlDoc;
-		};
-		xmlDoc = parseXml(textXML);
-	} else if (typeof javax.xml.parsers.DocumentBuilderFactory != "undefined" ) {
-		var factory = javax.xml.parsers.DocumentBuilderFactory.newInstance();
-		factory.setNamespaceAware(true);
-		var documentBuilder = factory.newDocumentBuilder();
-		xmlDoc = documentBuilder.parse(new org.xml.sax.InputSource(new java.io.StringReader(textXML)));
-		/* return doc; */
-	} else {
-		throw new Error("No XML parser found");
-	}
-	
-	return xmlDoc;
-}
-
 
 function readJSONGrammars(callback) {
 	var file = document.getElementById('grammarsInput').files[0];
@@ -95,6 +61,8 @@ function readJSONGrammars(callback) {
 	reader.readAsText(file);
 }
 
+var options = {};
+// options['byteAligned'] = true;  // byte-aligned coding
 
 function encodeXML(grammars) {
 	var textXML = editorXML.getValue();
@@ -103,11 +71,10 @@ function encodeXML(grammars) {
 	} else {
 		try {
 			// console.log("JSON Grammars: " + grammars);
-			var exiEncoder = new EXIEncoder(Grammars.fromJson(grammars));	
+			var exiEncoder = new EXIEncoder(Grammars.fromJson(grammars), options);	
 			
-			// TODO full encode
 			// exiEncoder.encodeXmlText(textXML);
-			var xmlDoc = getXMLDocument(textXML); // 
+			var xmlDoc = getXMLDocument(textXML);
 			exiEncoder.encodeXmlDocument(xmlDoc);
 			// exiEncoder.encodeXmlText(textXML);
 			
@@ -146,7 +113,7 @@ function decodeEXI(grammars) {
 				uint8Array[i] = parseInt(sp[i], 16);
 			}
 			
-			var exiDecoder = new EXIDecoder(Grammars.fromJson(grammars));
+			var exiDecoder = new EXIDecoder(Grammars.fromJson(grammars), options);
 			
 			// register XML handler
 			var xmlHandler = new XMLEventHandler();

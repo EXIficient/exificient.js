@@ -52,7 +52,7 @@ public class TestXML extends XMLTestCase {
 	// assigning the values
 	protected void setUp() throws IOException {
 		fJS = EXIficientForJSON.createMergedJS();
-		System.out.println("File: " + fJS);
+		System.out.println("File: " + fJS);			
 	}
 	
 	static String parseGrammars(String xsdPath) throws EXIException, IOException {
@@ -62,8 +62,14 @@ public class TestXML extends XMLTestCase {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		g2j.toGrammarsJSON(grammarIn, baos);
 		String grammars = new String(baos.toByteArray());
-		grammars = grammars.replace("\n", "").replace("\r", "").replace("\n\r", "").replace("\r\n", "");
+		// grammars = grammars.replace("\n", "").replace("\r", "").replace("\n\r", "").replace("\r\n", "");
+		grammars = sanitize(grammars);
 		return grammars;
+	}
+	
+	static String sanitize(String in) {
+		String out = in.replace("\n", "").replace("\r", "").replace("\n\r", "").replace("\r\n", "");
+		return out;
 	}
 	
 	EXIFactory getEXIFactory(String xsdPath) throws EXIException {
@@ -204,11 +210,22 @@ public class TestXML extends XMLTestCase {
 		if(codingMode == CodingMode.BYTE_PACKED) {
 			engine.eval("options['byteAligned'] = true;");
 		}
-		engine.eval("var exiEncoder = new EXIEncoder(grammars, options);");
+		if(EXIficientForJSON.USE_TS) {
+			engine.eval("var exiEncoder = new EXIEncoder(Grammars.fromJson(grammars), options);");
+			xmlTest = sanitize(xmlTest);
+			engine.eval("var xmlDoc = getXMLDocument('" + xmlTest + "');");	
+		} else {
+			engine.eval("var exiEncoder = new EXIEncoder(grammars, options);");
+		}
 		Object obj = engine.get("exiEncoder");
 		Invocable inv = (Invocable) engine;
-		inv.invokeMethod(obj, "encodeXmlText", xmlTest);
-		// System.out.println(obj2);
+		if(EXIficientForJSON.USE_TS) {
+			engine.eval("exiEncoder.encodeXmlDocument(xmlDoc);");
+		} else {
+			inv.invokeMethod(obj, "encodeXmlText", xmlTest);
+			// System.out.println(obj2);	
+		}
+
 
 		Object oGetUint8ArrayLength = inv.invokeMethod(obj, "getUint8ArrayLength");
 		System.out.println(oGetUint8ArrayLength);
@@ -294,18 +311,22 @@ public class TestXML extends XMLTestCase {
 		
 		engine.eval("var jsonTextGrammar = '" + grammars + "';");
 		engine.eval("var grammars = JSON.parse(jsonTextGrammar);");
-
 		engine.eval("var options = {};");
 		if(codingMode == CodingMode.BYTE_PACKED) {
 			engine.eval("options['byteAligned'] = true;");
 		}
-		engine.eval("var exiDecoder = new EXIDecoder(grammars, options);");
+		if(EXIficientForJSON.USE_TS) {
+			engine.eval("var exiDecoder = new EXIDecoder(Grammars.fromJson(grammars), options);");
+		} else {
+			engine.eval("var exiDecoder = new EXIDecoder(grammars, options);");
+		}
+		
 		engine.eval("var xmlHandler = new XMLEventHandler();");
 		engine.eval("exiDecoder.registerEventHandler(xmlHandler);");
 		
 		
 		engine.eval("var arrayBuffer = new ArrayBuffer("+ bytes.length + ");");
-		engine.eval("var arrayBufferView = new Uint8Array(arrayBuffer);");
+		engine.eval("var uint8Array = new Uint8Array(arrayBuffer);");
 		
 		List<Integer> ilist = new ArrayList<>();
 		javax.script.Bindings b = new SimpleBindings();
@@ -318,11 +339,11 @@ public class TestXML extends XMLTestCase {
 			ibytes[i] = bb;
 			ilist.add(bb);
 			
-			engine.eval("arrayBufferView[" + i + "] = "  + bb +  ";"); // parseInt(sp[i], 16)
+			engine.eval("uint8Array[" + i + "] = "  + bb +  ";"); // parseInt(sp[i], 16)
 		}
 		
 
-		Object o = engine.eval("exiDecoder.decode(arrayBuffer);");
+		Object o = engine.eval("exiDecoder.decode(uint8Array);");
 		System.out.println("resultErrn: " + o);
 		
 		

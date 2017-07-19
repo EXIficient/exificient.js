@@ -17,6 +17,13 @@ import javax.script.ScriptEngineManager;
 
 public class EXIficientForJSON {
 
+	public static final boolean USE_TS = true;
+	
+	// typescript
+	static final String EXIFICIENT_JS_TS_NAME = "exificient-ts.js";
+	static final String XMLPARSER_JS_TS_NAME = "xml-parser.js";
+	static final String EXIFICIENT_JS_TS_FOLDER = "./../dist/";
+	
 	static final String EXIFICIENT_JS_FOLDER = "./../";
 	static final String EXIFICIENT_JS_NAME = "exificient.js";
 	static final String EXIFICIENT_JS4JSON_NAME = "exificient-for-json.js";
@@ -28,6 +35,13 @@ public class EXIficientForJSON {
 
 		String aLine;
 		while ((aLine = in.readLine()) != null) {
+			// Nashorn issues
+			// #1 
+//			aLine = aLine.replace("this.encodeNBitUnsignedInteger(b & 0xff, 8, byteAligned);", "this.encodeNBitUnsignedInteger(b & 0xff, 8);");
+			// #2
+//			aLine = aLine.replace("this.decodeNBitUnsignedInteger(8, byteAligned)", "this.decodeNBitUnsignedInteger(8)");
+			
+			
 			to.write(aLine);
 			to.write(NEW_LINE);
 		}
@@ -42,11 +56,23 @@ public class EXIficientForJSON {
 		BufferedWriter out = new BufferedWriter(new FileWriter(mergedFile));
 		
 		out.append("console = { log: print, warn: print, error: print};"); // avoids console warning
-		appendContent(new File(EXIFICIENT_JS_FOLDER + EXIFICIENT_JS_NAME), out);
-		appendContent(new File(EXIFICIENT_JS_FOLDER + EXIFICIENT_JS4JSON_NAME), out);
+		if(USE_TS) {
+			appendContent(new File(EXIFICIENT_JS_TS_FOLDER + EXIFICIENT_JS_TS_NAME), out);
+			appendContent(new File(EXIficientForJSON.EXIFICIENT_JS_TS_FOLDER + EXIficientForJSON.XMLPARSER_JS_TS_NAME), out);
+			// Nashorn Issue 
+			// java.lang.StackOverflowError
+			// at jdk.nashorn.internal.scripts.Script$Recompilation$56$59509IIA$\^eval\_.BitOutputStream$encodeNBitUnsignedInteger(<eval>:1359)
+			// see in appendContent();
+			
+			
+		} else {
+			appendContent(new File(EXIFICIENT_JS_FOLDER + EXIFICIENT_JS_NAME), out);
+			appendContent(new File(EXIFICIENT_JS_FOLDER + EXIFICIENT_JS4JSON_NAME), out);				
+		}
 		
+		System.out.println("Created merged JS file: " + mergedFile);
 		
-		return mergedFile;
+		return mergedFile;			
 	}
 	
 	public static void main(String... args) throws Throwable {
@@ -56,10 +82,10 @@ public class EXIficientForJSON {
 		// engine.eval("function sum(a, b) { return a + b; }");
        
 		// merge JS files
-		File f =  createMergedJS();
-		System.out.println("Created merged JS file: " + f);
+		File f = createMergedJS();
+		
 		// evaluate JS code
-		 engine.eval(new FileReader(f));
+		engine.eval(new FileReader(f));
 //		engine.eval(new FileReader(new File(EXIFICIENT_JS_FOLDER + EXIFICIENT_JS_NAME)));
 //		engine.eval(new FileReader(new File(EXIFICIENT_JS_FOLDER + EXIFICIENT_JS4JSON_NAME)));
 		

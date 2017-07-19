@@ -587,7 +587,7 @@ var BitInputStream = (function () {
             var result = 0;
             while (bitsRead < nbits) {
                 // result = (result << 8) | is.read();
-                result += (this.decodeNBitUnsignedInteger(8, byteAligned) << bitsRead);
+                result += (this.decodeNBitUnsignedInteger(8, false) << bitsRead);
                 bitsRead += 8;
             }
             return result;
@@ -746,18 +746,18 @@ var EXIDecoder = (function (_super) {
     };
     EXIDecoder.prototype.decodeHeader = function () {
         // TODO cookie
-        var distBits = this.bitStream.decodeNBitUnsignedInteger(2, this.isByteAligned); // Distinguishing
+        var distBits = this.bitStream.decodeNBitUnsignedInteger(2, false); // Distinguishing
         // Bits
         if (distBits != 2) {
             throw new Error("Distinguishing Bits are " + distBits);
         }
-        var presBit = this.bitStream.decodeNBitUnsignedInteger(1, this.isByteAligned); // Presence
+        var presBit = this.bitStream.decodeNBitUnsignedInteger(1, false); // Presence
         // Bit for EXI Options
         if (presBit != 0) {
             throw new Error("Do not support EXI Options in header");
         }
         // TODO continuos e.g., Final version 16 == 0 1111 0000
-        var formatVersion = this.bitStream.decodeNBitUnsignedInteger(5, this.isByteAligned); // Format
+        var formatVersion = this.bitStream.decodeNBitUnsignedInteger(5, false); // Format
         // Version
         if (formatVersion != 0) {
             throw new Error("Do not support format version " + formatVersion);
@@ -1365,25 +1365,25 @@ var BitOutputStream = (function () {
             }
             else if (n < 9) {
                 // 1 byte
-                this.encodeNBitUnsignedInteger(b & 0xff, 8, byteAligned);
+                this.encodeNBitUnsignedInteger(b & 0xff, 8, false);
             }
             else if (n < 17) {
                 // 2 bytes
-                this.encodeNBitUnsignedInteger(b & 0x00ff, 8, byteAligned);
-                this.encodeNBitUnsignedInteger((b & 0xff00) >> 8, 8, byteAligned);
+                this.encodeNBitUnsignedInteger(b & 0x00ff, 8, false);
+                this.encodeNBitUnsignedInteger((b & 0xff00) >> 8, 8, false);
             }
             else if (n < 25) {
                 // 3 bytes
-                this.encodeNBitUnsignedInteger(b & 0x0000ff, 8, byteAligned);
-                this.encodeNBitUnsignedInteger((b & 0x00ff00) >> 8, 8, byteAligned);
-                this.encodeNBitUnsignedInteger((b & 0xff0000) >> 16, 8, byteAligned);
+                this.encodeNBitUnsignedInteger(b & 0x0000ff, 8, false);
+                this.encodeNBitUnsignedInteger((b & 0x00ff00) >> 8, 8, false);
+                this.encodeNBitUnsignedInteger((b & 0xff0000) >> 16, 8, false);
             }
             else if (n < 33) {
                 // 4 bytes
-                this.encodeNBitUnsignedInteger(b & 0x000000ff, 8, byteAligned);
-                this.encodeNBitUnsignedInteger((b & 0x0000ff00) >> 8, 8, byteAligned);
-                this.encodeNBitUnsignedInteger((b & 0x00ff0000) >> 16, 8, byteAligned);
-                this.encodeNBitUnsignedInteger((b & 0xff000000) >> 24, 8, byteAligned);
+                this.encodeNBitUnsignedInteger(b & 0x000000ff, 8, false);
+                this.encodeNBitUnsignedInteger((b & 0x0000ff00) >> 8, 8, false);
+                this.encodeNBitUnsignedInteger((b & 0x00ff0000) >> 16, 8, false);
+                this.encodeNBitUnsignedInteger((b & 0xff000000) >> 24, 8, false);
             }
             else {
                 throw new Error("nbit = " + n + " exceeds supported value range");
@@ -1588,30 +1588,7 @@ var DateTimeValue = (function () {
 var EXIEncoder = (function (_super) {
     __extends(EXIEncoder, _super);
     function EXIEncoder(grammars, options) {
-        var _this = _super.call(this, grammars, options) || this;
-        _this.encodeDatatypeValueUnsignedInteger = function (value, namespaceID, localNameID) {
-            console.log("\t" + " UNSIGNED_INTEGER = " + value);
-            this.bitStream.encodeUnsignedInteger(value);
-        };
-        _this.encodeDatatypeValueInteger = function (value, namespaceID, localNameID) {
-            console.log("\t" + " INTEGER = " + value);
-            this.bitStream.encodeInteger(value, this.byteAligned);
-        };
-        _this.encodeDatatypeValueFloat = function (value, namespaceID, localNameID) {
-            var f = parseFloat(value);
-            // 
-            console.log("\t" + " floatA = " + f);
-            // var fl = decodeIEEE64(f);
-            // var fl = getNumberParts(f);
-            var fl = this.getEXIFloat(f);
-            // mantissa followed by exponent
-            this.bitStream.encodeInteger(fl.mantissa, this.byteAligned);
-            this.bitStream.encodeInteger(fl.exponent, this.byteAligned);
-            console
-                .log("\t" + " floatB = " + fl.mantissa + " E "
-                + fl.exponent);
-        };
-        return _this;
+        return _super.call(this, grammars, options) || this;
     }
     // 	/*
     // 	 * should allow parsing XML string into an XML document in all major
@@ -1654,12 +1631,12 @@ var EXIEncoder = (function (_super) {
     EXIEncoder.prototype.encodeHeader = function () {
         // TODO cookie
         // Distinguishing Bits 10
-        this.bitStream.encodeNBitUnsignedInteger(2, 2, this.isByteAligned);
+        this.bitStream.encodeNBitUnsignedInteger(2, 2, false);
         // Presence Bit for EXI Options 0
-        this.bitStream.encodeNBitUnsignedInteger(0, 1, this.isByteAligned);
+        this.bitStream.encodeNBitUnsignedInteger(0, 1, false);
         // EXI Format Version 0-0000
-        this.bitStream.encodeNBitUnsignedInteger(0, 1, this.isByteAligned); // preview false
-        this.bitStream.encodeNBitUnsignedInteger(0, 4, this.isByteAligned);
+        this.bitStream.encodeNBitUnsignedInteger(0, 1, false); // preview false
+        this.bitStream.encodeNBitUnsignedInteger(0, 4, false);
         return 0;
     };
     EXIEncoder.prototype.processXMLElement = function (el) {
@@ -2282,6 +2259,28 @@ var EXIEncoder = (function (_super) {
                 this.bitStream.encodeNBitUnsignedInteger(stEntry.globalValueID, n, this.isByteAligned);
             }
         }
+    };
+    EXIEncoder.prototype.encodeDatatypeValueUnsignedInteger = function (value, namespaceID, localNameID) {
+        console.log("\t" + " UNSIGNED_INTEGER = " + value);
+        this.bitStream.encodeUnsignedInteger(parseInt(value), this.isByteAligned);
+    };
+    EXIEncoder.prototype.encodeDatatypeValueInteger = function (value, namespaceID, localNameID) {
+        console.log("\t" + " INTEGER = " + value);
+        this.bitStream.encodeInteger(parseInt(value), this.isByteAligned);
+    };
+    EXIEncoder.prototype.encodeDatatypeValueFloat = function (value, namespaceID, localNameID) {
+        var f = parseFloat(value);
+        // 
+        console.log("\t" + " floatA = " + f);
+        // var fl = decodeIEEE64(f);
+        // var fl = getNumberParts(f);
+        var fl = this.getEXIFloat(f);
+        // mantissa followed by exponent
+        this.bitStream.encodeInteger(fl.mantissa, this.isByteAligned);
+        this.bitStream.encodeInteger(fl.exponent, this.isByteAligned);
+        console
+            .log("\t" + " floatB = " + fl.mantissa + " E "
+            + fl.exponent);
     };
     EXIEncoder.prototype.encodeDatatypeValueBoolean = function (value, namespaceID, localNameID) {
         var b = new Boolean(value);

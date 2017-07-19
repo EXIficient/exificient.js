@@ -658,7 +658,7 @@ class BitInputStream {
 
 			while (bitsRead < nbits) {
 				// result = (result << 8) | is.read();
-				result += (this.decodeNBitUnsignedInteger(8, byteAligned) << bitsRead);
+				result += (this.decodeNBitUnsignedInteger(8, false) << bitsRead);
 				bitsRead += 8;
 			}
 			return result;
@@ -834,18 +834,18 @@ class EXIDecoder extends AbtractEXICoder {
 
 	decodeHeader() : number {
 		// TODO cookie
-		var distBits = this.bitStream.decodeNBitUnsignedInteger(2, this.isByteAligned); // Distinguishing
+		var distBits = this.bitStream.decodeNBitUnsignedInteger(2, false); // Distinguishing
 		// Bits
 		if (distBits != 2) {
 			throw new Error("Distinguishing Bits are " + distBits);
 		}
-		var presBit = this.bitStream.decodeNBitUnsignedInteger(1, this.isByteAligned); // Presence
+		var presBit = this.bitStream.decodeNBitUnsignedInteger(1, false); // Presence
 		// Bit for EXI Options
 		if (presBit != 0) {
 			throw new Error("Do not support EXI Options in header");
 		}
 		// TODO continuos e.g., Final version 16 == 0 1111 0000
-		var formatVersion = this.bitStream.decodeNBitUnsignedInteger(5, this.isByteAligned); // Format
+		var formatVersion = this.bitStream.decodeNBitUnsignedInteger(5, false); // Format
 		// Version
 		if (formatVersion != 0) {
 			throw new Error("Do not support format version " + formatVersion);
@@ -1505,8 +1505,7 @@ class BitOutputStream {
 	 * Encode n-bit unsigned integer. The n least significant bits of parameter
 	 * b starting with the most significant, i.e. from left to right.
 	 */
-	encodeNBitUnsignedInteger(b : number, n : number, byteAligned : boolean) {
-
+	encodeNBitUnsignedInteger(b : number, n : number, byteAligned : boolean) {		
 		if(byteAligned !== undefined && byteAligned) {
 			while(n % 8 !== 0) {
 				n++;
@@ -1517,27 +1516,28 @@ class BitOutputStream {
 				// 0 bytes
 			} else if (n < 9) {
 				// 1 byte
-				this.encodeNBitUnsignedInteger(b & 0xff, 8, byteAligned);
+				this.encodeNBitUnsignedInteger(b & 0xff, 8, false);
 			} else if (n < 17) {
 				// 2 bytes
-				this.encodeNBitUnsignedInteger(b & 0x00ff, 8, byteAligned);
-				this.encodeNBitUnsignedInteger((b & 0xff00) >> 8, 8, byteAligned);
+				this.encodeNBitUnsignedInteger(b & 0x00ff, 8, false);
+				this.encodeNBitUnsignedInteger((b & 0xff00) >> 8, 8, false);
 			} else if (n < 25) {
 				// 3 bytes
-				this.encodeNBitUnsignedInteger(b & 0x0000ff, 8, byteAligned);
-				this.encodeNBitUnsignedInteger((b & 0x00ff00) >> 8, 8, byteAligned);
-				this.encodeNBitUnsignedInteger((b & 0xff0000) >> 16, 8, byteAligned);
+				this.encodeNBitUnsignedInteger(b & 0x0000ff, 8, false);
+				this.encodeNBitUnsignedInteger((b & 0x00ff00) >> 8, 8, false);
+				this.encodeNBitUnsignedInteger((b & 0xff0000) >> 16, 8, false);
 			} else if (n < 33) {
 				// 4 bytes
-				this.encodeNBitUnsignedInteger(b & 0x000000ff, 8, byteAligned);
-				this.encodeNBitUnsignedInteger((b & 0x0000ff00) >> 8, 8, byteAligned);
-				this.encodeNBitUnsignedInteger((b & 0x00ff0000) >> 16, 8, byteAligned);
-				this.encodeNBitUnsignedInteger((b & 0xff000000) >> 24, 8, byteAligned);
+				this.encodeNBitUnsignedInteger(b & 0x000000ff, 8, false);
+				this.encodeNBitUnsignedInteger((b & 0x0000ff00) >> 8, 8, false);
+				this.encodeNBitUnsignedInteger((b & 0x00ff0000) >> 16, 8, false);
+				this.encodeNBitUnsignedInteger((b & 0xff000000) >> 24, 8, false);
 			} else {
 				throw new Error("nbit = " + n + " exceeds supported value range");
 			}
 			
 		} else {
+			
 			if (n === 0) {
 				// nothing to write
 			} else if (n <= this.capacity) {
@@ -1804,12 +1804,12 @@ class EXIEncoder extends AbtractEXICoder {
 		// TODO cookie
 
 		// Distinguishing Bits 10
-		this.bitStream.encodeNBitUnsignedInteger(2, 2, this.isByteAligned);
+		this.bitStream.encodeNBitUnsignedInteger(2, 2, false);
 		// Presence Bit for EXI Options 0
-		this.bitStream.encodeNBitUnsignedInteger(0, 1, this.isByteAligned);
+		this.bitStream.encodeNBitUnsignedInteger(0, 1, false);
 		// EXI Format Version 0-0000
-		this.bitStream.encodeNBitUnsignedInteger(0, 1, this.isByteAligned); // preview false
-		this.bitStream.encodeNBitUnsignedInteger(0, 4, this.isByteAligned);
+		this.bitStream.encodeNBitUnsignedInteger(0, 1, false); // preview false
+		this.bitStream.encodeNBitUnsignedInteger(0, 4, false);
 
 		return 0;
 	}
@@ -2487,17 +2487,17 @@ class EXIEncoder extends AbtractEXICoder {
 		}
 	}
 	
-	encodeDatatypeValueUnsignedInteger = function(value : string, namespaceID : number, localNameID : number) {
+	encodeDatatypeValueUnsignedInteger(value : string, namespaceID : number, localNameID : number) {
 		console.log("\t" + " UNSIGNED_INTEGER = " + value);
-		this.bitStream.encodeUnsignedInteger(value);
+		this.bitStream.encodeUnsignedInteger(parseInt(value), this.isByteAligned);
 	}
 	
-	encodeDatatypeValueInteger = function(value : string, namespaceID : number, localNameID : number) {
+	encodeDatatypeValueInteger(value : string, namespaceID : number, localNameID : number) {
 		console.log("\t" + " INTEGER = " + value);
-		this.bitStream.encodeInteger(value, this.byteAligned);
+		this.bitStream.encodeInteger(parseInt(value), this.isByteAligned);
 	}
 	
-	encodeDatatypeValueFloat = function(value : string, namespaceID : number, localNameID : number) {
+	encodeDatatypeValueFloat(value : string, namespaceID : number, localNameID : number) {
 		var f = parseFloat(value);
 		// 
 		console.log("\t" + " floatA = " + f);
@@ -2505,8 +2505,8 @@ class EXIEncoder extends AbtractEXICoder {
 		// var fl = getNumberParts(f);
 		var fl = this.getEXIFloat(f);
 		// mantissa followed by exponent
-		this.bitStream.encodeInteger(fl.mantissa, this.byteAligned);
-		this.bitStream.encodeInteger(fl.exponent, this.byteAligned);
+		this.bitStream.encodeInteger(fl.mantissa, this.isByteAligned);
+		this.bitStream.encodeInteger(fl.exponent, this.isByteAligned);
 		console
 				.log("\t" + " floatB = " + fl.mantissa + " E "
 						+ fl.exponent);
