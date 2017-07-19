@@ -2,8 +2,8 @@
 <html>
 <head>
 <title>EXI for JSON Tests</title>
-<script type="text/javascript" src="../exificient.js"></script>
-<script type="text/javascript" src="../exificient-for-json.js"></script>
+<script type="text/javascript" src="../dist/exificient-ts.js"></script>
+<!--<script type="text/javascript" src="../exificient-for-json.js"></script> -->
 
 <style>
 table, th, td {
@@ -53,7 +53,7 @@ function testUnsignedInteger(f) {
 	var ok = false;
 	try {
 		var datatype =  new Object();
-		datatype["type"] = "UNSIGNED_INTEGER";
+		datatype["type"] =  SimpleDatatypeType.UNSIGNED_INTEGER; //"UNSIGNED_INTEGER";
 		var namespaceID = 0;
 		var localNameID = 0;
 		
@@ -78,12 +78,13 @@ function testUnsignedInteger(f) {
 		var numberHandler = new NumberEventHandler();
 		exiDecoder.registerEventHandler(numberHandler);
 		
+		/*
 		var arrayBuffer = new ArrayBuffer(uint8ArrayLength);
 		var arrayBufferView = new Uint8Array(arrayBuffer);
 		for(var i=0; i<uint8ArrayLength; i++) {
 			arrayBufferView[i] = uint8Array[i];
-		}
-		exiDecoder.bitStream = new BitInputStream(arrayBuffer);
+		}*/
+		exiDecoder.bitStream = new BitInputStream(uint8Array); // arrayBuffer);
 		
 		exiDecoder.decodeDatatypeValue(datatype, namespaceID, localNameID, isCharactersEvent);
 		
@@ -112,7 +113,7 @@ function testInteger(f) {
 	var ok = false;
 	try {
 		var datatype =  new Object();
-		datatype["type"] = "INTEGER";
+		datatype["type"] = SimpleDatatypeType.INTEGER; // "INTEGER";
 		var namespaceID = 0;
 		var localNameID = 0;
 		
@@ -137,12 +138,12 @@ function testInteger(f) {
 		var numberHandler = new NumberEventHandler();
 		exiDecoder.registerEventHandler(numberHandler);
 		
-		var arrayBuffer = new ArrayBuffer(uint8ArrayLength);
+		/*var arrayBuffer = new ArrayBuffer(uint8ArrayLength);
 		var arrayBufferView = new Uint8Array(arrayBuffer);
 		for(var i=0; i<uint8ArrayLength; i++) {
 			arrayBufferView[i] = uint8Array[i];
-		}
-		exiDecoder.bitStream = new BitInputStream(arrayBuffer);
+		}*/
+		exiDecoder.bitStream = new BitInputStream(uint8Array); // arrayBuffer);
 		
 		exiDecoder.decodeDatatypeValue(datatype, namespaceID, localNameID, isCharactersEvent);
 		
@@ -171,7 +172,7 @@ function testFloat(f) {
 	var ok = false;
 	try {
 		var datatype =  new Object();
-		datatype["type"] = "FLOAT";
+		datatype["type"] = SimpleDatatypeType.FLOAT; // "FLOAT";
 		var namespaceID = 0;
 		var localNameID = 0;
 		
@@ -200,12 +201,12 @@ function testFloat(f) {
 		var numberHandler = new NumberEventHandler();
 		exiDecoder.registerEventHandler(numberHandler);
 		
-		var arrayBuffer = new ArrayBuffer(uint8ArrayLength);
+		/* var arrayBuffer = new ArrayBuffer(uint8ArrayLength);
 		var arrayBufferView = new Uint8Array(arrayBuffer);
 		for(var i=0; i<uint8ArrayLength; i++) {
 			arrayBufferView[i] = uint8Array[i];
-		}
-		exiDecoder.bitStream = new BitInputStream(arrayBuffer);
+		}*/
+		exiDecoder.bitStream = new BitInputStream(uint8Array); // arrayBuffer);
 		
 		
 		exiDecoder.decodeDatatypeValue(datatype, namespaceID, localNameID, isCharactersEvent);
