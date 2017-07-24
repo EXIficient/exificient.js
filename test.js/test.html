@@ -47,6 +47,66 @@ function NumberEventHandler() {
 	}
 }
 
+function testNBitUnsignedIntegers() {
+	document.write("<tr>");
+	document.write("<td> 1(2) 3(4) 2(7) 99(7) 2(2) 7(3) </td>");
+	var ok = true;
+	try {
+		var bitStream = new BitOutputStream();
+
+		bitStream.encodeNBitUnsignedInteger(1, 2);
+		bitStream.encodeNBitUnsignedInteger(3, 4);
+		bitStream.encodeNBitUnsignedInteger(2, 7);
+		bitStream.encodeNBitUnsignedInteger(99, 7);
+		bitStream.encodeNBitUnsignedInteger(2, 2);
+		bitStream.encodeNBitUnsignedInteger(7, 3);
+		bitStream.align();
+
+		
+		
+		var uint8ArrayLength = bitStream.getUint8ArrayLength();
+		var uint8Array = bitStream.getUint8Array();
+
+		console.log("Write NBitUnsignedIntegers encoded in " + uint8ArrayLength + " Bytes.");
+		
+		
+		// decode 
+		var bitStream = new BitInputStream(uint8Array); // arrayBuffer);
+		if(bitStream.decodeNBitUnsignedInteger(2) != 1) {
+			ok = false;
+		}
+		if(bitStream.decodeNBitUnsignedInteger(4) != 3) {
+			ok = false;
+		}
+		if(bitStream.decodeNBitUnsignedInteger(7) != 2) {
+			ok = false;
+		}
+		if(bitStream.decodeNBitUnsignedInteger(7) != 99) {
+			ok = false;
+		}
+		if(bitStream.decodeNBitUnsignedInteger(2) != 2) {
+			ok = false;
+		}
+		if(bitStream.decodeNBitUnsignedInteger(3) != 7) {
+			ok = false;
+		}
+		
+		
+		document.write("<td>" + "1(2) 3(4) 2(7) 99(7) 2(2) 7(3)" + "</td>");
+		
+	} catch(err) {
+		console.log("Error while testing UnsignedInteger. " + f1 + ": " + err);
+	}
+	if(ok) {
+		document.write("<td  style='background-color: green'>OK</td>");
+	} else {
+		document.write("<td style='background-color: red'>NOK</td>");
+	}
+	
+	document.write("</tr>");
+}
+
+
 function testUnsignedInteger(f) {
 	document.write("<tr>");
 	document.write("<td>" + f + "</td>");
@@ -315,6 +375,22 @@ function testEXI4JSONEscape(key, expected) {
 document.write(new Date());
 </script>
 
+
+<h2>NBitUnsignedIntegers</h2>
+<table>
+<thead>
+  <tr>
+    <th>Input Value</th>
+    <th>Decoded to</th>
+    <th>OK / Not OK</th>
+  </tr>
+</thead>
+<tbody>
+  <script>
+  testNBitUnsignedIntegers();
+  </script> 
+</tbody>
+</table> 
 
 <h2>UnsignedInteger</h2>
 <table>

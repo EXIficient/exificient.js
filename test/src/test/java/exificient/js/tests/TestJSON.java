@@ -68,6 +68,7 @@ public class TestJSON extends TestCase {
 
 	@Test
 	public void testJSON2() throws IOException, ScriptException, NoSuchMethodException, EXIException {
+		fail("TODO testJSON2 endless loop");
 		String jsonTest = "{\"menu\": {\r\n  \"id\": \"file\",\r\n  \"value\": \"File\",\r\n  \"popup\": {\r\n    \"menuitem\": [\r\n      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\r\n      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\r\n      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\r\n    ]\r\n  }\r\n}}";
 		_testJSONCode(jsonTest);
 	}
@@ -154,7 +155,17 @@ public class TestJSON extends TestCase {
 		_testJSONCode(sFancyLed);
 	}
 	
-	
+	@Test
+	public void testIssue1a() throws IOException, ScriptException, NoSuchMethodException, EXIException {
+		String jsonTest = "{\r\n" + 
+				"	\"type\": \"F1\",\r\n" + 
+				"	\"features\": {\r\n" + 
+				"			\"type\": \"F1\"\r\n" + 
+				"		}\r\n" + 
+				"	\r\n" + 
+				"}";
+		_testJSONCode(jsonTest);
+	}
 
 
 	@Test
@@ -353,7 +364,7 @@ public class TestJSON extends TestCase {
 		engine.eval("exiDecoder.registerEventHandler(jsonHandler);");
 
 		engine.eval("var arrayBuffer = new ArrayBuffer(" + bytes.length + ");");
-		engine.eval("var arrayBufferView = new Uint8Array(arrayBuffer);");
+		engine.eval("var uint8Array = new Uint8Array(arrayBuffer);");
 
 		List<Integer> ilist = new ArrayList<>();
 		javax.script.Bindings b = new SimpleBindings();
@@ -366,11 +377,11 @@ public class TestJSON extends TestCase {
 			ibytes[i] = bb;
 			ilist.add(bb);
 
-			engine.eval("arrayBufferView[" + i + "] = " + bb + ";"); // parseInt(sp[i],
+			engine.eval("uint8Array[" + i + "] = " + bb + ";"); // parseInt(sp[i],
 																		// 16)
 		}
 
-		Object o = engine.eval("exiDecoder.decode(arrayBuffer);");
+		Object o = engine.eval("exiDecoder.decode(uint8Array);");
 		System.out.println("resultErrn: " + o);
 
 		// Object objJsonHandler = engine.get("jsonHandler");

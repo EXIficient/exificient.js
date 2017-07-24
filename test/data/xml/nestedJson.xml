@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ns4:map xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ns3="http://www.w3.org/2001/XMLSchema" xmlns:ns4="http://www.w3.org/2015/EXI/json">
+    <ns4:type>
+        <ns4:string>F1</ns4:string>
+    </ns4:type>
+    <ns4:features>
+        <ns4:map>
+            <ns4:type>
+                <ns4:string>F2</ns4:string>
+            </ns4:type>
+        </ns4:map>
+    </ns4:features>
+</ns4:map>

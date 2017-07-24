@@ -183,6 +183,16 @@ public class TestXML extends XMLTestCase {
 		
 		_testXMLCode(xmlTest, xsdPath);
 	}
+	
+	@Test
+	public void testNestedJson() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/nestedJson.xml";
+		String xsdPath = "../grammars/exi4json.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
 
 
 	
@@ -383,6 +393,9 @@ public class TestXML extends XMLTestCase {
 		PrintWriter out = new PrintWriter(xsdPath + ".grs");
 		out.write(s);
 		out.close();
+		
+//		byte[]d = {(byte) 0xe8, (byte) 0xd8};
+		
 	}
 
 }
