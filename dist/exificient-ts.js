@@ -249,9 +249,11 @@ var AbtractEXICoder = (function () {
         // Object.assign(this.grammars, grammars);
         // copy to allow extending grammars and do re-set them
         // TODO use a more elegant method
-        if (grammars !== undefined) {
+        /*
+        if(grammars !== undefined) { // for test.js
             this.grammarsCopy = JSON.parse(JSON.stringify(grammars));
         }
+        */
         this.stringTable = new StringTable();
         this.isStrict = true; // TODO
         this.isByteAligned = false; // default is false
@@ -267,7 +269,7 @@ var AbtractEXICoder = (function () {
         console.log("Set sharedStrings: " + this.sharedStrings);
     };
     AbtractEXICoder.prototype.init = function () {
-        this.grammars = this.grammarsCopy;
+        // this.grammars = this.grammarsCopy;
         this.stringTable = new StringTable();
         // console.log("SharedStringsX: " + this.sharedStrings + Object.prototype.toString.call(this.sharedStrings));
         if (this.sharedStrings != null && this.sharedStrings instanceof Array) {
@@ -1225,11 +1227,21 @@ var EventHandler = (function () {
     return EventHandler;
 }());
 /* allows to retrieve XML by registering it as decoder handler */
+var PfxMapping = (function () {
+    function PfxMapping(pfx, namespace) {
+        this.pfx = pfx;
+        this.namespace = namespace;
+    }
+    return PfxMapping;
+}());
 var XMLEventHandler = (function (_super) {
     __extends(XMLEventHandler, _super);
-    // xmlDecls : XMLDeclarations[];
     function XMLEventHandler() {
         return _super.call(this) || this;
+        // let people = new Map<string, Person>();
+        // let map = new Map<string, string>(); 
+        // this.xmlDecls = {}; // null; //  new Array(<string, string>); // new Map(); // new Array();
+        // this.xmlDecls = new Array();
     }
     XMLEventHandler.prototype.getXML = function () {
         return this.xml;
@@ -1256,7 +1268,7 @@ var XMLEventHandler = (function (_super) {
     };
     XMLEventHandler.prototype.startDocument = function () {
         this.xml = "";
-        this.xmlDecls = null; //  [undefined, undefined]; // {"cnt": 0, "decls": {}};
+        this.xmlDecls = [undefined, undefined]; // {"cnt": 0, "decls": {}};
         this.seOpen = false;
     };
     XMLEventHandler.prototype.endDocument = function () {

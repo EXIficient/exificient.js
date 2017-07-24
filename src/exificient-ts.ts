@@ -305,7 +305,7 @@ class Grammars {
 
 abstract class AbtractEXICoder {
     grammars: Grammars; // any;
-    grammarsCopy: Grammars; // any;
+    // grammarsCopy: Grammars; // any;
     isStrict : boolean;
     isByteAligned : boolean; // default is false
 
@@ -320,10 +320,12 @@ abstract class AbtractEXICoder {
         // Object.assign(this.grammars, grammars);
 
         // copy to allow extending grammars and do re-set them
-        // TODO use a more elegant method
+		// TODO use a more elegant method
+		/*
         if(grammars !== undefined) { // for test.js
             this.grammarsCopy = JSON.parse(JSON.stringify(grammars));
 		}
+		*/
 		
  		this.stringTable = new StringTable();
 
@@ -344,7 +346,7 @@ abstract class AbtractEXICoder {
 	}
 
  	public init() {
-		this.grammars = this.grammarsCopy;
+		// this.grammars = this.grammarsCopy;
 		this.stringTable = new StringTable();
 		// console.log("SharedStringsX: " + this.sharedStrings + Object.prototype.toString.call(this.sharedStrings));
 		if (this.sharedStrings != null && this.sharedStrings instanceof Array) {
@@ -1361,17 +1363,32 @@ abstract class EventHandler {
 }
 
 /* allows to retrieve XML by registering it as decoder handler */
+
+class PfxMapping {
+	pfx: string;
+	namespace: string;
+	constructor(pfx: string, namespace: string) {
+		this.pfx = pfx;
+		this.namespace = namespace;
+	}
+}
+
 class XMLEventHandler extends EventHandler {
 
 	xml : string;
 
 	seOpen : boolean;
 
-	xmlDecls: [string, string]; // namespace --> prefix
+	// xmlDecls : PfxMapping[];//  {}; // : [string, string]; // namespace --> prefix
 	// xmlDecls : XMLDeclarations[];
+	xmlDecls : [string, string];
 
 	constructor() {
 		super();
+		// let people = new Map<string, Person>();
+		// let map = new Map<string, string>(); 
+		// this.xmlDecls = {}; // null; //  new Array(<string, string>); // new Map(); // new Array();
+		// this.xmlDecls = new Array();
 	}
 	
 	getXML() : string {
@@ -1400,7 +1417,7 @@ class XMLEventHandler extends EventHandler {
 
 	startDocument() {
 		this.xml = "";
-		this.xmlDecls = null; //  [undefined, undefined]; // {"cnt": 0, "decls": {}};
+		this.xmlDecls = [undefined, undefined]; // {"cnt": 0, "decls": {}};
 		this.seOpen = false;
 	}
 	endDocument() {
