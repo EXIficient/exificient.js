@@ -68,7 +68,6 @@ public class TestJSON extends TestCase {
 
 	@Test
 	public void testJSON2() throws IOException, ScriptException, NoSuchMethodException, EXIException {
-		fail("TODO testJSON2 endless loop");
 		String jsonTest = "{\"menu\": {\r\n  \"id\": \"file\",\r\n  \"value\": \"File\",\r\n  \"popup\": {\r\n    \"menuitem\": [\r\n      {\"value\": \"New\", \"onclick\": \"CreateNewDoc()\"},\r\n      {\"value\": \"Open\", \"onclick\": \"OpenDoc()\"},\r\n      {\"value\": \"Close\", \"onclick\": \"CloseDoc()\"}\r\n    ]\r\n  }\r\n}}";
 		_testJSONCode(jsonTest);
 	}
