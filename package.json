@@ -24,7 +24,8 @@
   },
   "homepage": "https://github.com/EXIficient/exificient.js#readme",
   "files" : [
-	"dist\exificient.js"
+	"dist\exificient.js",
+	"dist\xml-parser.js"
   ],
   "dependencies": {
     "del": "^2.2.0",
