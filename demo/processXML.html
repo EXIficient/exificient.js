@@ -62,8 +62,8 @@ function readJSONGrammars(callback) {
 }
 
 var options = {};
-// options['byteAligned'] = true;  // byte-aligned coding
-// alert("TEST: switched ON byteAligned");
+options['byteAligned'] = true;  // byte-aligned coding
+alert("TEST: switched ON byteAligned");
 
 function encodeXML(grammars) {
 	var textXML = editorXML.getValue();

@@ -1384,6 +1384,24 @@ class PfxMapping {
 	}
 }
 
+/*
+class Stack<T> {
+	_store: T[] = [];
+	push(val: T) {
+		this._store.push(val);
+	}
+	pop(): T | undefined {
+		return this._store.pop();
+	}
+	peek() : T  | undefined {
+		return this._store[this._store.length-1];
+	}
+	clear() {
+		this._store = [];
+	}
+}
+*/
+
 class XMLEventHandler extends EventHandler {
 
 	xml : string;
@@ -1394,17 +1412,81 @@ class XMLEventHandler extends EventHandler {
 	// xmlDecls : XMLDeclarations[];
 	xmlDecls : [string, string];
 
+	nsDecls : Array<PfxMapping>[];
+
 	constructor() {
 		super();
+		this.nsDecls = []; // new Array<PfxMapping>();
 		// let people = new Map<string, Person>();
 		// let map = new Map<string, string>(); 
 		// this.xmlDecls = {}; // null; //  new Array(<string, string>); // new Map(); // new Array();
 		// this.xmlDecls = new Array();
 	}
 	
+	pushPfx() {
+		this.nsDecls.push([]);
+	}
+	addPfx(namespace: string) : string {
+		let pfx = "ns" + this.getPfxLength();
+		let pm : PfxMapping = new PfxMapping(pfx, namespace);
+		this.nsDecls[this.nsDecls.length-1].push(pm);
+		return pfx;
+	}
+	popPfx(): Array<PfxMapping> {
+		return this.nsDecls.pop();
+	}
+	clearPfx() {
+		this.nsDecls = [];
+	}
+	getPfx(namespace : string) : string | undefined {
+		let pfx = undefined;
+
+		if(namespace === undefined || namespace.length === 0) {
+			// default
+			pfx = "";
+		} else {
+			// check if declared already
+			for(let i=this.nsDecls.length-1; i>= 0; i--) {
+				let pfxs : PfxMapping[] = this.nsDecls[i];
+				for(let k=0; k<pfxs.length; k++) {
+					let pm : PfxMapping = pfxs[k];
+					if(pm.namespace == namespace) {
+						return pm.pfx;
+					}
+				}
+			}
+
+			// none found --> undefined
+
+			/*
+			if(this.xmlDecls[namespace] != null) {
+				// get existing prefix
+				// TODO assumption declared already (Note: not always the case for nested elements!!!)
+				pfx = this.xmlDecls[namespace];
+			} else {
+				// create new prefix
+				pfx = "ns" + this.xmlDecls.length;
+				this.xmlDecls[namespace]  = pfx;
+			}
+			*/
+		}
+
+		return pfx;
+	}
+	getPfxLength() : number {
+		let n : number = 0;
+		for(let i=this.nsDecls.length-1; i>= 0; i--) {
+			let pfxs : PfxMapping[] = this.nsDecls[i];
+			n += pfxs.length;
+		}
+		return n;
+	}
+
+
 	getXML() : string {
 		return this.xml;
 	}
+	/*
 	getPrefix(namespace : string) : string {
 		// TODO more accurate namespace/prefix handling
 		let pfx = "";
@@ -1425,20 +1507,35 @@ class XMLEventHandler extends EventHandler {
 		
 		return pfx;
 	}
+	*/
+
+
 
 	startDocument() {
 		this.xml = "";
 		this.xmlDecls = [undefined, undefined]; // {"cnt": 0, "decls": {}};
+		this.clearPfx();
 		this.seOpen = false;
 	}
 	endDocument() {
 	}
 	startElement(namespace : string, localName : string) {
+		this.pushPfx();
 		if (this.seOpen) {
 			this.xml += ">";
 		}
 
-		var pfx = this.getPrefix(namespace);
+		// old version
+		// var pfx = this.getPrefix(namespace);
+		// new version
+		let printNS = false;
+		let pfx = this.getPfx(namespace);
+		if(pfx == undefined) {
+			pfx = this.addPfx(namespace);
+			printNS = true;
+		}
+		
+
 		if(pfx.length > 0) {
 			this.xml += "<" + pfx + ":" + localName;
 		} else {
@@ -1446,7 +1543,7 @@ class XMLEventHandler extends EventHandler {
 		}
 		this.seOpen = true;
 		
-		if(pfx.length > 0) {
+		if(pfx.length > 0 && printNS) {
 			this.xml += " xmlns:" + pfx + "='"  + namespace + "'";
 		}
 	}
@@ -1456,12 +1553,14 @@ class XMLEventHandler extends EventHandler {
 			this.seOpen = false;
 		}
 		
-		var pfx = this.getPrefix(namespace);
+		// var pfx = this.getPrefix(namespace);
+		var pfx = this.getPfx(namespace);
 		if(pfx.length > 0) {
 			this.xml += "</" + pfx + ":" + localName + ">";
 		} else {
 			this.xml += "</" + localName + ">";
 		}
+		this.popPfx();
 	}
 	characters(chars : string) {
 		if (this.seOpen) {

@@ -1246,50 +1246,124 @@ var PfxMapping = (function () {
     }
     return PfxMapping;
 }());
+/*
+class Stack<T> {
+    _store: T[] = [];
+    push(val: T) {
+        this._store.push(val);
+    }
+    pop(): T | undefined {
+        return this._store.pop();
+    }
+    peek() : T  | undefined {
+        return this._store[this._store.length-1];
+    }
+    clear() {
+        this._store = [];
+    }
+}
+*/
 var XMLEventHandler = (function (_super) {
     __extends(XMLEventHandler, _super);
     function XMLEventHandler() {
-        return _super.call(this) || this;
+        var _this = _super.call(this) || this;
+        _this.nsDecls = []; // new Array<PfxMapping>();
+        return _this;
         // let people = new Map<string, Person>();
         // let map = new Map<string, string>(); 
         // this.xmlDecls = {}; // null; //  new Array(<string, string>); // new Map(); // new Array();
         // this.xmlDecls = new Array();
     }
-    XMLEventHandler.prototype.getXML = function () {
-        return this.xml;
+    XMLEventHandler.prototype.pushPfx = function () {
+        this.nsDecls.push([]);
     };
-    XMLEventHandler.prototype.getPrefix = function (namespace) {
-        // TODO more accurate namespace/prefix handling
-        var pfx = "";
+    XMLEventHandler.prototype.addPfx = function (namespace) {
+        var pfx = "ns" + this.getPfxLength();
+        var pm = new PfxMapping(pfx, namespace);
+        this.nsDecls[this.nsDecls.length - 1].push(pm);
+        return pfx;
+    };
+    XMLEventHandler.prototype.popPfx = function () {
+        return this.nsDecls.pop();
+    };
+    XMLEventHandler.prototype.clearPfx = function () {
+        this.nsDecls = [];
+    };
+    XMLEventHandler.prototype.getPfx = function (namespace) {
+        var pfx = undefined;
         if (namespace === undefined || namespace.length === 0) {
+            // default
+            pfx = "";
         }
         else {
             // check if declared already
-            if (this.xmlDecls[namespace] != null) {
-                // get existing prefix
-                // TODO assumption declared already (Note: not always the case for nested elements!!!)
-                pfx = this.xmlDecls[namespace];
-            }
-            else {
-                // create new prefix
-                pfx = "ns" + this.xmlDecls.length;
-                this.xmlDecls[namespace] = pfx;
+            for (var i = this.nsDecls.length - 1; i >= 0; i--) {
+                var pfxs = this.nsDecls[i];
+                for (var k = 0; k < pfxs.length; k++) {
+                    var pm = pfxs[k];
+                    if (pm.namespace == namespace) {
+                        return pm.pfx;
+                    }
+                }
             }
         }
         return pfx;
     };
+    XMLEventHandler.prototype.getPfxLength = function () {
+        var n = 0;
+        for (var i = this.nsDecls.length - 1; i >= 0; i--) {
+            var pfxs = this.nsDecls[i];
+            n += pfxs.length;
+        }
+        return n;
+    };
+    XMLEventHandler.prototype.getXML = function () {
+        return this.xml;
+    };
+    /*
+    getPrefix(namespace : string) : string {
+        // TODO more accurate namespace/prefix handling
+        let pfx = "";
+        if(namespace === undefined || namespace.length === 0) {
+            // do nothing
+        } else {
+            // check if declared already
+            if(this.xmlDecls[namespace] != null) {
+                // get existing prefix
+                // TODO assumption declared already (Note: not always the case for nested elements!!!)
+                pfx = this.xmlDecls[namespace];
+            } else {
+                // create new prefix
+                pfx = "ns" + this.xmlDecls.length;
+                this.xmlDecls[namespace]  = pfx;
+            }
+        }
+        
+        return pfx;
+    }
+    */
     XMLEventHandler.prototype.startDocument = function () {
         this.xml = "";
         this.xmlDecls = [undefined, undefined]; // {"cnt": 0, "decls": {}};
+        this.clearPfx();
         this.seOpen = false;
     };
     XMLEventHandler.prototype.endDocument = function () {
     };
     XMLEventHandler.prototype.startElement = function (namespace, localName) {
+        this.pushPfx();
         if (this.seOpen) {
             this.xml += ">";
         }
-        var pfx = this.getPrefix(namespace);
+        // old version
+        // var pfx = this.getPrefix(namespace);
+        // new version
+        var printNS = false;
+        var pfx = this.getPfx(namespace);
+        if (pfx == undefined) {
+            pfx = this.addPfx(namespace);
+            printNS = true;
+        }
         if (pfx.length > 0) {
             this.xml += "<" + pfx + ":" + localName;
         }
@@ -1297,7 +1371,7 @@ var XMLEventHandler = (function (_super) {
             this.xml += "<" + localName;
         }
         this.seOpen = true;
-        if (pfx.length > 0) {
+        if (pfx.length > 0 && printNS) {
             this.xml += " xmlns:" + pfx + "='" + namespace + "'";
         }
     };
@@ -1306,13 +1380,15 @@ var XMLEventHandler = (function (_super) {
             this.xml += ">";
             this.seOpen = false;
         }
-        var pfx = this.getPrefix(namespace);
+        // var pfx = this.getPrefix(namespace);
+        var pfx = this.getPfx(namespace);
         if (pfx.length > 0) {
             this.xml += "</" + pfx + ":" + localName + ">";
         }
         else {
             this.xml += "</" + localName + ">";
         }
+        this.popPfx();
     };
     XMLEventHandler.prototype.characters = function (chars) {
         if (this.seOpen) {
