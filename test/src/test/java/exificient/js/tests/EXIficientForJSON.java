@@ -17,10 +17,10 @@ import javax.script.ScriptEngineManager;
 
 public class EXIficientForJSON {
 
-	public static final boolean USE_TS = true;
+//	public static final boolean USE_TS = true;
 	
 	// typescript
-	static final String EXIFICIENT_JS_TS_NAME = "exificient-ts.js";
+	static final String EXIFICIENT_JS_TS_NAME = "exificient.js";
 	static final String XMLPARSER_JS_TS_NAME = "xml-parser.js";
 	static final String EXIFICIENT_JS_TS_FOLDER = "./../dist/";
 	
@@ -56,7 +56,7 @@ public class EXIficientForJSON {
 		BufferedWriter out = new BufferedWriter(new FileWriter(mergedFile));
 		
 		out.append("console = { log: print, warn: print, error: print};"); // avoids console warning
-		if(USE_TS) {
+//		if(USE_TS) {
 			appendContent(new File(EXIFICIENT_JS_TS_FOLDER + EXIFICIENT_JS_TS_NAME), out);
 			appendContent(new File(EXIficientForJSON.EXIFICIENT_JS_TS_FOLDER + EXIficientForJSON.XMLPARSER_JS_TS_NAME), out);
 			// Nashorn Issue 
@@ -65,10 +65,10 @@ public class EXIficientForJSON {
 			// see in appendContent();
 			
 			
-		} else {
-			appendContent(new File(EXIFICIENT_JS_FOLDER + EXIFICIENT_JS_NAME), out);
-			appendContent(new File(EXIFICIENT_JS_FOLDER + EXIFICIENT_JS4JSON_NAME), out);				
-		}
+//		} else {
+//			appendContent(new File(EXIFICIENT_JS_FOLDER + EXIFICIENT_JS_NAME), out);
+//			appendContent(new File(EXIFICIENT_JS_FOLDER + EXIFICIENT_JS4JSON_NAME), out);				
+//		}
 		
 		System.out.println("Created merged JS file: " + mergedFile);
 		

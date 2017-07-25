@@ -220,21 +220,21 @@ public class TestXML extends XMLTestCase {
 		if(codingMode == CodingMode.BYTE_PACKED) {
 			engine.eval("options['byteAligned'] = true;");
 		}
-		if(EXIficientForJSON.USE_TS) {
+//		if(EXIficientForJSON.USE_TS) {
 			engine.eval("var exiEncoder = new EXIEncoder(Grammars.fromJson(grammars), options);");
 			xmlTest = sanitize(xmlTest);
 			engine.eval("var xmlDoc = getXMLDocument('" + xmlTest + "');");	
-		} else {
-			engine.eval("var exiEncoder = new EXIEncoder(grammars, options);");
-		}
+//		} else {
+//			engine.eval("var exiEncoder = new EXIEncoder(grammars, options);");
+//		}
 		Object obj = engine.get("exiEncoder");
 		Invocable inv = (Invocable) engine;
-		if(EXIficientForJSON.USE_TS) {
+//		if(EXIficientForJSON.USE_TS) {
 			engine.eval("exiEncoder.encodeXmlDocument(xmlDoc);");
-		} else {
-			inv.invokeMethod(obj, "encodeXmlText", xmlTest);
-			// System.out.println(obj2);	
-		}
+//		} else {
+//			inv.invokeMethod(obj, "encodeXmlText", xmlTest);
+//			// System.out.println(obj2);	
+//		}
 
 
 		Object oGetUint8ArrayLength = inv.invokeMethod(obj, "getUint8ArrayLength");
@@ -325,11 +325,11 @@ public class TestXML extends XMLTestCase {
 		if(codingMode == CodingMode.BYTE_PACKED) {
 			engine.eval("options['byteAligned'] = true;");
 		}
-		if(EXIficientForJSON.USE_TS) {
+//		if(EXIficientForJSON.USE_TS) {
 			engine.eval("var exiDecoder = new EXIDecoder(Grammars.fromJson(grammars), options);");
-		} else {
-			engine.eval("var exiDecoder = new EXIDecoder(grammars, options);");
-		}
+//		} else {
+//			engine.eval("var exiDecoder = new EXIDecoder(grammars, options);");
+//		}
 		
 		engine.eval("var xmlHandler = new XMLEventHandler();");
 		engine.eval("exiDecoder.registerEventHandler(xmlHandler);");
