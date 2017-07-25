@@ -644,6 +644,9 @@ var BitInputStream = (function () {
                     console.log("\t" + " decodeNBitUnsignedInteger --> " + result);
                     return result;
                 }
+                if (this.errn !== 0) {
+                    throw new Error("InputStream error: EOF?");
+                }
             }
         }
         return -1;
@@ -1088,7 +1091,6 @@ var EXIDecoder = (function (_super) {
                             console.log("NextGrammar after SE(*) is " + nextGrammar);
                             // learn SE
                             var ngX = new Production(EventType.startElement, grammar.elementContent.grammarID);
-                            grammar.production.push(ngX);
                             ngX.startElementGrammarID = seGrammar.grammarID;
                             ngX.startElementNamespaceID = qnameContext.uriID;
                             ngX.startElementLocalNameID = qnameContext.localNameID;

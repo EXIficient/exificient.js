@@ -716,6 +716,10 @@ class BitInputStream {
 					console.log("\t" + " decodeNBitUnsignedInteger --> " + result);
 					return result;
 				}
+
+				if (this.errn !== 0) {
+					throw new Error("InputStream error: EOF?");
+				}
 			}
 		}
 
@@ -1188,7 +1192,6 @@ class EXIDecoder extends AbtractEXICoder {
 						
 						// learn SE
 						let ngX = new Production(EventType.startElement, grammar.elementContent.grammarID);
-						grammar.production.push(ngX);
 						ngX.startElementGrammarID = seGrammar.grammarID;
 						ngX.startElementNamespaceID = qnameContext.uriID;
 						ngX.startElementLocalNameID =  qnameContext.localNameID;
