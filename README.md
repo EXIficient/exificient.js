@@ -16,8 +16,7 @@ npm install exificient.js
 ### unpkg, CDN (content delivery network)
 
 ```
-https://unpkg.com/exificient.js@0.0.2/exificient.js
-https://unpkg.com/exificient.js@0.0.2/exificient-for-json.js
+https://unpkg.com/exificient.js@0.0.3/dist/exificient.js
 ```
 
 ## Demo
