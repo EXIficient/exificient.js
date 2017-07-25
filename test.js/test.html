@@ -2,7 +2,7 @@
 <html>
 <head>
 <title>EXI for JSON Tests</title>
-<script type="text/javascript" src="../dist/exificient-ts.js"></script>
+<script type="text/javascript" src="../dist/exificient.js"></script>
 <!--<script type="text/javascript" src="../exificient-for-json.js"></script> -->
 
 <style>
@@ -330,8 +330,8 @@ function testEXI4JSONEscape(key, expected) {
 	var ok = false;
 	try {	
 		// encode
-		var encoder = new EXI4JSONEncoder();
-		var ekey = encoder.escapeKey(key);
+		// var encoder = new EXI4JSONEncoder();
+		var ekey = EXI4JSONEncoder.escapeKey(key);
 		
 		document.write("<td>" + expected + "</td>");
 		if(ekey != expected) {
