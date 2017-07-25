@@ -1,5 +1,7 @@
 /*! exificient.js v0.0.3-SNAPSHOT | (c) 2017 Siemens AG | The MIT License (MIT) */
 
+// export * from './exificient'
+
 const MAX_EXI_FLOAT_DIGITS = 6; // -1 indicates no rounding
 
 /*******************************************************************************
@@ -3279,11 +3281,10 @@ class JSONEventHandler extends EventHandler {
 
 
 
-// export
-class EXI4JSON {
-	static encoder : EXI4JSONEncoder = new EXI4JSONEncoder();
-	static decoder : EXI4JSONDecoder = new EXI4JSONDecoder();
-	static exify(jsonObj : Object) {	
+export class EXI4JSON {
+	encoder : EXI4JSONEncoder = new EXI4JSONEncoder();
+	decoder : EXI4JSONDecoder = new EXI4JSONDecoder();
+	public exify(jsonObj : Object) {	
 		this.encoder.encodeJsonObject(jsonObj);
 		// EXI4JSON.encoder.encodeJsonObject(jsonObj);
 		let uint8ArrayLength = this.encoder.getUint8ArrayLength();
@@ -3291,7 +3292,7 @@ class EXI4JSON {
 		return uint8Array;
 	}
 
-	static parse(uint8Array : Uint8Array){
+	public parse(uint8Array : Uint8Array){
 		let jsonHandler = new JSONEventHandler();
 		this.decoder.registerEventHandler(jsonHandler);
 		this.decoder.decode(uint8Array);
@@ -3301,6 +3302,20 @@ class EXI4JSON {
 
 }
 
+export function exify(jsonObj : Object): Uint8Array {
+	let encoder : EXI4JSONEncoder = new EXI4JSONEncoder();
+	encoder.encodeJsonObject(jsonObj);
+	let uint8Array = encoder.getUint8Array();
+	return uint8Array;
+}
+
+export function parse(uint8Array : Uint8Array): Object {
+	let decoder : EXI4JSONDecoder = new EXI4JSONDecoder();
+	let jsonHandler = new JSONEventHandler();
+	decoder.registerEventHandler(jsonHandler);
+	decoder.decode(uint8Array);
+	return jsonHandler.getJSON();
+}
 
 
 

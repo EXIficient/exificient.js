@@ -1,9 +1,11 @@
 /*! exificient.js v0.0.3-SNAPSHOT | (c) 2017 Siemens AG | The MIT License (MIT) */
+"use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
+// export * from './exificient'
 var MAX_EXI_FLOAT_DIGITS = 6; // -1 indicates no rounding
 /*******************************************************************************
  *
@@ -2972,18 +2974,19 @@ var JSONEventHandler = (function (_super) {
     };
     return JSONEventHandler;
 }(EventHandler));
-// export
 var EXI4JSON = (function () {
     function EXI4JSON() {
+        this.encoder = new EXI4JSONEncoder();
+        this.decoder = new EXI4JSONDecoder();
     }
-    EXI4JSON.exify = function (jsonObj) {
+    EXI4JSON.prototype.exify = function (jsonObj) {
         this.encoder.encodeJsonObject(jsonObj);
         // EXI4JSON.encoder.encodeJsonObject(jsonObj);
         var uint8ArrayLength = this.encoder.getUint8ArrayLength();
         var uint8Array = this.encoder.getUint8Array();
         return uint8Array;
     };
-    EXI4JSON.parse = function (uint8Array) {
+    EXI4JSON.prototype.parse = function (uint8Array) {
         var jsonHandler = new JSONEventHandler();
         this.decoder.registerEventHandler(jsonHandler);
         this.decoder.decode(uint8Array);
@@ -2992,5 +2995,19 @@ var EXI4JSON = (function () {
     };
     return EXI4JSON;
 }());
-EXI4JSON.encoder = new EXI4JSONEncoder();
-EXI4JSON.decoder = new EXI4JSONDecoder();
+exports.EXI4JSON = EXI4JSON;
+function exify(jsonObj) {
+    var encoder = new EXI4JSONEncoder();
+    encoder.encodeJsonObject(jsonObj);
+    var uint8Array = encoder.getUint8Array();
+    return uint8Array;
+}
+exports.exify = exify;
+function parse(uint8Array) {
+    var decoder = new EXI4JSONDecoder();
+    var jsonHandler = new JSONEventHandler();
+    decoder.registerEventHandler(jsonHandler);
+    decoder.decode(uint8Array);
+    return jsonHandler.getJSON();
+}
+exports.parse = parse;
