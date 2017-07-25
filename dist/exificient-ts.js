@@ -1838,7 +1838,7 @@ var EXIEncoder = (function (_super) {
         this.bitStream = new BitOutputStream();
         this.elementContext = [];
         console.log("numberOfQNames SD: " + this.getNumberOfQNames(this.grammars));
-        console.log("Grammar SD: " + JSON.stringify(this.grammars));
+        // console.log("Grammar SD: " + JSON.stringify(this.grammars));
         this.encodeHeader();
         // set grammar position et cetera
         // Document grammar
@@ -1896,7 +1896,7 @@ var EXIEncoder = (function (_super) {
         }
         this.bitStream.align();
         console.log("numberOfQNames ED: " + this.getNumberOfQNames(this.grammars));
-        console.log("Grammar ED: " + JSON.stringify(this.grammars));
+        // console.log("Grammar ED: " + JSON.stringify(this.grammars));
     };
     EXIEncoder.prototype.startElement = function (namespace, localName) {
         if (namespace === null) {

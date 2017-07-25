@@ -2057,7 +2057,7 @@ class EXIEncoder extends AbtractEXICoder {
 		this.bitStream = new BitOutputStream();
 		this.elementContext = [];
 		console.log("numberOfQNames SD: " + this.getNumberOfQNames(this.grammars));
-		console.log("Grammar SD: " + JSON.stringify(this.grammars));
+		// console.log("Grammar SD: " + JSON.stringify(this.grammars));
 		
 		this.encodeHeader();
 		// set grammar position et cetera
@@ -2122,7 +2122,7 @@ class EXIEncoder extends AbtractEXICoder {
 		this.bitStream.align();
 
 		console.log("numberOfQNames ED: " + this.getNumberOfQNames(this.grammars));
-		console.log("Grammar ED: " + JSON.stringify(this.grammars));
+		// console.log("Grammar ED: " + JSON.stringify(this.grammars));
 	}
 
 	startElement(namespace : string, localName : string) {
