@@ -1,6 +1,6 @@
 {
   "name": "exificient.js",
-  "main": "exificient-for-json.js",
+  "main": "dist/exificient.js",
   "homepage": "https://github.com/EXIficient/exificient.js",
   "authors": [
     "Daniel Peintner"
@@ -19,5 +19,5 @@
     "demo",
     "grammars"
   ],
-  "version": "0.0.3"
+  "version": "0.0.4"
 }

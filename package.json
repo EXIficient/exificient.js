@@ -1,8 +1,8 @@
 {
   "name": "exificient.js",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "exi and exi4json parser in pure js",
-  "main": "exificient-for-json.js",
+  "main": "dist/exificient.js",
   "directories": {
     "test": "test"
   },
