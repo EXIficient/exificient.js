@@ -35,15 +35,22 @@ public class EXIficientForJSON {
 
 		String aLine;
 		while ((aLine = in.readLine()) != null) {
-			// Nashorn issues
+			// Nashorn issues (exports)
+			if("exports.EXI4JSON = EXI4JSON;".equals(aLine)) {
+				// do nothing
+			} else if("exports.exify = exify;".equals(aLine)) {
+				// do nothing
+			} else if("exports.parse = parse;".equals(aLine)) {
+				// do nothing
+			} else {
+				to.write(aLine);
+				to.write(NEW_LINE);
+			}
+				
 			// #1 
 //			aLine = aLine.replace("this.encodeNBitUnsignedInteger(b & 0xff, 8, byteAligned);", "this.encodeNBitUnsignedInteger(b & 0xff, 8);");
 			// #2
 //			aLine = aLine.replace("this.decodeNBitUnsignedInteger(8, byteAligned)", "this.decodeNBitUnsignedInteger(8)");
-			
-			
-			to.write(aLine);
-			to.write(NEW_LINE);
 		}
 		to.flush();
 
@@ -60,6 +67,9 @@ public class EXIficientForJSON {
 			appendContent(new File(EXIFICIENT_JS_TS_FOLDER + EXIFICIENT_JS_TS_NAME), out);
 			appendContent(new File(EXIficientForJSON.EXIFICIENT_JS_TS_FOLDER + EXIficientForJSON.XMLPARSER_JS_TS_NAME), out);
 			// Nashorn Issue 
+			
+			
+			
 			// java.lang.StackOverflowError
 			// at jdk.nashorn.internal.scripts.Script$Recompilation$56$59509IIA$\^eval\_.BitOutputStream$encodeNBitUnsignedInteger(<eval>:1359)
 			// see in appendContent();
