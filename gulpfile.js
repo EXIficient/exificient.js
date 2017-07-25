@@ -11,7 +11,7 @@ var del = require("del");
 //var bower = require("gulp-bower"); //TBD automate bower versioning 
 
 gulp.task('default', function () {
-	return gulp.src(['exificient.js','exificient-for-json.js'])
+	return gulp.src(['dist\exificient.js'])
         .pipe(sourcemaps.init())
 		//.pipe(concat('exificient-for-json-bundle.js'))
         //.pipe(gulp.dest('dist'))

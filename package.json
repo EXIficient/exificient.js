@@ -24,8 +24,7 @@
   },
   "homepage": "https://github.com/EXIficient/exificient.js#readme",
   "files" : [
-	"exificient.js",
-	"exificient-for-json.js"
+	"dist\exificient.js"
   ],
   "dependencies": {
     "del": "^2.2.0",
