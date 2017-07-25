@@ -248,6 +248,7 @@ var Grammars = (function () {
 var AbtractEXICoder = (function () {
     function AbtractEXICoder(grammars, options) {
         this.grammars = grammars;
+        // this.grammarsCopy = Object.create(grammars);
         // Object.assign(this.grammars, grammars);
         // copy to allow extending grammars and do re-set them
         // TODO use a more elegant method
@@ -265,6 +266,13 @@ var AbtractEXICoder = (function () {
             }
         }
     }
+    AbtractEXICoder.prototype.getNumberOfQNames = function (grammars) {
+        var n = 0;
+        for (var i = 0; i < grammars.qnames.namespaceContext.length; i++) {
+            n += grammars.qnames.namespaceContext[i].qnameContext.length;
+        }
+        return n;
+    };
     // WARNING: not specified in EXI 1.0 core (is extension)
     AbtractEXICoder.prototype.setSharedStrings = function (sharedStrings) {
         this.sharedStrings = sharedStrings;
@@ -272,6 +280,25 @@ var AbtractEXICoder = (function () {
     };
     AbtractEXICoder.prototype.init = function () {
         // this.grammars = this.grammarsCopy;
+        // re-init (qnames) 
+        if (this.grammars.numberOfQNames === undefined || this.grammars.numberOfQNames == null) {
+            // first time..store information for resetting grammar qnames
+            this.grammars.numberOfQNames = new Array();
+            for (var i_1 = 0; i_1 < this.grammars.qnames.namespaceContext.length; i_1++) {
+                this.grammars.numberOfQNames.push(this.grammars.qnames.namespaceContext[i_1].qnameContext.length);
+            }
+        }
+        else {
+            // any other time --> reset
+            while (this.grammars.numberOfQNames.length > this.grammars.qnames.namespaceContext.length) {
+                this.grammars.qnames.namespaceContext.pop();
+            }
+            for (var i_2 = 0; i_2 < this.grammars.qnames.namespaceContext.length; i_2++) {
+                while (this.grammars.qnames.namespaceContext[i_2].qnameContext.length > this.grammars.numberOfQNames[i_2]) {
+                    this.grammars.qnames.namespaceContext[i_2].qnameContext.pop();
+                }
+            }
+        }
         this.stringTable = new StringTable();
         // console.log("SharedStringsX: " + this.sharedStrings + Object.prototype.toString.call(this.sharedStrings));
         if (this.sharedStrings != null && this.sharedStrings instanceof Array) {
@@ -1216,7 +1243,7 @@ var EXIDecoder = (function (_super) {
             + Object.keys(this.grammars.qnames.namespaceContext).length);
         // console.log("\t" + grammars.uris);
         console.log("\t" + "numberOfUris:  " + this.grammars.qnames.namespaceContext.length);
-        console.log("\t" + "numberOfQNames:" + this.grammars.qnames.numberOfQNames);
+        console.log("\t" + "numberOfQNames:" + this.getNumberOfQNames(this.grammars));
         console.log("EXI: " + uint8Array + " len=" + uint8Array.byteLength);
         // process header
         var errn = this.decodeHeader();
@@ -1779,10 +1806,10 @@ var EXIEncoder = (function (_super) {
         var childNodes = el.childNodes;
         if (childNodes != null) {
             // console.log("\tchildNodes.length" + childNodes.length);
-            for (var i_1 = 0; i_1 < childNodes.length; i_1++) {
+            for (var i_3 = 0; i_3 < childNodes.length; i_3++) {
                 // Attributes (type 1)
                 // Text (type 3)
-                var cn = childNodes.item(i_1);
+                var cn = childNodes.item(i_3);
                 if (cn.nodeType === 3) {
                     var text = cn.nodeValue;
                     text = text.trim();
@@ -1810,6 +1837,8 @@ var EXIEncoder = (function (_super) {
         this.init();
         this.bitStream = new BitOutputStream();
         this.elementContext = [];
+        console.log("numberOfQNames SD: " + this.getNumberOfQNames(this.grammars));
+        console.log("Grammar SD: " + JSON.stringify(this.grammars));
         this.encodeHeader();
         // set grammar position et cetera
         // Document grammar
@@ -1866,6 +1895,8 @@ var EXIEncoder = (function (_super) {
             throw new Error("Element context not balanced");
         }
         this.bitStream.align();
+        console.log("numberOfQNames ED: " + this.getNumberOfQNames(this.grammars));
+        console.log("Grammar ED: " + JSON.stringify(this.grammars));
     };
     EXIEncoder.prototype.startElement = function (namespace, localName) {
         if (namespace === null) {
@@ -2945,21 +2976,21 @@ var JSONEventHandler = (function (_super) {
 var EXI4JSON = (function () {
     function EXI4JSON() {
     }
-    EXI4JSON.prototype.exify = function (jsonObj) {
-        var encoder = new EXI4JSONEncoder();
-        encoder.encodeJsonObject(jsonObj);
+    EXI4JSON.exify = function (jsonObj) {
+        this.encoder.encodeJsonObject(jsonObj);
         // EXI4JSON.encoder.encodeJsonObject(jsonObj);
-        var uint8ArrayLength = encoder.getUint8ArrayLength();
-        var uint8Array = encoder.getUint8Array();
+        var uint8ArrayLength = this.encoder.getUint8ArrayLength();
+        var uint8Array = this.encoder.getUint8Array();
         return uint8Array;
     };
-    EXI4JSON.prototype.parse = function (uint8Array) {
-        var decoder = new EXI4JSONDecoder();
+    EXI4JSON.parse = function (uint8Array) {
         var jsonHandler = new JSONEventHandler();
-        decoder.registerEventHandler(jsonHandler);
-        decoder.decode(uint8Array);
+        this.decoder.registerEventHandler(jsonHandler);
+        this.decoder.decode(uint8Array);
         // var jsonText = JSON.stringify(jsonHandler.getJSON(), null, "\t");
         return jsonHandler.getJSON();
     };
     return EXI4JSON;
 }());
+EXI4JSON.encoder = new EXI4JSONEncoder();
+EXI4JSON.decoder = new EXI4JSONDecoder();

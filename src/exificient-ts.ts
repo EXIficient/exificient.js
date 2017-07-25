@@ -199,7 +199,7 @@ class NamespaceContext {
 }
 class QNames {
 	namespaceContext : NamespaceContext[];
-	numberOfQNames : number;
+	// numberOfQNames : number;
 }
 
 class Production {
@@ -270,6 +270,7 @@ class Grammars {
 	qnames: QNames;
     simpleDatatypes : SimpleDatatype[];
 	grs : Grs;
+	numberOfQNames : number[]; // qnames per namespace for resetting qnames
 	
 	public static fromJson(json : any) : Grammars {
 		// copy content as is
@@ -306,7 +307,10 @@ class Grammars {
 }
 
 abstract class AbtractEXICoder {
-    grammars: Grammars; // any;
+	grammars: Grammars; // any;
+	// numberOfNamespaces : number;
+	// numberOfQNames : number[]; // qnames per namespace
+
     // grammarsCopy: Grammars; // any;
     isStrict : boolean;
     isByteAligned : boolean; // default is false
@@ -318,7 +322,9 @@ abstract class AbtractEXICoder {
 	runtimeGrammars : Grammar[];
 
     constructor(grammars: Grammars, options: any) {
-        this.grammars = grammars;
+		this.grammars = grammars;
+
+		// this.grammarsCopy = Object.create(grammars);
         // Object.assign(this.grammars, grammars);
 
         // copy to allow extending grammars and do re-set them
@@ -339,7 +345,16 @@ abstract class AbtractEXICoder {
                 this.isByteAligned = options["byteAligned"];
             }
         }
-    }
+	}
+	
+	getNumberOfQNames(grammars: Grammars) : number {
+		let n = 0;
+		for(let i=0; i<grammars.qnames.namespaceContext.length; i++) {
+			n += grammars.qnames.namespaceContext[i].qnameContext.length;
+		}
+		
+		return n;
+	}
 
     // WARNING: not specified in EXI 1.0 core (is extension)
 	public setSharedStrings(sharedStrings : string[]) {
@@ -349,6 +364,25 @@ abstract class AbtractEXICoder {
 
  	public init() {
 		// this.grammars = this.grammarsCopy;
+		// re-init (qnames) 
+		if(this.grammars.numberOfQNames === undefined || this.grammars.numberOfQNames == null ) {
+			// first time..store information for resetting grammar qnames
+			this.grammars.numberOfQNames = new Array();
+			for(let i=0; i<this.grammars.qnames.namespaceContext.length; i++) {
+				this.grammars.numberOfQNames.push(this.grammars.qnames.namespaceContext[i].qnameContext.length)
+			}
+		} else {
+			// any other time --> reset
+			while(this.grammars.numberOfQNames.length > this.grammars.qnames.namespaceContext.length) {
+				this.grammars.qnames.namespaceContext.pop();
+			}
+			for(let i=0; i<this.grammars.qnames.namespaceContext.length; i++) {
+				while(this.grammars.qnames.namespaceContext[i].qnameContext.length > this.grammars.numberOfQNames[i]) {
+					this.grammars.qnames.namespaceContext[i].qnameContext.pop();
+				}
+			}
+		}
+
 		this.stringTable = new StringTable();
 		// console.log("SharedStringsX: " + this.sharedStrings + Object.prototype.toString.call(this.sharedStrings));
 		if (this.sharedStrings != null && this.sharedStrings instanceof Array) {
@@ -1339,7 +1373,7 @@ class EXIDecoder extends AbtractEXICoder {
 		// console.log("\t" + grammars.uris);
 
 		console.log("\t" + "numberOfUris:  " + this.grammars.qnames.namespaceContext.length);
-		console.log("\t" + "numberOfQNames:" + this.grammars.qnames.numberOfQNames);
+		console.log("\t" + "numberOfQNames:" + this.getNumberOfQNames(this.grammars));
 
 		console.log("EXI: " + uint8Array + " len=" + uint8Array.byteLength);
 
@@ -2022,6 +2056,8 @@ class EXIEncoder extends AbtractEXICoder {
 		this.init();
 		this.bitStream = new BitOutputStream();
 		this.elementContext = [];
+		console.log("numberOfQNames SD: " + this.getNumberOfQNames(this.grammars));
+		console.log("Grammar SD: " + JSON.stringify(this.grammars));
 		
 		this.encodeHeader();
 		// set grammar position et cetera
@@ -2084,6 +2120,9 @@ class EXIEncoder extends AbtractEXICoder {
 		}
 
 		this.bitStream.align();
+
+		console.log("numberOfQNames ED: " + this.getNumberOfQNames(this.grammars));
+		console.log("Grammar ED: " + JSON.stringify(this.grammars));
 	}
 
 	startElement(namespace : string, localName : string) {
@@ -3242,21 +3281,20 @@ class JSONEventHandler extends EventHandler {
 
 // export
 class EXI4JSON {
-	exify(jsonObj : Object) {
-		var encoder = new EXI4JSONEncoder();
-		encoder.encodeJsonObject(jsonObj);
+	static encoder : EXI4JSONEncoder = new EXI4JSONEncoder();
+	static decoder : EXI4JSONDecoder = new EXI4JSONDecoder();
+	static exify(jsonObj : Object) {	
+		this.encoder.encodeJsonObject(jsonObj);
 		// EXI4JSON.encoder.encodeJsonObject(jsonObj);
-		var uint8ArrayLength = encoder.getUint8ArrayLength();
-		var uint8Array = encoder.getUint8Array();
+		let uint8ArrayLength = this.encoder.getUint8ArrayLength();
+		let uint8Array = this.encoder.getUint8Array();
 		return uint8Array;
 	}
 
-
-	parse(uint8Array : Uint8Array){
-		var decoder = new EXI4JSONDecoder();
-		var jsonHandler = new JSONEventHandler();
-		decoder.registerEventHandler(jsonHandler);
-		decoder.decode(uint8Array);
+	static parse(uint8Array : Uint8Array){
+		let jsonHandler = new JSONEventHandler();
+		this.decoder.registerEventHandler(jsonHandler);
+		this.decoder.decode(uint8Array);
 		// var jsonText = JSON.stringify(jsonHandler.getJSON(), null, "\t");
 		return jsonHandler.getJSON();
 	}
