@@ -1,0 +1,29 @@
+<!DOCTYPE rdf:RDF [
+<!ENTITY wot "http://www.w3c.org/wot/td#" >
+]>
+
+<sparql:Query xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+ xsi:schemaLocation="http://www.w3.org/ns/sparql# basic_rdf_query_v02.xsd"
+ xmlns:unit="http://purl.oclc.org/NET/ssnx/qu/unit#" xmlns:qu="http://purl.oclc.org/NET/ssnx/qu/qu#"
+ xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+ xmlns:dim="http://purl.oclc.org/NET/ssnx/qu/dim#"
+ xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#" xmlns:xs="http://www.w3.org/2001/XMLSchema#"
+ xmlns:sparql="http://www.w3.org/ns/sparql#" xmlns:wot="http://www.w3c.org/wot/td#"
+ xmlns:wd="http://www.wikidata.org/entity/" xmlns:ssn="http://purl.oclc.org/NET/ssnx/ssn#">
+    
+    <sparql:QueryVariable sparql:name="t">
+        <rdf:type rdf:resource="&wot;Thing"/>
+        <wot:name>Air quality sensor example 1</wot:name>
+		<wot:hasInteraction rdf:resource="http://example.org/ex1"/>
+		<wot:supportsEncoding>JSON</wot:supportsEncoding>
+		<wot:hasProperty>
+			<sparql:QueryVariable sparql:name="p">
+				<rdf:type rdf:resource="dim:Density"/>
+				<qu:unitKind rdf:resource="unit:milligramPerCubicMetre"/>
+				<wot:valueType rdf:resource="xs:unsignedInt"/>
+				<ssn:isPropertyOf rdf:resource="wd:Q498957"/>
+			</sparql:QueryVariable>
+		</wot:hasProperty>
+    </sparql:QueryVariable>
+
+</sparql:Query>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--....................................................   
+    Generic schema for RDF queries addressed to a uRDF
+	store and serialized with EXI 
+    Version: 0.1
+    Author: victor.charpenay@siemens.com
+.........................................................-->
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:sparql="http://www.w3.org/ns/sparql#"
+    targetNamespace="http://www.w3.org/ns/sparql#"
+    attributeFormDefault="qualified"
+    >
+	
+	<xs:import namespace="http://www.w3.org/1999/02/22-rdf-syntax-ns#" schemaLocation="basic_rdf_for_exi_v03.xsd"/>
+
+    <!-- root -->
+    <xs:element name="Query">
+		<xs:complexType>
+			<xs:choice maxOccurs="unbounded">
+				<xs:element ref="rdf:Description"/>
+				<xs:element ref="sparql:QueryVariable"/>
+			</xs:choice>
+		</xs:complexType>
+    </xs:element>
+	
+	<xs:element name="QueryVariable">
+        <xs:complexType>
+            <xs:sequence>
+                <!-- property -->
+                <xs:any minOccurs="0" maxOccurs="unbounded" namespace="##any" processContents="lax"/>
+            </xs:sequence>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+        </xs:complexType>
+	</xs:element>
+    
+</xs:schema>

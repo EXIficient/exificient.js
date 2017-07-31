@@ -167,6 +167,16 @@ public class TestXML extends XMLTestCase {
 	
 	
 	@Test
+	public void testBasic_rdf_query_v02() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/basic_rdf_query_v02.xml";
+		String xsdPath = "./data/xml/basic_rdf_query_v02.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
+	
+	@Test
 	public void testJson0() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
 		String xmlPath = "./data/xml/json0.xml";
 		String xsdPath = "../grammars/exi4json.xsd"; 

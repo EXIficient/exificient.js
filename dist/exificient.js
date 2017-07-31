@@ -532,12 +532,18 @@ var AbtractEXICoder = (function () {
         }
     };
     AbtractEXICoder.prototype.getQNameContext = function (namespaceContext, localName) {
-        var qnameContext; // undefined by default
-        for (var i = 0; i < namespaceContext.qnameContext.length; i++) {
-            if (namespaceContext.qnameContext[i].localName === localName) {
-                qnameContext = namespaceContext.qnameContext[i];
-                return qnameContext;
+        var qnameContext = undefined; // undefined by default
+        if (namespaceContext.qnameContext != undefined) {
+            for (var i = 0; i < namespaceContext.qnameContext.length; i++) {
+                if (namespaceContext.qnameContext[i].localName === localName) {
+                    qnameContext = namespaceContext.qnameContext[i];
+                    return qnameContext;
+                }
             }
+        }
+        else {
+            // init array
+            namespaceContext.qnameContext = new Array(); // QNameContext[]
         }
         return qnameContext;
     };
@@ -1989,7 +1995,7 @@ var EXIEncoder = (function (_super) {
         }
         else {
             // NO event-code found
-            if (grammar.type === GrammarType.builtInStartTagContent) {
+            if (grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
                 // 1st level
                 var codeLength = this.getCodeLengthForGrammar(grammar);
                 this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.isByteAligned);
@@ -2012,9 +2018,6 @@ var EXIEncoder = (function (_super) {
                 this.elementContext[this.elementContext.length - 1].grammar = grammar.elementContent;
                 console.log("NextGrammar after SE_Generic_Undefined " + localName + " is " + this.elementContext[this.elementContext.length - 1].grammar);
                 this.elementContext.push(new ElementContextEntry(qnameContext_1.uriID, qnameContext_1.localNameID, startElementGrammar));
-            }
-            else if (grammar.type === GrammarType.builtInElementContent) {
-                throw new Error("TODO SE elementContent grammar. grammar.type = " + grammar.type);
             }
             else {
                 throw new Error("No startElement event found for " + localName + ". grammar.type = " + grammar.type);
@@ -2101,7 +2104,24 @@ var EXIEncoder = (function (_super) {
             this.elementContext.pop();
         }
         else {
-            throw new Error("No endElement event found");
+            if (grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
+                // 1st level
+                var codeLength1 = this.getCodeLengthForGrammar(grammar);
+                this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength1, this.isByteAligned);
+                // 2nd level
+                var codeLength2 = this.get2ndCodeLengthForGrammar(grammar);
+                var ec2 = this.get2ndEventCode(grammar, EventType.endElement);
+                this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned);
+                // learn EE
+                var ngX = new Production(EventType.endElement, grammar.grammarID);
+                ngX.charactersDatatypeID = 0;
+                grammar.production.push(ngX);
+                // pop element stack
+                this.elementContext.pop();
+            }
+            else {
+                throw new Error("No endElement event found");
+            }
         }
     };
     EXIEncoder.prototype.attribute = function (namespace, localName, value) {
@@ -2142,7 +2162,29 @@ var EXIEncoder = (function (_super) {
                 this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
             }
             else {
-                throw new Error("No attribute event found for " + localName);
+                if (grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
+                    // 1st level
+                    var codeLength1 = this.getCodeLengthForGrammar(grammar);
+                    this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength1, this.isByteAligned);
+                    // 2nd level
+                    var codeLength2 = this.get2ndCodeLengthForGrammar(grammar);
+                    var ec2 = this.get2ndEventCode(grammar, EventType.attributeGeneric);
+                    this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned);
+                    // encode qname
+                    this.encodeQName(namespace, localName);
+                    // encode value
+                    var datatype = new SimpleDatatype();
+                    datatype.type = SimpleDatatypeType.STRING;
+                    var elementContext = this.elementContext[this.elementContext.length - 1];
+                    this.encodeDatatypeValue(value, datatype, elementContext.namespaceID, elementContext.localNameID);
+                    // learn AT
+                    var ngX = new Production(EventType.attribute, grammar.grammarID);
+                    ngX.charactersDatatypeID = 0;
+                    grammar.production.push(ngX);
+                }
+                else {
+                    throw new Error("No attribute event found for " + localName);
+                }
             }
         }
     };
@@ -2171,36 +2213,36 @@ var EXIEncoder = (function (_super) {
             this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
         }
         else {
-            //			if(grammar.type === "builtInStartTagContent" || grammar.type === "builtInElementContent" ) {
-            //				// 1st level
-            //				var codeLength = this.getCodeLengthForGrammar(grammar);
-            //				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.byteAligned);
-            //				// 2nd level
-            //				var codeLength = this.get2ndCodeLengthForGrammar(grammar);
-            //				var ec2 = this.get2ndEventCode(grammar, "charactersGeneric");
-            //				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength, this.byteAligned);
-            //				
-            //				// write value
-            //				var datatype = {"type": "STRING"};
-            //				var elementContext = this.elementContext[this.elementContext.length - 1];
-            //				this
-            //						.encodeDatatypeValue(
-            //								chars,
-            //								datatype,
-            //								elementContext.namespaceID, elementContext.localNameID);
-            //				
-            //				// learn CH
-            //				// TODO check charactersDatatypeID is STRING
-            //				if(this.grammars.simpleTypes[0].type !== "STRING") {
-            //					throw new Error("TODO simpleType ID 0 is not STRING");
-            //				}
-            //				var ng = {"event": "characters",  "charactersDatatypeID" : 0, "nextGrammarID" : grammar.elementContent.grammarID};
-            //				grammar.production.push(ng);
-            //				
-            //				// update current element context
-            //				this.elementContext[this.elementContext.length - 1].grammar = grammar.elementContent;
-            //			} else {
-            throw new Error("No characters event found for '" + chars + "'");
+            if (grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
+                // 1st level
+                var codeLength1 = this.getCodeLengthForGrammar(grammar);
+                this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength1, this.isByteAligned);
+                // 2nd level
+                var codeLength2 = this.get2ndCodeLengthForGrammar(grammar);
+                var ec2 = this.get2ndEventCode(grammar, EventType.charactersGeneric);
+                this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned);
+                // write value
+                // let datatype = {"type": "STRING"};
+                var datatype = new SimpleDatatype();
+                datatype.type = SimpleDatatypeType.STRING;
+                var elementContext = this.elementContext[this.elementContext.length - 1];
+                this.encodeDatatypeValue(chars, datatype, elementContext.namespaceID, elementContext.localNameID);
+                // learn CH
+                // TODO check charactersDatatypeID is STRING
+                // if(this.grammars.simpleTypes[0].type !== "STRING") {
+                // 	throw new Error("TODO simpleType ID 0 is not STRING");
+                // }
+                var ngX = new Production(EventType.characters, grammar.elementContent.grammarID);
+                ngX.charactersDatatypeID = 0;
+                grammar.production.push(ngX);
+                // let ng : Production = {"event": "characters",  "charactersDatatypeID" : 0, "nextGrammarID" : grammar.elementContent.grammarID};
+                // grammar.production.push(ng);
+                // update current element context
+                this.elementContext[this.elementContext.length - 1].grammar = grammar.elementContent;
+            }
+            else {
+                throw new Error("No characters event found for '" + chars + "'");
+            }
         }
     };
     EXIEncoder.prototype.decimalPlaces = function (num) {
