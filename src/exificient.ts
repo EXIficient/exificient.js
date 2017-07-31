@@ -1,4 +1,4 @@
-/*! exificient.js v0.0.3-SNAPSHOT | (c) 2017 Siemens AG | The MIT License (MIT) */
+/*! exificient.js v0.0.6-SNAPSHOT | (c) 2017 Siemens AG | The MIT License (MIT) */
 
 // export * from './exificient'
 
@@ -1218,10 +1218,20 @@ class EXIDecoder extends AbtractEXICoder {
 				} else {
 					// SE(*)
 					qnameContext = this.decodeQName();
+
+					console.log(">> SE_GENERIC (" + qnameContext.uriID + ", " + qnameContext.localName + ")");
+					seGrammar = this.getGlobalStartElement(qnameContext);
+
 //					seGrammar = this.getGlobalStartElement(qnameContext);
 //					nextGrammar = grammar.elementContent; // TODO check which grammar it is (BuiltIn?)
 
-					if(grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
+					if(grammar.type === GrammarType.firstStartTagContent || 
+						grammar.type === GrammarType.startTagContent ||
+						grammar.type === GrammarType.elementContent) {
+						// schema-informed grammars
+						seGrammar = this.getGlobalStartElement(qnameContext);
+
+					} else if(grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
 						seGrammar = this.getGlobalStartElement(qnameContext);
 						nextGrammar = grammar.elementContent; // TODO check which grammar it is (BuiltIn?)
 						console.log("NextGrammar after SE(*) is " + nextGrammar);
@@ -2170,10 +2180,10 @@ class EXIEncoder extends AbtractEXICoder {
 			
 			let startElementGrammar : Grammar;
 			
-			if (isSE || isSE_NS) {
+			if (isSE || isSE_NS || isSE_GENERIC) {
 				// ok
-			} else if (isSE_GENERIC) {
-				throw new Error("TODO StartElement Generic not implemented yet for " + localName);
+			// } else if (isSE_GENERIC) {
+			// 	throw new Error("TODO StartElement Generic not implemented yet for " + localName);
 			} else {
 				throw new Error("No startElement event found for " + localName);
 			}
@@ -2200,6 +2210,12 @@ class EXIEncoder extends AbtractEXICoder {
 			} else if (isSE_NS) {
 				// SE(uri:*)
 				// encode local-name
+				qnameContext = this.encodeLocalName(namespaceContext, localName);
+				startElementGrammar = this.getGlobalStartElement(qnameContext);
+			} else if(isSE_GENERIC) {
+				// SE(*:*)
+				// encode uri & local-name
+				namespaceContext = this.encodeUri(namespace);
 				qnameContext = this.encodeLocalName(namespaceContext, localName);
 				startElementGrammar = this.getGlobalStartElement(qnameContext);
 			}

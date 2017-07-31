@@ -144,6 +144,28 @@ public class TestXML extends XMLTestCase {
 		_testXMLCode(xmlTest, xsdPath);
 	}
 	
+	
+	@Test
+	public void testAny0() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/any0.xml";
+		String xsdPath = "./data/xml/any0.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
+	
+	@Test
+	public void testAny1() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/any1.xml";
+		String xsdPath = "./data/xml/any1.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
+	
+	
 	@Test
 	public void testJson0() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
 		String xmlPath = "./data/xml/json0.xml";

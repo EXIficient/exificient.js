@@ -1,4 +1,4 @@
-/*! exificient.js v0.0.3-SNAPSHOT | (c) 2017 Siemens AG | The MIT License (MIT) */
+/*! exificient.js v0.0.6-SNAPSHOT | (c) 2017 Siemens AG | The MIT License (MIT) */
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -1112,9 +1112,17 @@ var EXIDecoder = (function (_super) {
                     else {
                         // SE(*)
                         qnameContext = this.decodeQName();
+                        console.log(">> SE_GENERIC (" + qnameContext.uriID + ", " + qnameContext.localName + ")");
+                        seGrammar = this.getGlobalStartElement(qnameContext);
                         //					seGrammar = this.getGlobalStartElement(qnameContext);
                         //					nextGrammar = grammar.elementContent; // TODO check which grammar it is (BuiltIn?)
-                        if (grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
+                        if (grammar.type === GrammarType.firstStartTagContent ||
+                            grammar.type === GrammarType.startTagContent ||
+                            grammar.type === GrammarType.elementContent) {
+                            // schema-informed grammars
+                            seGrammar = this.getGlobalStartElement(qnameContext);
+                        }
+                        else if (grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
                             seGrammar = this.getGlobalStartElement(qnameContext);
                             nextGrammar = grammar.elementContent; // TODO check which grammar it is (BuiltIn?)
                             console.log("NextGrammar after SE(*) is " + nextGrammar);
@@ -1941,10 +1949,7 @@ var EXIEncoder = (function (_super) {
             var codeLength_1 = this.getCodeLengthForGrammar(grammar);
             this.bitStream.encodeNBitUnsignedInteger(ec, codeLength_1, this.isByteAligned);
             var startElementGrammar = void 0;
-            if (isSE || isSE_NS) {
-            }
-            else if (isSE_GENERIC) {
-                throw new Error("TODO StartElement Generic not implemented yet for " + localName);
+            if (isSE || isSE_NS || isSE_GENERIC) {
             }
             else {
                 throw new Error("No startElement event found for " + localName);
@@ -1970,6 +1975,13 @@ var EXIEncoder = (function (_super) {
             else if (isSE_NS) {
                 // SE(uri:*)
                 // encode local-name
+                qnameContext = this.encodeLocalName(namespaceContext, localName);
+                startElementGrammar = this.getGlobalStartElement(qnameContext);
+            }
+            else if (isSE_GENERIC) {
+                // SE(*:*)
+                // encode uri & local-name
+                namespaceContext = this.encodeUri(namespace);
                 qnameContext = this.encodeLocalName(namespaceContext, localName);
                 startElementGrammar = this.getGlobalStartElement(qnameContext);
             }
