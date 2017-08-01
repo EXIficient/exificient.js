@@ -2425,7 +2425,7 @@ class EXIEncoder extends AbtractEXICoder {
 					this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned);
 
 					// encode qname
-					this.encodeQName(namespace, localName);
+					let qnAT : QNameContext = this.encodeQName(namespace, localName);
 
 					// encode value
 					let datatype : SimpleDatatype = new SimpleDatatype();
@@ -2436,7 +2436,9 @@ class EXIEncoder extends AbtractEXICoder {
 
 					// learn AT
 					let ngX = new Production(EventType.attribute, grammar.grammarID);
-					ngX.charactersDatatypeID = 0;
+					ngX.attributeDatatypeID = 0;
+					ngX.attributeNamespaceID = qnAT.uriID;
+					ngX.attributeLocalNameID = qnAT.localNameID;
 					grammar.production.push(ngX);
 
 				} else {

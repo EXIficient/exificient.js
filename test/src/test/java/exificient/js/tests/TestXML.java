@@ -229,10 +229,12 @@ public class TestXML extends XMLTestCase {
 
 	
 	protected void _testXMLCode(String xmlTest, String xsdPath) throws NoSuchMethodException, IOException, ScriptException, EXIException, TransformerException, SAXException {
+		// schema-informed
 		_testXMLEncode(xmlTest, xsdPath, CodingMode.BYTE_PACKED);
 		_testXMLEncode(xmlTest, xsdPath, CodingMode.BIT_PACKED);
 		_testXMLDecode(xmlTest, xsdPath, CodingMode.BYTE_PACKED);
 		_testXMLDecode(xmlTest, xsdPath, CodingMode.BIT_PACKED);
+		// TODO schema-less coding
 	}
 
 	protected void _testXMLEncode(String xmlTest, String xsdPath, CodingMode codingMode)

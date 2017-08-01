@@ -25,6 +25,7 @@ function getXMLDocument(textXML) {
         factory.setNamespaceAware(true);
         var documentBuilder = factory.newDocumentBuilder();
         xmlDoc = documentBuilder.parse(new org.xml.sax.InputSource(new java.io.StringReader(textXML)));
+        /* return doc; */
     }
     else {
         throw new Error("No XML parser found");

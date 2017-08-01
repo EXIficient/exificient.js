@@ -1,0 +1,127 @@
+{
+	"qnames" : { 
+		"namespaceContext" : [
+			{
+				"uriID" : 0 ,
+				"uri" : "", 
+				"qnameContext" : []
+			}
+			, 
+			{
+				"uriID" : 1 ,
+				"uri" : "http://www.w3.org/XML/1998/namespace", 
+				"qnameContext" : [
+					{
+						"uriID" : 1 ,
+						"localNameID" : 0 ,
+						"localName" : "base"
+					}
+					, 
+					{
+						"uriID" : 1 ,
+						"localNameID" : 1 ,
+						"localName" : "id"
+					}
+					, 
+					{
+						"uriID" : 1 ,
+						"localNameID" : 2 ,
+						"localName" : "lang"
+					}
+					, 
+					{
+						"uriID" : 1 ,
+						"localNameID" : 3 ,
+						"localName" : "space"
+					}
+				]
+			}
+			, 
+			{
+				"uriID" : 2 ,
+				"uri" : "http://www.w3.org/2001/XMLSchema-instance", 
+				"qnameContext" : [
+					{
+						"uriID" : 2 ,
+						"localNameID" : 0 ,
+						"localName" : "nil"
+					}
+					, 
+					{
+						"uriID" : 2 ,
+						"localNameID" : 1 ,
+						"localName" : "type"
+					}
+				]
+			}
+		]
+	}
+	,
+	"simpleDatatypes" : [ ]
+	, 
+	"grs" : {
+		"documentGrammarID" : 0 ,
+		"fragmentGrammarID" : 3 ,
+		"grammar" : [
+			{
+				"grammarID" : "0" ,
+				"type" : "document" ,
+				"production" : [ 
+					{
+						"event" : "startDocument" ,
+						"nextGrammarID" : 1
+					}
+				]
+			}
+			, 
+			{
+				"grammarID" : "1" ,
+				"type" : "docContent" ,
+				"production" : [ 
+					{
+						"event" : "startElementGeneric" ,
+						"nextGrammarID" : 2
+					}
+				]
+			}
+			, 
+			{
+				"grammarID" : "2" ,
+				"type" : "docEnd" ,
+				"production" : [ 
+					{
+						"event" : "endDocument" ,
+						"nextGrammarID" : -1
+					}
+				]
+			}
+			, 
+			{
+				"grammarID" : "3" ,
+				"type" : "fragment" ,
+				"production" : [ 
+					{
+						"event" : "startDocument" ,
+						"nextGrammarID" : 4
+					}
+				]
+			}
+			, 
+			{
+				"grammarID" : "4" ,
+				"type" : "fragmentContent" ,
+				"production" : [ 
+					{
+						"event" : "startElementGeneric" ,
+						"nextGrammarID" : 4
+					}
+					, 
+					{
+						"event" : "endDocument" ,
+						"nextGrammarID" : -1
+					}
+				]
+			}
+		]
+	}
+}

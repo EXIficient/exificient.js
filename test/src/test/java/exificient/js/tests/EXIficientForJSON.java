@@ -42,6 +42,8 @@ public class EXIficientForJSON {
 				// do nothing
 			} else if("exports.parse = parse;".equals(aLine)) {
 				// do nothing
+			} else if(aLine.startsWith("Object.defineProperty(exports,")) {
+				// do nothing
 			} else {
 				to.write(aLine);
 				to.write(NEW_LINE);

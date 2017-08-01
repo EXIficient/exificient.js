@@ -1,10 +1,16 @@
-/*! exificient.js v0.0.6-SNAPSHOT | (c) 2017 Siemens AG | The MIT License (MIT) */
 "use strict";
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+/*! exificient.js v0.0.6-SNAPSHOT | (c) 2017 Siemens AG | The MIT License (MIT) */
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
+// Object.defineProperty(exports, "__esModule", { value: true });
 // export * from './exificient'
 var MAX_EXI_FLOAT_DIGITS = 6; // -1 indicates no rounding
 /*******************************************************************************
@@ -328,6 +334,7 @@ var AbtractEXICoder = (function () {
         if (characteristics < 0) {
             // error
             throw new Error("Error: Code length for " + characteristics + " not possible");
+            // return -1;
         }
         else if (characteristics < 2) {
             // 0 .. 1
@@ -436,6 +443,7 @@ var AbtractEXICoder = (function () {
         else {
             // unknown grammar type
             throw new Error("Unknown grammar type: " + grammar.type);
+            // return -1;
         }
     };
     AbtractEXICoder.prototype.get2ndCodeLengthForGrammar = function (grammar) {
@@ -452,6 +460,7 @@ var AbtractEXICoder = (function () {
         else {
             // unknown/unhandled grammar type
             throw new Error("Unknown/unhandled 2nd grammar type: " + grammar.type);
+            // return -1;
         }
     };
     AbtractEXICoder.prototype.get2ndEventCode = function (grammar, event) {
@@ -551,6 +560,7 @@ var AbtractEXICoder = (function () {
         if (qnameContext.globalElementGrammarID !== undefined) {
             // there is a global (static) element grammar
             return this.grammars.grs.grammar[qnameContext.globalElementGrammarID];
+            // throw new Error("Todo get global element grammar for : " + qnameContext);
         }
         else {
             // check runtime global element grammars
@@ -577,6 +587,7 @@ var AbtractEXICoder = (function () {
             this.runtimeGrammars.push(seGrammar); // e.g., -1
             this.runtimeGrammars.push(elementContent); // e.g., -2
             return seGrammar;
+            //			}
         }
     };
     return AbtractEXICoder;
@@ -635,6 +646,8 @@ var BitInputStream = (function () {
         else {
             if (nbits < 0) {
                 throw new Error("Error in decodeNBitUnsignedInteger, nbits = " + nbits);
+                // this.errn = -1;
+                // return -1;
             }
             else if (nbits === 0) {
                 return 0;
@@ -869,6 +882,9 @@ var EXIDecoder = (function (_super) {
                 else {
                     // Note: we need to change the process so that a values is returned instead!!
                     throw new Error("Unsupported LIST datatype attribute!!");
+                    // var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
+                    // var qnameContext = namespaceContext.qnameContext[localNameID];
+                    // eh.attribute(namespaceContext.uri, qnameContext.localName, sList);
                 }
             }
         }
@@ -1052,6 +1068,8 @@ var EXIDecoder = (function (_super) {
                 var codeLength2 = this.get2ndCodeLengthForGrammar(grammar);
                 var ec2 = this.bitStream.decodeNBitUnsignedInteger(codeLength2, this.isByteAligned); //
                 event_1 = this.get2ndEvent(grammar, ec2);
+                // TODO prod
+                // throw new Error("TODO Second event-code level " + grammar.type + ", ec2="+ec2 + " --> " + event);
             }
             else {
                 prod = grammar.production[ec];
@@ -1068,6 +1086,7 @@ var EXIDecoder = (function (_super) {
                     var rid = (prod.nextGrammarID + 1) * (-1);
                     nextGrammar = this.runtimeGrammars[rid];
                 }
+                // nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
             }
             // console.log("\t" + "Event Production " + prod.event);
             switch (event_1) {
@@ -1139,6 +1158,8 @@ var EXIDecoder = (function (_super) {
                             ngX.startElementLocalNameID = qnameContext.localNameID;
                             //ngX.nextGrammarID = grammar.elementContent.grammarID;
                             grammar.production.push(ngX);
+                            // var ng = {"event": "startElement", "startElementGrammarID" : seGrammar.grammarID, "startElementNamespaceID" : qnameContext.uriID, "startElementLocalNameID" : qnameContext.localNameID, "nextGrammarID" : grammar.elementContent.grammarID};
+                            // grammar.production.push(ng);
                         }
                         else {
                             throw new Error("Unsupported grammar-type = " + grammar.type + " for SE " + qnameContext.localName);
@@ -1351,6 +1372,18 @@ var XMLEventHandler = (function (_super) {
                     }
                 }
             }
+            // none found --> undefined
+            /*
+            if(this.xmlDecls[namespace] != null) {
+                // get existing prefix
+                // TODO assumption declared already (Note: not always the case for nested elements!!!)
+                pfx = this.xmlDecls[namespace];
+            } else {
+                // create new prefix
+                pfx = "ns" + this.xmlDecls.length;
+                this.xmlDecls[namespace]  = pfx;
+            }
+            */
         }
         return pfx;
     };
@@ -1507,6 +1540,7 @@ var BitOutputStream = (function () {
             }
             // TODO to check why we can't combine bit and byteAligned
             if (n === 0) {
+                // 0 bytes
             }
             else if (n < 9) {
                 // 1 byte
@@ -1536,6 +1570,7 @@ var BitOutputStream = (function () {
         }
         else {
             if (n === 0) {
+                // nothing to write
             }
             else if (n <= this.capacity) {
                 // all bits fit into the current buffer
@@ -1807,6 +1842,8 @@ var EXIEncoder = (function (_super) {
                         this.attribute(at.namespaceURI, at.localName, at.nodeValue);
                     }
                     else {
+                        // when does this happen, only for schemaLocations and
+                        // such?
                     }
                 }
             }
@@ -1837,6 +1874,7 @@ var EXIEncoder = (function (_super) {
                 // Process only element nodes (type 1) further
                 if (cn.nodeType === 1) {
                     this.processXMLElement(cn);
+                    // console.log(childNodes[i].childNodes[0].nodeValue);
                 }
             }
         }
@@ -1956,6 +1994,9 @@ var EXIEncoder = (function (_super) {
             this.bitStream.encodeNBitUnsignedInteger(ec, codeLength_1, this.isByteAligned);
             var startElementGrammar = void 0;
             if (isSE || isSE_NS || isSE_GENERIC) {
+                // ok
+                // } else if (isSE_GENERIC) {
+                // 	throw new Error("TODO StartElement Generic not implemented yet for " + localName);
             }
             else {
                 throw new Error("No startElement event found for " + localName);
@@ -1992,6 +2033,8 @@ var EXIEncoder = (function (_super) {
                 startElementGrammar = this.getGlobalStartElement(qnameContext);
             }
             this.elementContext.push(new ElementContextEntry(namespaceContext.uriID, qnameContext.localNameID, startElementGrammar));
+            //			this.elementContext.push(new ElementContextEntry(
+            //			prod.startElementNamespaceID, prod.startElementLocalNameID, startElementGrammar));
         }
         else {
             // NO event-code found
@@ -2018,6 +2061,8 @@ var EXIEncoder = (function (_super) {
                 this.elementContext[this.elementContext.length - 1].grammar = grammar.elementContent;
                 console.log("NextGrammar after SE_Generic_Undefined " + localName + " is " + this.elementContext[this.elementContext.length - 1].grammar);
                 this.elementContext.push(new ElementContextEntry(qnameContext_1.uriID, qnameContext_1.localNameID, startElementGrammar));
+                // } else if(grammar.type === GrammarType.builtInElementContent) {
+                // 	throw new Error("TODO SE elementContent grammar. grammar.type = " + grammar.type);
             }
             else {
                 throw new Error("No startElement event found for " + localName + ". grammar.type = " + grammar.type);
@@ -2131,8 +2176,10 @@ var EXIEncoder = (function (_super) {
         console.log("\tAT {" + namespace + "}" + localName + " == '" + value
             + "'");
         if ("http://www.w3.org/2000/xmlns/" === namespace) {
+            // TODO namespace declaration
         }
         else if ("http://www.w3.org/2001/XMLSchema-instance" === namespace) {
+            // TODO schemaLocation et cetera
         }
         else {
             // normal attribute
@@ -2171,7 +2218,7 @@ var EXIEncoder = (function (_super) {
                     var ec2 = this.get2ndEventCode(grammar, EventType.attributeGeneric);
                     this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned);
                     // encode qname
-                    this.encodeQName(namespace, localName);
+                    var qnAT = this.encodeQName(namespace, localName);
                     // encode value
                     var datatype = new SimpleDatatype();
                     datatype.type = SimpleDatatypeType.STRING;
@@ -2179,7 +2226,9 @@ var EXIEncoder = (function (_super) {
                     this.encodeDatatypeValue(value, datatype, elementContext.namespaceID, elementContext.localNameID);
                     // learn AT
                     var ngX = new Production(EventType.attribute, grammar.grammarID);
-                    ngX.charactersDatatypeID = 0;
+                    ngX.attributeDatatypeID = 0;
+                    ngX.attributeNamespaceID = qnAT.uriID;
+                    ngX.attributeLocalNameID = qnAT.localNameID;
                     grammar.production.push(ngX);
                 }
                 else {
@@ -2351,6 +2400,7 @@ var EXIEncoder = (function (_super) {
      */
     EXIEncoder.prototype.checkCharacter = function (sb, pos, c, dateTimeValue) {
         if (sb.length > pos && sb.charAt(pos) === c) {
+            // ok
         }
         else {
             dateTimeValue.error = -1;
@@ -2688,6 +2738,7 @@ var EXI4JSONEncoder = (function (_super) {
                     // OK
                     // if (sb != null) {
                     sb += c;
+                    // }
                 }
                 else if (cc == '_'.charCodeAt(0)) {
                     // NOT OK: valid NCName, but needs to be escaped for EXI4JSON
@@ -3049,14 +3100,14 @@ var EXI4JSON = (function () {
     };
     return EXI4JSON;
 }());
-exports.EXI4JSON = EXI4JSON;
+// exports.EXI4JSON = EXI4JSON;
 function exify(jsonObj) {
     var encoder = new EXI4JSONEncoder();
     encoder.encodeJsonObject(jsonObj);
     var uint8Array = encoder.getUint8Array();
     return uint8Array;
 }
-exports.exify = exify;
+// exports.exify = exify;
 function parse(uint8Array) {
     var decoder = new EXI4JSONDecoder();
     var jsonHandler = new JSONEventHandler();
@@ -3064,4 +3115,4 @@ function parse(uint8Array) {
     decoder.decode(uint8Array);
     return jsonHandler.getJSON();
 }
-exports.parse = parse;
+// exports.parse = parse;

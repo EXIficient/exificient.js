@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha -r ts-node/register test/TypeScriptTest.ts"
   },
   "repository": {
     "type": "git",
@@ -23,9 +23,9 @@
     "url": "https://github.com/EXIficient/exificient.js/issues"
   },
   "homepage": "https://github.com/EXIficient/exificient.js#readme",
-  "files" : [
-	"dist/exificient.js",
-	"dist/xml-parser.js"
+  "files": [
+    "dist/exificient.js",
+    "dist/xml-parser.js"
   ],
   "dependencies": {
     "del": "^2.2.0",
@@ -33,6 +33,16 @@
     "gulp-concat": "^2.6.0",
     "gulp-rename": "^1.2.2",
     "gulp-sourcemaps": "^1.6.0",
-    "gulp-uglify": "^1.5.3"
+    "gulp-uglify": "^1.5.3",
+    "tsc": "^1.20150623.0"
+  },
+  "devDependencies": {
+    "@types/chai": "^4.0.1",
+    "@types/mocha": "^2.2.41",
+    "chai": "^4.1.0",
+    "mocha": "^3.5.0",
+    "ts-node": "^3.3.0",
+    "typescript": "^2.3.4",
+    "typescript-standard": "^0.3.30"
   }
 }
