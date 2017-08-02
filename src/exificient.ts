@@ -259,6 +259,10 @@ class SimpleDatatype {
 	listType : SimpleDatatypeType;
 
 	datetimeType : DatetimeType;
+
+	constructor(type: SimpleDatatypeType) {
+		this.type = type;
+	}
 }
 
 /*
@@ -322,6 +326,8 @@ abstract class AbtractEXICoder {
 
 	runtimeGlobalElements : any; // Map
 	runtimeGrammars : Grammar[];
+
+	static DEFAULT_SIMPLE_DATATYPE  : SimpleDatatype = new SimpleDatatype(SimpleDatatypeType.STRING);
 
     constructor(grammars: Grammars, options: any) {
 		this.grammars = grammars;
@@ -647,6 +653,42 @@ abstract class AbtractEXICoder {
 //			}
 		}
 	}
+
+
+	learnStartElement(grammar : Grammar, seGrammarID : number, seQname : QNameContext)  {
+		// TODO builtIn FragmentGrammar
+		if(grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
+			// learn SE
+			let ng = new Production(EventType.startElement, grammar.elementContent.grammarID);
+			ng.startElementGrammarID = seGrammarID;
+			ng.startElementNamespaceID = seQname.uriID;
+			ng.startElementLocalNameID = seQname.localNameID;
+			grammar.production.push(ng);
+		}
+	}
+
+
+
+	learnAttribute(grammar : Grammar, atQname : QNameContext)  {
+		if(grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
+			// learn AT
+			let ng = new Production(EventType.attribute, grammar.grammarID);
+			ng.attributeDatatypeID = undefined; // STRING default
+			ng.attributeNamespaceID = atQname.uriID;
+			ng.attributeLocalNameID = atQname.localNameID;
+			grammar.production.push(ng);
+		}
+	}
+
+	learnCharacters(grammar : Grammar)  {
+		if(grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
+			// learn CH
+			let ng = new Production(EventType.characters, grammar.elementContent.grammarID);
+			ng.charactersDatatypeID = undefined;
+			grammar.production.push(ng);
+		}
+	}
+
 }
 
 /*******************************************************************************
@@ -1242,14 +1284,7 @@ class EXIDecoder extends AbtractEXICoder {
 						console.log("NextGrammar after SE(*) is " + nextGrammar);
 						
 						// learn SE
-						let ngX = new Production(EventType.startElement, grammar.elementContent.grammarID);
-						ngX.startElementGrammarID = seGrammar.grammarID;
-						ngX.startElementNamespaceID = qnameContext.uriID;
-						ngX.startElementLocalNameID =  qnameContext.localNameID;
-						//ngX.nextGrammarID = grammar.elementContent.grammarID;
-						grammar.production.push(ngX);
-						// var ng = {"event": "startElement", "startElementGrammarID" : seGrammar.grammarID, "startElementNamespaceID" : qnameContext.uriID, "startElementLocalNameID" : qnameContext.localNameID, "nextGrammarID" : grammar.elementContent.grammarID};
-						// grammar.production.push(ng);
+						this.learnStartElement(grammar, seGrammar.grammarID, qnameContext);
 					} else {
 						throw new Error("Unsupported grammar-type = " + grammar.type + " for SE " +  qnameContext.localName);
 					}
@@ -2245,13 +2280,7 @@ class EXIEncoder extends AbtractEXICoder {
 				let startElementGrammar = this.getGlobalStartElement(qnameContext);
 				
 				// learn SE
-				let ng = new Production(EventType.startElement, grammar.elementContent.grammarID);
-				ng.startElementGrammarID = startElementGrammar.grammarID;
-				ng.startElementNamespaceID = qnameContext.uriID;
-				ng.startElementLocalNameID = qnameContext.localNameID;
-				ng.nextGrammarID =  grammar.elementContent.grammarID;
-				// var ng = {"event": "startElement", "startElementGrammarID" : startElementGrammar.grammarID, "startElementNamespaceID" : qnameContext.uriID, "startElementLocalNameID" : qnameContext.localNameID, "nextGrammarID" : grammar.elementContent.grammarID};
-				grammar.production.push(ng);
+				this.learnStartElement(grammar, startElementGrammar.grammarID, qnameContext);
 				
 				// update current element context
 				this.elementContext[this.elementContext.length - 1].grammar = grammar.elementContent;
@@ -2407,10 +2436,15 @@ class EXIEncoder extends AbtractEXICoder {
 				let codeLength = this.getCodeLengthForGrammar(grammar);
 				this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.isByteAligned);
 				// write value
-				let datatype : SimpleDatatype = this.grammars.simpleDatatypes[prod.attributeDatatypeID];
-				this
-						.encodeDatatypeValue(value, datatype,
-								prod.attributeNamespaceID, prod.attributeLocalNameID);
+				let datatype : SimpleDatatype;
+				if(prod.attributeDatatypeID === undefined || prod.attributeDatatypeID < 0) {
+					// learned AT
+					datatype = EXIEncoder.DEFAULT_SIMPLE_DATATYPE;
+				} else {
+					datatype = this.grammars.simpleDatatypes[prod.attributeDatatypeID];
+				}
+				this.encodeDatatypeValue(value, datatype,
+					prod.attributeNamespaceID, prod.attributeLocalNameID);
 				// update current element context with revised grammar
 				let nextGrammar : Grammar = this.grammars.grs.grammar[prod.nextGrammarID];
 				this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
@@ -2428,18 +2462,12 @@ class EXIEncoder extends AbtractEXICoder {
 					let qnAT : QNameContext = this.encodeQName(namespace, localName);
 
 					// encode value
-					let datatype : SimpleDatatype = new SimpleDatatype();
-					datatype.type  = SimpleDatatypeType.STRING;
 					let elementContext = this.elementContext[this.elementContext.length - 1];
-					this .encodeDatatypeValue(value, datatype,
+					this .encodeDatatypeValue(value, EXIEncoder.DEFAULT_SIMPLE_DATATYPE,
 						elementContext.namespaceID, elementContext.localNameID);
 
 					// learn AT
-					let ngX = new Production(EventType.attribute, grammar.grammarID);
-					ngX.attributeDatatypeID = 0;
-					ngX.attributeNamespaceID = qnAT.uriID;
-					ngX.attributeLocalNameID = qnAT.localNameID;
-					grammar.production.push(ngX);
+					this.learnAttribute(grammar, qnAT);
 
 				} else {
 					throw new Error("No attribute event found for " + localName);
@@ -2465,13 +2493,16 @@ class EXIEncoder extends AbtractEXICoder {
 			let codeLength = this.getCodeLengthForGrammar(grammar);
 			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.isByteAligned);
 			// write value
-			let datatype : SimpleDatatype = this.grammars.simpleDatatypes[prod.charactersDatatypeID];
+			let datatype : SimpleDatatype;
+			if(prod.charactersDatatypeID === undefined || prod.charactersDatatypeID < 0) {
+				// learned CH
+				datatype = EXIEncoder.DEFAULT_SIMPLE_DATATYPE;
+			} else {
+				datatype = this.grammars.simpleDatatypes[prod.charactersDatatypeID];
+			}
 			let elementContext : ElementContextEntry = this.elementContext[this.elementContext.length - 1];
-			this
-					.encodeDatatypeValue(
-							chars,
-							datatype,
-							elementContext.namespaceID, elementContext.localNameID);
+			this.encodeDatatypeValue(chars, datatype,
+				elementContext.namespaceID, elementContext.localNameID);
 			// update current element context with revised grammar
 			let nextGrammar : Grammar = this.grammars.grs.grammar[prod.nextGrammarID];
 			this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
@@ -2486,24 +2517,12 @@ class EXIEncoder extends AbtractEXICoder {
 				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned);
 				
 				// write value
-				// let datatype = {"type": "STRING"};
-				let datatype : SimpleDatatype = new SimpleDatatype();
-				datatype.type  = SimpleDatatypeType.STRING;
 				let elementContext = this.elementContext[this.elementContext.length - 1];
-				this.encodeDatatypeValue(chars, datatype,
+				this.encodeDatatypeValue(chars, EXIEncoder.DEFAULT_SIMPLE_DATATYPE,
 					elementContext.namespaceID, elementContext.localNameID);
 				
 				// learn CH
-				// TODO check charactersDatatypeID is STRING
-				// if(this.grammars.simpleTypes[0].type !== "STRING") {
-				// 	throw new Error("TODO simpleType ID 0 is not STRING");
-				// }
-				let ngX = new Production(EventType.characters, grammar.elementContent.grammarID);
-				ngX.charactersDatatypeID = 0;
-				grammar.production.push(ngX);
-
-				// let ng : Production = {"event": "characters",  "charactersDatatypeID" : 0, "nextGrammarID" : grammar.elementContent.grammarID};
-				// grammar.production.push(ng);
+				this.learnCharacters(grammar);
 				
 				// update current element context
 				this.elementContext[this.elementContext.length - 1].grammar = grammar.elementContent;
