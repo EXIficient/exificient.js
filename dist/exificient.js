@@ -10,7 +10,7 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-// Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, "__esModule", { value: true });
 // export * from './exificient'
 var MAX_EXI_FLOAT_DIGITS = 6; // -1 indicates no rounding
 /*******************************************************************************
@@ -235,6 +235,7 @@ var Grammars = (function () {
         // copy content as is
         var grammars = json;
         grammars.isSchemaLess = schemaLess;
+        console.log("SchemaLess: " + grammars.isSchemaLess);
         // fix enum string to numbers
         if (grammars.simpleDatatypes != undefined) {
             for (var i = 0; i < grammars.simpleDatatypes.length; i++) {
@@ -477,9 +478,9 @@ var AbtractEXICoder = (function () {
             return 2;
         }
         else if (grammar.type === GrammarType.builtInElementContent) {
-            // --> second level EE, SE(*), CH, ER?, [CM?, PI?]
-            // 3 options
-            return 2;
+            // --> second level SE(*), CH, ER?, [CM?, PI?]
+            // 2 options
+            return 1;
         }
         else {
             // unknown/unhandled grammar type
@@ -509,15 +510,15 @@ var AbtractEXICoder = (function () {
         }
         else if (grammar.type === GrammarType.builtInElementContent) {
             // --> second level EE, SE(*), CH, ER?, [CM?, PI?]
-            // 3 options
-            if (event === EventType.endElementGeneric) {
+            // 2 options
+            /*if(event === EventType.endElementGeneric) {
+                return 0;
+            } else */
+            if (event === EventType.startElementGeneric) {
                 return 0;
             }
-            else if (event === EventType.startElementGeneric) {
-                return 1;
-            }
             else if (event === EventType.charactersGeneric) {
-                return 2;
+                return 1;
             }
             else {
                 throw new Error("Unknown/unhandled 2nd level event: " + event);
@@ -549,11 +550,11 @@ var AbtractEXICoder = (function () {
             // --> second level EE, SE(*), CH, ER?, [CM?, PI?]
             // 3 options
             switch (ec2) {
+                /*case 0:
+                    return EventType.endElementGeneric;*/
                 case 0:
-                    return EventType.endElementGeneric;
-                case 1:
                     return EventType.startElementGeneric;
-                case 2:
+                case 1:
                     return EventType.charactersGeneric;
                 default:
                     throw new Error("Unsupported event-code=" + ec2 + "in " + grammar);
@@ -622,7 +623,8 @@ var AbtractEXICoder = (function () {
             ng.startElementGrammarID = seGrammarID;
             ng.startElementNamespaceID = seQname.uriID;
             ng.startElementLocalNameID = seQname.localNameID;
-            grammar.production.push(ng);
+            grammar.production.splice(0, 0, ng);
+            // grammar.production.push(ng);
         }
     };
     AbtractEXICoder.prototype.learnAttribute = function (grammar, atQname) {
@@ -633,7 +635,8 @@ var AbtractEXICoder = (function () {
             ng.attributeDatatypeID = undefined; // STRING default
             ng.attributeNamespaceID = atQname.uriID;
             ng.attributeLocalNameID = atQname.localNameID;
-            grammar.production.push(ng);
+            grammar.production.splice(0, 0, ng);
+            // grammar.production.push(ng);
         }
     };
     AbtractEXICoder.prototype.learnCharacters = function (grammar) {
@@ -641,14 +644,16 @@ var AbtractEXICoder = (function () {
             // learn CH
             var ng = new Production(EventType.characters, grammar.elementContent.grammarID);
             ng.charactersDatatypeID = undefined;
-            grammar.production.push(ng);
+            grammar.production.splice(0, 0, ng);
+            // grammar.production.push(ng);
         }
     };
     AbtractEXICoder.prototype.learnEndElement = function (grammar) {
         if (grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
             // learn EE
             var ng = new Production(EventType.endElement, grammar.elementContent.grammarID);
-            grammar.production.push(ng);
+            grammar.production.splice(0, 0, ng);
+            // grammar.production.push(ng);
         }
     };
     AbtractEXICoder.DEFAULT_SIMPLE_DATATYPE = new SimpleDatatype(SimpleDatatypeType.STRING);
@@ -1814,6 +1819,7 @@ var BitOutputStream = (function () {
         for (var i = 0; i < str.length; i++) {
             var cp = str.charCodeAt(i);
             this.encodeUnsignedInteger(cp, byteAligned);
+            console.log("char encoded " + cp);
         }
     };
     return BitOutputStream;
@@ -1901,6 +1907,7 @@ var EXIEncoder = (function (_super) {
         if (el.attributes != null && el.attributes.length > 0) {
             if (el.attributes.length > 1) {
                 if (this.grammars.isSchemaLess != undefined && this.grammars.isSchemaLess) {
+                    console.log("Do not sort attributes in schema-less mode");
                     for (var i = 0; i < el.attributes.length; i++) {
                         var ati = el.attributes.item(i);
                         this.attribute(ati.namespaceURI, ati.localName, ati.nodeValue);
@@ -1908,6 +1915,7 @@ var EXIEncoder = (function (_super) {
                 }
                 else {
                     // sorting
+                    console.log("Sort attributes in schema-informed mode");
                     var atts = [];
                     for (var i = 0; i < el.attributes.length; i++) {
                         // console.log(" AT " + el.attributes[i].nodeName + " == " +
@@ -2074,8 +2082,9 @@ var EXIEncoder = (function (_super) {
         if (ec != -1) {
             // event-code found
             // console.log("\t" + "Event Code == " + ec );
-            var codeLength_1 = this.getCodeLengthForGrammar(grammar);
-            this.bitStream.encodeNBitUnsignedInteger(ec, codeLength_1, this.isByteAligned);
+            var codeLength = this.getCodeLengthForGrammar(grammar);
+            this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.isByteAligned);
+            console.log("SE encoded " + ec + " in " + codeLength);
             var startElementGrammar = void 0;
             if (isSE || isSE_NS || isSE_GENERIC) {
                 // ok
@@ -2115,14 +2124,17 @@ var EXIEncoder = (function (_super) {
             // NO event-code found
             if (grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
                 // 1st level
-                var codeLength = this.getCodeLengthForGrammar(grammar);
-                this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.isByteAligned);
+                var codeLength1 = this.getCodeLengthForGrammar(grammar);
+                this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength1, this.isByteAligned);
+                console.log("SE1 encoded " + grammar.production.length + " in " + codeLength1);
                 // 2nd level
-                var codeLength = this.get2ndCodeLengthForGrammar(grammar);
+                var codeLength2 = this.get2ndCodeLengthForGrammar(grammar);
                 var ec2 = this.get2ndEventCode(grammar, EventType.startElementGeneric);
-                this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength, this.isByteAligned); //2 in 2 bits
+                this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned); //2 in 2 bits
+                console.log("SE2 encoded " + ec2 + " in " + codeLength2);
                 // encode qname
                 var qnameContext_1 = this.encodeQName(namespace, localName);
+                console.log("SE qname encoded");
                 var startElementGrammar = this.getGlobalStartElement(qnameContext_1);
                 // learn SE
                 this.learnStartElement(grammar, startElementGrammar.grammarID, qnameContext_1);
@@ -2150,6 +2162,7 @@ var EXIEncoder = (function (_super) {
             // ==> zero (0) as an n-nit unsigned integer
             // followed by uri encoded as string
             this.bitStream.encodeNBitUnsignedInteger(0, n, this.isByteAligned);
+            console.log("Uri miss encoded " + 0 + " in " + n);
             this.bitStream.encodeStringOnly(namespace, this.isByteAligned);
             // after encoding string value is added to table
             namespaceContext = new NamespaceContext();
@@ -2162,6 +2175,7 @@ var EXIEncoder = (function (_super) {
             // string value found
             // ==> value(i+1) is encoded as n-bit unsigned integer
             this.bitStream.encodeNBitUnsignedInteger(namespaceContext.uriID + 1, n, this.isByteAligned);
+            console.log("Uri hit encoded " + (namespaceContext.uriID + 1) + " in " + n);
         }
         return namespaceContext;
     };
@@ -2172,6 +2186,7 @@ var EXIEncoder = (function (_super) {
             // ==> string literal is encoded as a String
             // with the length of the string incremented by one
             this.bitStream.encodeUnsignedInteger(localName.length + 1, this.isByteAligned);
+            console.log("localName miss encoded " + (localName.length + 1));
             this.bitStream.encodeStringOnly(localName, this.isByteAligned);
             // After encoding the string value, it is added to the string
             // table partition and assigned the next available compact
@@ -2182,10 +2197,13 @@ var EXIEncoder = (function (_super) {
             qnameContext.uriID = namespaceContext.uriID;
             qnameContext.localNameID = namespaceContext.qnameContext.length;
             qnameContext.localName = localName;
+            console.log("QName length before: " + namespaceContext.qnameContext.length);
             // qnameContext = {"uriID": namespaceContext.uriID, "localNameID": namespaceContext.qnameContext.length, "localName": localName};
-            console.log("create new runtime qnameContext = '" + qnameContext + "'");
+            console.log("create new runtime qnameContext for '" + localName + "', uriId=" + qnameContext.uriID + " and localNameID=" + qnameContext.localNameID);
             // this.runtimeQNameContexts.push(qnameContext);
+            console.log("QName length beforeb: " + namespaceContext.qnameContext.length);
             namespaceContext.qnameContext.push(qnameContext);
+            console.log("QName length after: " + namespaceContext.qnameContext.length);
         }
         else {
             // string value found in local partition
@@ -2194,8 +2212,10 @@ var EXIEncoder = (function (_super) {
             // string value as an n-bit unsigned integer n is log2 m and m is
             // the number of entries in the string table partition
             this.bitStream.encodeUnsignedInteger(0, this.isByteAligned);
+            console.log("localName hit1 encoded " + 0);
             var n = this.getCodeLength(namespaceContext.qnameContext.length);
             this.bitStream.encodeNBitUnsignedInteger(qnameContext.localNameID, n, this.isByteAligned);
+            console.log("localName hit2 encoded " + qnameContext.localNameID + " in " + n);
         }
         return qnameContext;
     };
@@ -2214,6 +2234,7 @@ var EXIEncoder = (function (_super) {
             // console.log("\t" + "Event Code == " + ec );
             var codeLength = this.getCodeLengthForGrammar(grammar);
             this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.isByteAligned);
+            console.log("EE encoded " + ec + " in " + codeLength);
             // pop element stack
             this.elementContext.pop();
         }
@@ -2222,10 +2243,12 @@ var EXIEncoder = (function (_super) {
                 // 1st level
                 var codeLength1 = this.getCodeLengthForGrammar(grammar);
                 this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength1, this.isByteAligned);
+                console.log("EE1 encoded " + grammar.production.length + " in " + codeLength1);
                 // 2nd level
                 var codeLength2 = this.get2ndCodeLengthForGrammar(grammar);
                 var ec2 = this.get2ndEventCode(grammar, EventType.endElementGeneric);
                 this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned);
+                console.log("EE2 encoded " + ec2 + " in " + codeLength2);
                 // learn EE
                 this.learnEndElement(grammar);
                 // pop element stack
@@ -2294,7 +2317,7 @@ var EXIEncoder = (function (_super) {
                     var qnAT = this.encodeQName(namespace, localName);
                     // encode value
                     var elementContext = this.elementContext[this.elementContext.length - 1];
-                    this.encodeDatatypeValue(value, EXIEncoder.DEFAULT_SIMPLE_DATATYPE, elementContext.namespaceID, elementContext.localNameID);
+                    this.encodeDatatypeValue(value, EXIEncoder.DEFAULT_SIMPLE_DATATYPE, qnAT.uriID, qnAT.localNameID);
                     // learn AT
                     this.learnAttribute(grammar, qnAT);
                 }
@@ -3162,14 +3185,14 @@ var EXI4JSON = (function () {
     };
     return EXI4JSON;
 }());
-// exports.EXI4JSON = EXI4JSON;
+exports.EXI4JSON = EXI4JSON;
 function exify(jsonObj) {
     var encoder = new EXI4JSONEncoder();
     encoder.encodeJsonObject(jsonObj);
     var uint8Array = encoder.getUint8Array();
     return uint8Array;
 }
-// exports.exify = exify;
+exports.exify = exify;
 function parse(uint8Array) {
     var decoder = new EXI4JSONDecoder();
     var jsonHandler = new JSONEventHandler();
@@ -3177,4 +3200,4 @@ function parse(uint8Array) {
     decoder.decode(uint8Array);
     return jsonHandler.getJSON();
 }
-// exports.parse = parse;
+exports.parse = parse;

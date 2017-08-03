@@ -291,6 +291,7 @@ class Grammars {
 		// copy content as is
 		let grammars : Grammars = json;
 		grammars.isSchemaLess = schemaLess;
+		console.log("SchemaLess: " + grammars.isSchemaLess);
 
 		// fix enum string to numbers
 		if(grammars.simpleDatatypes != undefined) {
@@ -545,9 +546,9 @@ abstract class AbtractEXICoder {
 			// 4 options
 			return 2;
 		} else if (grammar.type === GrammarType.builtInElementContent) {
-			// --> second level EE, SE(*), CH, ER?, [CM?, PI?]
-			// 3 options
-			return 2;
+			// --> second level SE(*), CH, ER?, [CM?, PI?]
+			// 2 options
+			return 1;
 		} else {
 			// unknown/unhandled grammar type
 			throw new Error("Unknown/unhandled 2nd grammar type: " + grammar.type);
@@ -572,13 +573,14 @@ abstract class AbtractEXICoder {
 			}
 		} else if (grammar.type === GrammarType.builtInElementContent) {
 			// --> second level EE, SE(*), CH, ER?, [CM?, PI?]
-			// 3 options
-			if(event === EventType.endElementGeneric) {
+			// 2 options
+			/*if(event === EventType.endElementGeneric) {
 				return 0;
-			} else  if(event === EventType.startElementGeneric) {
-				return 1;
+			} else */
+			if(event === EventType.startElementGeneric) {
+				return 0;
 			} else if(event === EventType.charactersGeneric) {
-				return 2;
+				return 1;
 			} else {
 				throw new Error("Unknown/unhandled 2nd level event: " + event);
 			}
@@ -608,11 +610,11 @@ abstract class AbtractEXICoder {
 			// --> second level EE, SE(*), CH, ER?, [CM?, PI?]
 			// 3 options
 			switch(ec2) {
+			/*case 0:
+				return EventType.endElementGeneric;*/
 			case 0:
-				return EventType.endElementGeneric;
-			case 1:
 				return EventType.startElementGeneric;
-			case 2:
+			case 1:
 				return EventType.charactersGeneric;
 			default:
 				throw new Error("Unsupported event-code="+ ec2 + "in " + grammar);
@@ -690,7 +692,8 @@ abstract class AbtractEXICoder {
 			ng.startElementGrammarID = seGrammarID;
 			ng.startElementNamespaceID = seQname.uriID;
 			ng.startElementLocalNameID = seQname.localNameID;
-			grammar.production.push(ng);
+			grammar.production.splice(0, 0, ng);
+			// grammar.production.push(ng);
 		}
 	}
 
@@ -704,7 +707,8 @@ abstract class AbtractEXICoder {
 			ng.attributeDatatypeID = undefined; // STRING default
 			ng.attributeNamespaceID = atQname.uriID;
 			ng.attributeLocalNameID = atQname.localNameID;
-			grammar.production.push(ng);
+			grammar.production.splice(0, 0, ng);
+			// grammar.production.push(ng);
 		}
 	}
 
@@ -713,7 +717,8 @@ abstract class AbtractEXICoder {
 			// learn CH
 			let ng = new Production(EventType.characters, grammar.elementContent.grammarID);
 			ng.charactersDatatypeID = undefined;
-			grammar.production.push(ng);
+			grammar.production.splice(0, 0, ng);
+			// grammar.production.push(ng);
 		}
 	}
 
@@ -721,7 +726,8 @@ abstract class AbtractEXICoder {
 		if(grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
 			// learn EE
 			let ng = new Production(EventType.endElement, grammar.elementContent.grammarID);
-			grammar.production.push(ng);
+			grammar.production.splice(0, 0, ng);
+			// grammar.production.push(ng);
 		}
 	}
 
@@ -1995,6 +2001,7 @@ class BitOutputStream {
 		for (var i = 0; i < str.length; i++) {
 			var cp = str.charCodeAt(i);
 			this.encodeUnsignedInteger(cp, byteAligned);
+			console.log("char encoded " + cp);
 		}
 	}
 }
@@ -2095,12 +2102,14 @@ class EXIEncoder extends AbtractEXICoder {
 		if (el.attributes != null && el.attributes.length > 0) {
 			if (el.attributes.length > 1) {
 				if(this.grammars.isSchemaLess != undefined && this.grammars.isSchemaLess) {
+					console.log("Do not sort attributes in schema-less mode");
 					for (let i = 0; i < el.attributes.length; i++) {
 						var ati = el.attributes.item(i);
 						this.attribute(ati.namespaceURI, ati.localName, ati.nodeValue);
 					}
 				} else {
 					// sorting
+					console.log("Sort attributes in schema-informed mode");
 					let atts = [];
 					for (let i = 0; i < el.attributes.length; i++) {
 						// console.log(" AT " + el.attributes[i].nodeName + " == " +
@@ -2284,6 +2293,7 @@ class EXIEncoder extends AbtractEXICoder {
 			// console.log("\t" + "Event Code == " + ec );
 			let codeLength = this.getCodeLengthForGrammar(grammar);
 			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.isByteAligned);
+			console.log("SE encoded " + ec + " in " + codeLength);
 			
 			let startElementGrammar : Grammar;
 			
@@ -2326,15 +2336,19 @@ class EXIEncoder extends AbtractEXICoder {
 			// NO event-code found
 			if(grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
 				// 1st level
-				var codeLength = this.getCodeLengthForGrammar(grammar);
-				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength, this.isByteAligned);
+				let codeLength1 = this.getCodeLengthForGrammar(grammar);
+				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength1, this.isByteAligned);
+				console.log("SE1 encoded " + grammar.production.length + " in " + codeLength1);
 				// 2nd level
-				var codeLength = this.get2ndCodeLengthForGrammar(grammar);
-				var ec2 = this.get2ndEventCode(grammar, EventType.startElementGeneric);
-				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength, this.isByteAligned); //2 in 2 bits
+				let codeLength2 = this.get2ndCodeLengthForGrammar(grammar);
+				let ec2 = this.get2ndEventCode(grammar, EventType.startElementGeneric);
+				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned); //2 in 2 bits
+				console.log("SE2 encoded " + ec2 + " in " + codeLength2);
 				
 				// encode qname
 				let qnameContext = this.encodeQName(namespace, localName);
+				console.log("SE qname encoded");
+
 				let startElementGrammar = this.getGlobalStartElement(qnameContext);
 				
 				// learn SE
@@ -2371,6 +2385,7 @@ class EXIEncoder extends AbtractEXICoder {
 			// ==> zero (0) as an n-nit unsigned integer
 			// followed by uri encoded as string
 			this.bitStream.encodeNBitUnsignedInteger(0, n, this.isByteAligned);
+			console.log("Uri miss encoded " + 0 + " in " + n);
 			this.bitStream.encodeStringOnly(namespace, this.isByteAligned);
 			// after encoding string value is added to table
 			namespaceContext = new NamespaceContext();
@@ -2382,18 +2397,20 @@ class EXIEncoder extends AbtractEXICoder {
 			// string value found
 			// ==> value(i+1) is encoded as n-bit unsigned integer
 			this.bitStream.encodeNBitUnsignedInteger(namespaceContext.uriID + 1, n, this.isByteAligned);
+			console.log("Uri hit encoded " + (namespaceContext.uriID + 1) + " in " + n);
 		}
 		
 		return namespaceContext;
 	}
 	
 	encodeLocalName(namespaceContext : NamespaceContext, localName : string) : QNameContext{
-		var qnameContext = this.getQNameContext(namespaceContext, localName);
+		let qnameContext = this.getQNameContext(namespaceContext, localName);
 		if(qnameContext === undefined) {
 			// string value was not found in local partition
 			// ==> string literal is encoded as a String
 			// with the length of the string incremented by one
 			this.bitStream.encodeUnsignedInteger(localName.length + 1, this.isByteAligned);
+			console.log("localName miss encoded " + (localName.length + 1) );
 			this.bitStream.encodeStringOnly(localName, this.isByteAligned);
 			// After encoding the string value, it is added to the string
 			// table partition and assigned the next available compact
@@ -2404,10 +2421,13 @@ class EXIEncoder extends AbtractEXICoder {
 			qnameContext.uriID = namespaceContext.uriID;
 			qnameContext.localNameID = namespaceContext.qnameContext.length;
 			qnameContext.localName = localName;
+			console.log("QName length before: " + namespaceContext.qnameContext.length)
 			// qnameContext = {"uriID": namespaceContext.uriID, "localNameID": namespaceContext.qnameContext.length, "localName": localName};
-			console.log("create new runtime qnameContext = '" + qnameContext + "'");
+			console.log("create new runtime qnameContext for '" + localName + "', uriId=" + qnameContext.uriID + " and localNameID=" + qnameContext.localNameID );
 			// this.runtimeQNameContexts.push(qnameContext);
+			console.log("QName length beforeb: " + namespaceContext.qnameContext.length)
 			namespaceContext.qnameContext.push(qnameContext);
+			console.log("QName length after: " + namespaceContext.qnameContext.length)
 		} else {
 			// string value found in local partition
 			// ==> string value is represented as zero (0) encoded as an
@@ -2415,8 +2435,10 @@ class EXIEncoder extends AbtractEXICoder {
 			// string value as an n-bit unsigned integer n is log2 m and m is
 			// the number of entries in the string table partition
 			this.bitStream.encodeUnsignedInteger(0, this.isByteAligned);
+			console.log("localName hit1 encoded " + 0);
 			var n = this.getCodeLength(namespaceContext.qnameContext.length);
 			this.bitStream.encodeNBitUnsignedInteger(qnameContext.localNameID, n, this.isByteAligned);
+			console.log("localName hit2 encoded " + qnameContext.localNameID + " in " + n);
 		}
 		
 		return qnameContext;
@@ -2438,6 +2460,7 @@ class EXIEncoder extends AbtractEXICoder {
 			// console.log("\t" + "Event Code == " + ec );
 			let codeLength = this.getCodeLengthForGrammar(grammar);
 			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.isByteAligned);
+			console.log("EE encoded " + ec + " in " + codeLength);
 
 			// pop element stack
 			this.elementContext.pop();
@@ -2446,10 +2469,12 @@ class EXIEncoder extends AbtractEXICoder {
 				// 1st level
 				let codeLength1 = this.getCodeLengthForGrammar(grammar);
 				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength1, this.isByteAligned);
+				console.log("EE1 encoded " + grammar.production.length + " in " + codeLength1);
 				// 2nd level
 				let codeLength2 = this.get2ndCodeLengthForGrammar(grammar);
 				let ec2 = this.get2ndEventCode(grammar, EventType.endElementGeneric);
 				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned);
+				console.log("EE2 encoded " + ec2 + " in " + codeLength2);
 				
 				// learn EE
 				this.learnEndElement(grammar);
@@ -2519,8 +2544,8 @@ class EXIEncoder extends AbtractEXICoder {
 
 					// encode value
 					let elementContext = this.elementContext[this.elementContext.length - 1];
-					this .encodeDatatypeValue(value, EXIEncoder.DEFAULT_SIMPLE_DATATYPE,
-						elementContext.namespaceID, elementContext.localNameID);
+					this.encodeDatatypeValue(value, EXIEncoder.DEFAULT_SIMPLE_DATATYPE,
+						qnAT.uriID, qnAT.localNameID);
 
 					// learn AT
 					this.learnAttribute(grammar, qnAT);

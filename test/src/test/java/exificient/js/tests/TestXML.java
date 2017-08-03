@@ -3,6 +3,7 @@ package exificient.js.tests;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -238,6 +239,9 @@ public class TestXML extends XMLTestCase {
 		_testXMLDecode(xmlTest, xsdPath, CodingMode.BIT_PACKED);
 		// TODO schema-less coding
 		// _testXMLEncode(xmlTest, null, CodingMode.BYTE_PACKED);
+		// _testXMLEncode(xmlTest, null, CodingMode.BIT_PACKED);
+		// _testXMLDecode(xmlTest, null, CodingMode.BYTE_PACKED);
+		//_testXMLDecode(xmlTest, null, CodingMode.BIT_PACKED);
 	}
 
 	protected void _testXMLEncode(String xmlTest, String xsdPath, CodingMode codingMode)
@@ -307,6 +311,15 @@ public class TestXML extends XMLTestCase {
 					// System.out.println(oi.getClass());
 				}
 				
+				// write to file
+				if(true) {
+					File f = File.createTempFile("exificient-js", ".exi");
+					FileOutputStream fos = new FileOutputStream(f);
+					fos.write(foo);
+					fos.close();
+					System.out.println("Wrote to file: " + f);
+				}
+				
 				// decode
 				EXIFactory exiFactory = getEXIFactory(xsdPath);
 				exiFactory.setCodingMode(codingMode);
@@ -352,7 +365,7 @@ public class TestXML extends XMLTestCase {
 		System.out.println("size: " + bytes.length);
 
 		////////////////////////
-		String grammars = parseGrammars(xsdPath);
+		//String grammars = parseGrammars(xsdPath);
 		
 		ScriptEngineManager engineManager = new ScriptEngineManager();
 		ScriptEngine engine = engineManager.getEngineByName("JavaScript");
@@ -360,8 +373,18 @@ public class TestXML extends XMLTestCase {
 		// evaluate JS code
 		engine.eval(new FileReader(fJS));
 		
-		engine.eval("var jsonTextGrammar = '" + grammars + "';");
-		engine.eval("var grammars = JSON.parse(jsonTextGrammar);");
+		if(xsdPath != null) {
+			String grammars = parseGrammars(xsdPath);
+			engine.eval("var jsonTextGrammar = '" + grammars + "';");
+			engine.eval("var grammars = JSON.parse(jsonTextGrammar);");
+		} else {
+			// schema-less
+			engine.eval("var grammars = null;");
+		}
+//		engine.eval("var jsonTextGrammar = '" + grammars + "';");
+//		engine.eval("var grammars = JSON.parse(jsonTextGrammar);");
+		
+		
 		engine.eval("var options = {};");
 		if(codingMode == CodingMode.BYTE_PACKED) {
 			engine.eval("options['byteAligned'] = true;");
