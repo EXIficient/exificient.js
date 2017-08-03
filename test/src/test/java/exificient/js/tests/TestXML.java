@@ -75,9 +75,11 @@ public class TestXML extends XMLTestCase {
 	EXIFactory getEXIFactory(String xsdPath) throws EXIException {
 		EXIFactory exiFactory = DefaultEXIFactory.newInstance();
 		exiFactory.setFidelityOptions(FidelityOptions.createStrict());
-		grammarBuilder.loadGrammars(xsdPath);
-		exiFactory.setGrammars(grammarBuilder.toGrammars());
-		
+		if(xsdPath != null) {
+			grammarBuilder.loadGrammars(xsdPath);
+			exiFactory.setGrammars(grammarBuilder.toGrammars());
+		}
+
 		return exiFactory;
 	}
 
@@ -235,20 +237,25 @@ public class TestXML extends XMLTestCase {
 		_testXMLDecode(xmlTest, xsdPath, CodingMode.BYTE_PACKED);
 		_testXMLDecode(xmlTest, xsdPath, CodingMode.BIT_PACKED);
 		// TODO schema-less coding
+		// _testXMLEncode(xmlTest, null, CodingMode.BYTE_PACKED);
 	}
 
 	protected void _testXMLEncode(String xmlTest, String xsdPath, CodingMode codingMode)
 			throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
-		String grammars = parseGrammars(xsdPath);
 		
 		ScriptEngineManager engineManager = new ScriptEngineManager();
 		ScriptEngine engine = engineManager.getEngineByName("JavaScript");
-
 		// evaluate JS code
 		engine.eval(new FileReader(fJS));
-
-		engine.eval("var jsonTextGrammar = '" + grammars + "';");
-		engine.eval("var grammars = JSON.parse(jsonTextGrammar);");
+		
+		if(xsdPath != null) {
+			String grammars = parseGrammars(xsdPath);
+			engine.eval("var jsonTextGrammar = '" + grammars + "';");
+			engine.eval("var grammars = JSON.parse(jsonTextGrammar);");
+		} else {
+			// schema-less
+			engine.eval("var grammars = null;");
+		}
 		
 		engine.eval("var options = {};");
 		if(codingMode == CodingMode.BYTE_PACKED) {

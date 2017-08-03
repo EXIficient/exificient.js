@@ -17,6 +17,7 @@ enum EventType {
 	startElementNS,
 	startElementGeneric,
 	endElement,
+	endElementGeneric,
 	characters,
 	charactersGeneric,
 	attribute,
@@ -277,24 +278,36 @@ class Grammars {
     simpleDatatypes : SimpleDatatype[];
 	grs : Grs;
 	numberOfQNames : number[]; // qnames per namespace for resetting qnames
+	isSchemaLess : boolean;
 	
 	public static fromJson(json : any) : Grammars {
+		let schemaLess = false;
+		if(json == null || json == undefined) {
+			// schema-less grammars
+			json = JSON.parse('{"qnames":{"namespaceContext":[{"uriID":0,"uri":"","qnameContext":[]},{"uriID":1,"uri":"http://www.w3.org/XML/1998/namespace","qnameContext":[{"uriID":1,"localNameID":0,"localName":"base"},{"uriID":1,"localNameID":1,"localName":"id"},{"uriID":1,"localNameID":2,"localName":"lang"},{"uriID":1,"localNameID":3,"localName":"space"}]},{"uriID":2,"uri":"http://www.w3.org/2001/XMLSchema-instance","qnameContext":[{"uriID":2,"localNameID":0,"localName":"nil"},{"uriID":2,"localNameID":1,"localName":"type"}]}]},"simpleDatatypes":[],"grs":{"documentGrammarID":0,"fragmentGrammarID":3,"grammar":[{"grammarID":"0","type":"document","production":[{"event":"startDocument","nextGrammarID":1}]},{"grammarID":"1","type":"docContent","production":[{"event":"startElementGeneric","nextGrammarID":2}]},{"grammarID":"2","type":"docEnd","production":[{"event":"endDocument","nextGrammarID":-1}]},{"grammarID":"3","type":"fragment","production":[{"event":"startDocument","nextGrammarID":4}]},{"grammarID":"4","type":"fragmentContent","production":[{"event":"startElementGeneric","nextGrammarID":4},{"event":"endDocument","nextGrammarID":-1}]}]}}');
+			schemaLess = true;
+		}
+
 		// copy content as is
 		let grammars : Grammars = json;
+		grammars.isSchemaLess = schemaLess;
 
 		// fix enum string to numbers
-		for(let i=0; i<grammars.simpleDatatypes.length; i++) {
-			// string to enum
-			grammars.simpleDatatypes[i].type = SimpleDatatypeType["" + grammars.simpleDatatypes[i].type];
-			//  listType
-			if(grammars.simpleDatatypes[i].listType != null) {
-				grammars.simpleDatatypes[i].listType = SimpleDatatypeType["" + grammars.simpleDatatypes[i].listType];
-			}
-			// datetimeType
-			if(grammars.simpleDatatypes[i].datetimeType != null) {
-				grammars.simpleDatatypes[i].datetimeType = DatetimeType["" + grammars.simpleDatatypes[i].datetimeType];
+		if(grammars.simpleDatatypes != undefined) {
+			for(let i=0; i<grammars.simpleDatatypes.length; i++) {
+				// string to enum
+				grammars.simpleDatatypes[i].type = SimpleDatatypeType["" + grammars.simpleDatatypes[i].type];
+				//  listType
+				if(grammars.simpleDatatypes[i].listType != null) {
+					grammars.simpleDatatypes[i].listType = SimpleDatatypeType["" + grammars.simpleDatatypes[i].listType];
+				}
+				// datetimeType
+				if(grammars.simpleDatatypes[i].datetimeType != null) {
+					grammars.simpleDatatypes[i].datetimeType = DatetimeType["" + grammars.simpleDatatypes[i].datetimeType];
+				}
 			}
 		}
+
 
 		// fix GrammarType and EventType
 		for(let i=0; i<grammars.grs.grammar.length; i++) {
@@ -355,6 +368,20 @@ abstract class AbtractEXICoder {
         }
 	}
 	
+
+	getGrammar(grammarID : number) : Grammar {
+		let nextGrammar;
+		if(grammarID >= 0) {
+			// static grammars
+			nextGrammar = this.grammars.grs.grammar[grammarID];
+		} else {
+			// runtime grammars
+			var rid = (grammarID+1) *(-1);
+			nextGrammar = this.runtimeGrammars[rid];
+		}
+		return nextGrammar;
+	}
+
 	getNumberOfQNames(grammars: Grammars) : number {
 		let n = 0;
 		for(let i=0; i<grammars.qnames.namespaceContext.length; i++) {
@@ -532,7 +559,7 @@ abstract class AbtractEXICoder {
 		if (grammar.type === GrammarType.builtInStartTagContent) {
 			// --> second level EE, AT(*), NS?, SC?, SE(*), CH, ER?, [CM?, PI?]
 			// 4 options
-			if(event === EventType.endElement) {
+			if(event === EventType.endElementGeneric) {
 				return 0;
 			} else  if(event === EventType.attributeGeneric) {
 				return 1;
@@ -546,7 +573,7 @@ abstract class AbtractEXICoder {
 		} else if (grammar.type === GrammarType.builtInElementContent) {
 			// --> second level EE, SE(*), CH, ER?, [CM?, PI?]
 			// 3 options
-			if(event === EventType.endElement) {
+			if(event === EventType.endElementGeneric) {
 				return 0;
 			} else  if(event === EventType.startElementGeneric) {
 				return 1;
@@ -567,7 +594,7 @@ abstract class AbtractEXICoder {
 			// 4 options
 			switch(ec2) {
 			case 0:
-				return EventType.endElement;
+				return EventType.endElementGeneric;
 			case 1:
 				return EventType.attributeGeneric;
 			case 2:
@@ -582,11 +609,11 @@ abstract class AbtractEXICoder {
 			// 3 options
 			switch(ec2) {
 			case 0:
-				return EventType.endElement;
+				return EventType.endElementGeneric;
 			case 1:
-				return EventType.startElement;
+				return EventType.startElementGeneric;
 			case 2:
-				return EventType.characters;
+				return EventType.charactersGeneric;
 			default:
 				throw new Error("Unsupported event-code="+ ec2 + "in " + grammar);
 			}
@@ -670,6 +697,7 @@ abstract class AbtractEXICoder {
 
 
 	learnAttribute(grammar : Grammar, atQname : QNameContext)  {
+		// TODO xsi:type is not learned
 		if(grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
 			// learn AT
 			let ng = new Production(EventType.attribute, grammar.grammarID);
@@ -685,6 +713,14 @@ abstract class AbtractEXICoder {
 			// learn CH
 			let ng = new Production(EventType.characters, grammar.elementContent.grammarID);
 			ng.charactersDatatypeID = undefined;
+			grammar.production.push(ng);
+		}
+	}
+
+	learnEndElement(grammar : Grammar)  {
+		if(grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
+			// learn EE
+			let ng = new Production(EventType.endElement, grammar.elementContent.grammarID);
 			grammar.production.push(ng);
 		}
 	}
@@ -1204,18 +1240,8 @@ class EXIDecoder extends AbtractEXICoder {
 			
 			let nextGrammar : Grammar;
 			if(prod !== undefined) {
-				if(prod.nextGrammarID >= 0) {
-					// static grammars
-					nextGrammar = this.grammars.grs.grammar[prod.nextGrammarID];
-				} else {
-					// runtime grammars
-					var rid = (prod.nextGrammarID+1) *(-1);
-					nextGrammar = this.runtimeGrammars[rid];
-				}
-				
-				// nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
+				nextGrammar = this.getGrammar(prod.nextGrammarID);
 			}
-			// console.log("\t" + "Event Production " + prod.event);
 
 			switch (event) {
 			case EventType.startDocument:
@@ -1253,7 +1279,7 @@ class EXIDecoder extends AbtractEXICoder {
 					if(prod == undefined) {
 						throw new Error("Undefined Production for StartElement");
 					}
-					seGrammar = this.grammars.grs.grammar[prod.startElementGrammarID];
+					seGrammar = this.getGrammar(prod.startElementGrammarID);
 					qnameContext = namespaceContext.qnameContext[prod.startElementLocalNameID];
 					console.log(">> SE (" + qnameContext.localName + ")");
 				} else if (event == EventType.startElementNS) {
@@ -1274,7 +1300,8 @@ class EXIDecoder extends AbtractEXICoder {
 
 					if(grammar.type === GrammarType.firstStartTagContent || 
 						grammar.type === GrammarType.startTagContent ||
-						grammar.type === GrammarType.elementContent) {
+						grammar.type === GrammarType.elementContent ||
+						grammar.type === GrammarType.docContent) {
 						// schema-informed grammars
 						seGrammar = this.getGlobalStartElement(qnameContext);
 
@@ -1302,6 +1329,7 @@ class EXIDecoder extends AbtractEXICoder {
 				this.decodeElementContext(seGrammar, qnameContext.uriID, qnameContext.localNameID); // prod.startElementNamespaceID, prod.startElementLocalNameID
 				break;
 			case EventType.endElement:
+			case EventType.endElementGeneric:
 				var namespaceContextEE = this.grammars.qnames.namespaceContext[elementNamespaceID];
 				var qnameContextEE = namespaceContextEE.qnameContext[elementLocalNameID];
 				console.log("<< EE (" + qnameContextEE.localName + ")");
@@ -1309,6 +1337,9 @@ class EXIDecoder extends AbtractEXICoder {
 				for (let i = 0; i < this.eventHandler.length; i++) {
 					let eh : EventHandler = this.eventHandler[i];
 					eh.endElement(namespaceContextEE.uri, qnameContextEE.localName);
+				}
+				if(event === EventType.endElementGeneric) {
+					this.learnEndElement(grammar);
 				}
 				popStack = true;
 				break;
@@ -1320,7 +1351,14 @@ class EXIDecoder extends AbtractEXICoder {
 				// console.log("\t" + "Attribute datatypeID " +
 				// prod.attributeDatatypeID );
 
-				let datatypeA : SimpleDatatype = this.grammars.simpleDatatypes[prod.attributeDatatypeID];
+				let datatypeA : SimpleDatatype;
+				if(prod.attributeDatatypeID === undefined || prod.attributeDatatypeID < 0) {
+					// learned AT
+					datatypeA = EXIEncoder.DEFAULT_SIMPLE_DATATYPE;
+				} else {
+					datatypeA = this.grammars.simpleDatatypes[prod.attributeDatatypeID];
+				}
+
 				// console.log("\t" + "Attribute datatype " + datatype );
 				let namespaceContextA : NamespaceContext = this.grammars.qnames.namespaceContext[prod.attributeNamespaceID];
 				let qnameContextA : QNameContext = namespaceContextA.qnameContext[prod.attributeLocalNameID];
@@ -1328,13 +1366,33 @@ class EXIDecoder extends AbtractEXICoder {
 
 				this.decodeDatatypeValue(datatypeA, prod.attributeNamespaceID, prod.attributeLocalNameID, false);
 				break;
+			case EventType.attributeGeneric:
+				let atQName = this.decodeQName();
+				console.log("\t" + "AT_Generic (" + atQName.localName + ")");
+				this.decodeDatatypeValue(EXIDecoder.DEFAULT_SIMPLE_DATATYPE, atQName.uriID, atQName.localNameID, false);
+				this.learnAttribute(grammar, atQName);
+				nextGrammar = grammar;
+				break;
 			case EventType.characters:
 				// console.log("\t" + "Characters datatypeID " +
-				// prod.charactersDatatypeID );
-				let datatypeC : SimpleDatatype = this.grammars.simpleDatatypes[prod.charactersDatatypeID];
-				// console.log("\t" + "Characters datatype " + datatype );
+
+				let datatypeC : SimpleDatatype;
+				if(prod.charactersDatatypeID === undefined || prod.charactersDatatypeID < 0) {
+					// learned AT
+					datatypeC = EXIEncoder.DEFAULT_SIMPLE_DATATYPE;
+				} else {
+					datatypeC = this.grammars.simpleDatatypes[prod.charactersDatatypeID];
+				}
+
 				console.log("\t" + "CH");
 				this.decodeDatatypeValue(datatypeC, elementNamespaceID, elementLocalNameID, true);
+				break;
+			case EventType.charactersGeneric:
+				// console.log("\t" + "Characters datatype " + datatype );
+				console.log("\t" + "CH_Generic");
+				this.decodeDatatypeValue(EXIDecoder.DEFAULT_SIMPLE_DATATYPE, elementNamespaceID, elementLocalNameID, true);
+				this.learnCharacters(grammar);
+				nextGrammar = grammar.elementContent;
 				break;
 			default:
 				console.log("\t" + "Unknown event " + event);
@@ -1442,7 +1500,7 @@ class EXIDecoder extends AbtractEXICoder {
 					+ this.grammars.grs.grammar.length);
 			console.log("\t" + "Document grammar ID: "
 					+ this.grammars.grs.documentGrammarID);
-			var docGr = this.grammars.grs.grammar[this.grammars.grs.documentGrammarID];
+			var docGr = this.getGrammar(this.grammars.grs.documentGrammarID);
 
 			this.decodeElementContext(docGr, -1, -1);
 		}
@@ -2036,29 +2094,38 @@ class EXIEncoder extends AbtractEXICoder {
 
 		if (el.attributes != null && el.attributes.length > 0) {
 			if (el.attributes.length > 1) {
-				// sorting
-				let atts = [];
-				for (var i = 0; i < el.attributes.length; i++) {
-					// console.log(" AT " + el.attributes[i].nodeName + " == " +
-					// el.attributes[i].nodeValue);
-					var at = el.attributes.item(i);
-					atts.push(at.localName);
+				if(this.grammars.isSchemaLess != undefined && this.grammars.isSchemaLess) {
+					for (let i = 0; i < el.attributes.length; i++) {
+						var ati = el.attributes.item(i);
+						this.attribute(ati.namespaceURI, ati.localName, ati.nodeValue);
+					}
+				} else {
+					// sorting
+					let atts = [];
+					for (let i = 0; i < el.attributes.length; i++) {
+						// console.log(" AT " + el.attributes[i].nodeName + " == " +
+						// el.attributes[i].nodeValue);
+						let at = el.attributes.item(i);
+						atts.push(at.localName);
 
-				}
-				// sort according localName
-				// TODO in case also for namespace URI
-				atts.sort();
-				// write in sorted order
-				for (var i = 0; i < atts.length; i++) {
-					var at = el.getAttributeNode(atts[i]);
-					if (at != null) {
-						this.attribute(at.namespaceURI, at.localName,
-								at.nodeValue);
-					} else {
-						// when does this happen, only for schemaLocations and
-						// such?
+					}
+					// sort according localName
+					// TODO in case also for namespace URI
+					atts.sort();
+					// write in sorted order
+					for (let i = 0; i < atts.length; i++) {
+						let at = el.getAttributeNode(atts[i]);
+						if (at != null) {
+							this.attribute(at.namespaceURI, at.localName,
+									at.nodeValue);
+						} else {
+							// when does this happen, only for schemaLocations and
+							// such?
+						}
 					}
 				}
+
+
 			} else {
 				// console.log("AT length: " + el.attributes.length);
 				// console.log("AT all: " + el.attributes);
@@ -2120,7 +2187,7 @@ class EXIEncoder extends AbtractEXICoder {
 						+ this.grammars.grs.grammar.length);
 		console.log("\t" + "Document grammar ID: "
 				+ this.grammars.grs.documentGrammarID);
-		let docGr = this.grammars.grs.grammar[this.grammars.grs.documentGrammarID];
+		let docGr = this.getGrammar(this.grammars.grs.documentGrammarID);
 
 		let ec = -1;
 		let prod : Production;
@@ -2139,7 +2206,7 @@ class EXIEncoder extends AbtractEXICoder {
 			var codeLength = this.getCodeLengthForGrammar(docGr);
 			this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.isByteAligned);
 
-			let nextGrammar = this.grammars.grs.grammar[prod.nextGrammarID];
+			let nextGrammar = this.getGrammar(prod.nextGrammarID);
 			this.elementContext.push(new ElementContextEntry(-1, -1, nextGrammar));
 		} else {
 			throw new Error("No startDocument event found");
@@ -2229,16 +2296,7 @@ class EXIEncoder extends AbtractEXICoder {
 			}
 			
 			// update current element context
-			var nextGrammar;
-			if(prod.nextGrammarID >= 0) {
-				// static grammars
-				nextGrammar = this.grammars.grs.grammar[prod.nextGrammarID];
-			} else {
-				// runtime grammars
-				var rid = (prod.nextGrammarID+1) *(-1);
-				nextGrammar = this.runtimeGrammars[rid];
-			}
-			
+			let nextGrammar : Grammar = this.getGrammar(prod.nextGrammarID);
 			this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
 			
 			console.log("NextGrammar after SE/SE_NS " + localName + " is " + nextGrammar);
@@ -2246,7 +2304,7 @@ class EXIEncoder extends AbtractEXICoder {
 			// push new element context
 			if (isSE) {
 				// SE(uri:localname)
-				startElementGrammar = this.grammars.grs.grammar[prod.startElementGrammarID];
+				startElementGrammar = this.getGrammar(prod.startElementGrammarID);
 			} else if (isSE_NS) {
 				// SE(uri:*)
 				// encode local-name
@@ -2390,13 +2448,11 @@ class EXIEncoder extends AbtractEXICoder {
 				this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength1, this.isByteAligned);
 				// 2nd level
 				let codeLength2 = this.get2ndCodeLengthForGrammar(grammar);
-				let ec2 = this.get2ndEventCode(grammar, EventType.endElement);
+				let ec2 = this.get2ndEventCode(grammar, EventType.endElementGeneric);
 				this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned);
 				
 				// learn EE
-				let ngX = new Production(EventType.endElement, grammar.grammarID);
-				ngX.charactersDatatypeID = 0;
-				grammar.production.push(ngX);
+				this.learnEndElement(grammar);
 
 				// pop element stack
 				this.elementContext.pop();
@@ -2446,7 +2502,7 @@ class EXIEncoder extends AbtractEXICoder {
 				this.encodeDatatypeValue(value, datatype,
 					prod.attributeNamespaceID, prod.attributeLocalNameID);
 				// update current element context with revised grammar
-				let nextGrammar : Grammar = this.grammars.grs.grammar[prod.nextGrammarID];
+				let nextGrammar : Grammar = this.getGrammar(prod.nextGrammarID);
 				this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
 			} else {
 				if(grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent ) {
@@ -2504,7 +2560,7 @@ class EXIEncoder extends AbtractEXICoder {
 			this.encodeDatatypeValue(chars, datatype,
 				elementContext.namespaceID, elementContext.localNameID);
 			// update current element context with revised grammar
-			let nextGrammar : Grammar = this.grammars.grs.grammar[prod.nextGrammarID];
+			let nextGrammar : Grammar = this.getGrammar(prod.nextGrammarID);
 			this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
 		} else {
 			if(grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent ) {

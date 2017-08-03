@@ -26,10 +26,11 @@ var EventType;
     EventType[EventType["startElementNS"] = 3] = "startElementNS";
     EventType[EventType["startElementGeneric"] = 4] = "startElementGeneric";
     EventType[EventType["endElement"] = 5] = "endElement";
-    EventType[EventType["characters"] = 6] = "characters";
-    EventType[EventType["charactersGeneric"] = 7] = "charactersGeneric";
-    EventType[EventType["attribute"] = 8] = "attribute";
-    EventType[EventType["attributeGeneric"] = 9] = "attributeGeneric";
+    EventType[EventType["endElementGeneric"] = 6] = "endElementGeneric";
+    EventType[EventType["characters"] = 7] = "characters";
+    EventType[EventType["charactersGeneric"] = 8] = "charactersGeneric";
+    EventType[EventType["attribute"] = 9] = "attribute";
+    EventType[EventType["attributeGeneric"] = 10] = "attributeGeneric";
 })(EventType || (EventType = {}));
 var GrammarType;
 (function (GrammarType) {
@@ -225,19 +226,28 @@ var Grammars = (function () {
     function Grammars() {
     }
     Grammars.fromJson = function (json) {
+        var schemaLess = false;
+        if (json == null || json == undefined) {
+            // schema-less grammars
+            json = JSON.parse('{"qnames":{"namespaceContext":[{"uriID":0,"uri":"","qnameContext":[]},{"uriID":1,"uri":"http://www.w3.org/XML/1998/namespace","qnameContext":[{"uriID":1,"localNameID":0,"localName":"base"},{"uriID":1,"localNameID":1,"localName":"id"},{"uriID":1,"localNameID":2,"localName":"lang"},{"uriID":1,"localNameID":3,"localName":"space"}]},{"uriID":2,"uri":"http://www.w3.org/2001/XMLSchema-instance","qnameContext":[{"uriID":2,"localNameID":0,"localName":"nil"},{"uriID":2,"localNameID":1,"localName":"type"}]}]},"simpleDatatypes":[],"grs":{"documentGrammarID":0,"fragmentGrammarID":3,"grammar":[{"grammarID":"0","type":"document","production":[{"event":"startDocument","nextGrammarID":1}]},{"grammarID":"1","type":"docContent","production":[{"event":"startElementGeneric","nextGrammarID":2}]},{"grammarID":"2","type":"docEnd","production":[{"event":"endDocument","nextGrammarID":-1}]},{"grammarID":"3","type":"fragment","production":[{"event":"startDocument","nextGrammarID":4}]},{"grammarID":"4","type":"fragmentContent","production":[{"event":"startElementGeneric","nextGrammarID":4},{"event":"endDocument","nextGrammarID":-1}]}]}}');
+            schemaLess = true;
+        }
         // copy content as is
         var grammars = json;
+        grammars.isSchemaLess = schemaLess;
         // fix enum string to numbers
-        for (var i = 0; i < grammars.simpleDatatypes.length; i++) {
-            // string to enum
-            grammars.simpleDatatypes[i].type = SimpleDatatypeType["" + grammars.simpleDatatypes[i].type];
-            //  listType
-            if (grammars.simpleDatatypes[i].listType != null) {
-                grammars.simpleDatatypes[i].listType = SimpleDatatypeType["" + grammars.simpleDatatypes[i].listType];
-            }
-            // datetimeType
-            if (grammars.simpleDatatypes[i].datetimeType != null) {
-                grammars.simpleDatatypes[i].datetimeType = DatetimeType["" + grammars.simpleDatatypes[i].datetimeType];
+        if (grammars.simpleDatatypes != undefined) {
+            for (var i = 0; i < grammars.simpleDatatypes.length; i++) {
+                // string to enum
+                grammars.simpleDatatypes[i].type = SimpleDatatypeType["" + grammars.simpleDatatypes[i].type];
+                //  listType
+                if (grammars.simpleDatatypes[i].listType != null) {
+                    grammars.simpleDatatypes[i].listType = SimpleDatatypeType["" + grammars.simpleDatatypes[i].listType];
+                }
+                // datetimeType
+                if (grammars.simpleDatatypes[i].datetimeType != null) {
+                    grammars.simpleDatatypes[i].datetimeType = DatetimeType["" + grammars.simpleDatatypes[i].datetimeType];
+                }
             }
         }
         // fix GrammarType and EventType
@@ -275,6 +285,19 @@ var AbtractEXICoder = (function () {
             }
         }
     }
+    AbtractEXICoder.prototype.getGrammar = function (grammarID) {
+        var nextGrammar;
+        if (grammarID >= 0) {
+            // static grammars
+            nextGrammar = this.grammars.grs.grammar[grammarID];
+        }
+        else {
+            // runtime grammars
+            var rid = (grammarID + 1) * (-1);
+            nextGrammar = this.runtimeGrammars[rid];
+        }
+        return nextGrammar;
+    };
     AbtractEXICoder.prototype.getNumberOfQNames = function (grammars) {
         var n = 0;
         for (var i = 0; i < grammars.qnames.namespaceContext.length; i++) {
@@ -468,7 +491,7 @@ var AbtractEXICoder = (function () {
         if (grammar.type === GrammarType.builtInStartTagContent) {
             // --> second level EE, AT(*), NS?, SC?, SE(*), CH, ER?, [CM?, PI?]
             // 4 options
-            if (event === EventType.endElement) {
+            if (event === EventType.endElementGeneric) {
                 return 0;
             }
             else if (event === EventType.attributeGeneric) {
@@ -487,7 +510,7 @@ var AbtractEXICoder = (function () {
         else if (grammar.type === GrammarType.builtInElementContent) {
             // --> second level EE, SE(*), CH, ER?, [CM?, PI?]
             // 3 options
-            if (event === EventType.endElement) {
+            if (event === EventType.endElementGeneric) {
                 return 0;
             }
             else if (event === EventType.startElementGeneric) {
@@ -511,7 +534,7 @@ var AbtractEXICoder = (function () {
             // 4 options
             switch (ec2) {
                 case 0:
-                    return EventType.endElement;
+                    return EventType.endElementGeneric;
                 case 1:
                     return EventType.attributeGeneric;
                 case 2:
@@ -527,11 +550,11 @@ var AbtractEXICoder = (function () {
             // 3 options
             switch (ec2) {
                 case 0:
-                    return EventType.endElement;
+                    return EventType.endElementGeneric;
                 case 1:
-                    return EventType.startElement;
+                    return EventType.startElementGeneric;
                 case 2:
-                    return EventType.characters;
+                    return EventType.charactersGeneric;
                 default:
                     throw new Error("Unsupported event-code=" + ec2 + "in " + grammar);
             }
@@ -603,6 +626,7 @@ var AbtractEXICoder = (function () {
         }
     };
     AbtractEXICoder.prototype.learnAttribute = function (grammar, atQname) {
+        // TODO xsi:type is not learned
         if (grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
             // learn AT
             var ng = new Production(EventType.attribute, grammar.grammarID);
@@ -617,6 +641,13 @@ var AbtractEXICoder = (function () {
             // learn CH
             var ng = new Production(EventType.characters, grammar.elementContent.grammarID);
             ng.charactersDatatypeID = undefined;
+            grammar.production.push(ng);
+        }
+    };
+    AbtractEXICoder.prototype.learnEndElement = function (grammar) {
+        if (grammar.type === GrammarType.builtInStartTagContent || grammar.type === GrammarType.builtInElementContent) {
+            // learn EE
+            var ng = new Production(EventType.endElement, grammar.elementContent.grammarID);
             grammar.production.push(ng);
         }
     };
@@ -1108,18 +1139,8 @@ var EXIDecoder = (function (_super) {
             }
             var nextGrammar = void 0;
             if (prod !== undefined) {
-                if (prod.nextGrammarID >= 0) {
-                    // static grammars
-                    nextGrammar = this.grammars.grs.grammar[prod.nextGrammarID];
-                }
-                else {
-                    // runtime grammars
-                    var rid = (prod.nextGrammarID + 1) * (-1);
-                    nextGrammar = this.runtimeGrammars[rid];
-                }
-                // nextGrammar = grammars.grs.grammar[prod.nextGrammarID];
+                nextGrammar = this.getGrammar(prod.nextGrammarID);
             }
-            // console.log("\t" + "Event Production " + prod.event);
             switch (event_1) {
                 case EventType.startDocument:
                     console.log("> SD");
@@ -1154,7 +1175,7 @@ var EXIDecoder = (function (_super) {
                         if (prod == undefined) {
                             throw new Error("Undefined Production for StartElement");
                         }
-                        seGrammar = this.grammars.grs.grammar[prod.startElementGrammarID];
+                        seGrammar = this.getGrammar(prod.startElementGrammarID);
                         qnameContext = namespaceContext.qnameContext[prod.startElementLocalNameID];
                         console.log(">> SE (" + qnameContext.localName + ")");
                     }
@@ -1174,7 +1195,8 @@ var EXIDecoder = (function (_super) {
                         //					nextGrammar = grammar.elementContent; // TODO check which grammar it is (BuiltIn?)
                         if (grammar.type === GrammarType.firstStartTagContent ||
                             grammar.type === GrammarType.startTagContent ||
-                            grammar.type === GrammarType.elementContent) {
+                            grammar.type === GrammarType.elementContent ||
+                            grammar.type === GrammarType.docContent) {
                             // schema-informed grammars
                             seGrammar = this.getGlobalStartElement(qnameContext);
                         }
@@ -1200,12 +1222,16 @@ var EXIDecoder = (function (_super) {
                     this.decodeElementContext(seGrammar, qnameContext.uriID, qnameContext.localNameID); // prod.startElementNamespaceID, prod.startElementLocalNameID
                     break;
                 case EventType.endElement:
+                case EventType.endElementGeneric:
                     var namespaceContextEE = this.grammars.qnames.namespaceContext[elementNamespaceID];
                     var qnameContextEE = namespaceContextEE.qnameContext[elementLocalNameID];
                     console.log("<< EE (" + qnameContextEE.localName + ")");
                     for (var i = 0; i < this.eventHandler.length; i++) {
                         var eh = this.eventHandler[i];
                         eh.endElement(namespaceContextEE.uri, qnameContextEE.localName);
+                    }
+                    if (event_1 === EventType.endElementGeneric) {
+                        this.learnEndElement(grammar);
                     }
                     popStack = true;
                     break;
@@ -1216,20 +1242,46 @@ var EXIDecoder = (function (_super) {
                     // getQNameContext(prod.attributeQNameID).localName);
                     // console.log("\t" + "Attribute datatypeID " +
                     // prod.attributeDatatypeID );
-                    var datatypeA = this.grammars.simpleDatatypes[prod.attributeDatatypeID];
+                    var datatypeA = void 0;
+                    if (prod.attributeDatatypeID === undefined || prod.attributeDatatypeID < 0) {
+                        // learned AT
+                        datatypeA = EXIEncoder.DEFAULT_SIMPLE_DATATYPE;
+                    }
+                    else {
+                        datatypeA = this.grammars.simpleDatatypes[prod.attributeDatatypeID];
+                    }
                     // console.log("\t" + "Attribute datatype " + datatype );
                     var namespaceContextA = this.grammars.qnames.namespaceContext[prod.attributeNamespaceID];
                     var qnameContextA = namespaceContextA.qnameContext[prod.attributeLocalNameID];
                     console.log("\t" + "AT (" + qnameContextA.localName + ")");
                     this.decodeDatatypeValue(datatypeA, prod.attributeNamespaceID, prod.attributeLocalNameID, false);
                     break;
+                case EventType.attributeGeneric:
+                    var atQName = this.decodeQName();
+                    console.log("\t" + "AT_Generic (" + atQName.localName + ")");
+                    this.decodeDatatypeValue(EXIDecoder.DEFAULT_SIMPLE_DATATYPE, atQName.uriID, atQName.localNameID, false);
+                    this.learnAttribute(grammar, atQName);
+                    nextGrammar = grammar;
+                    break;
                 case EventType.characters:
                     // console.log("\t" + "Characters datatypeID " +
-                    // prod.charactersDatatypeID );
-                    var datatypeC = this.grammars.simpleDatatypes[prod.charactersDatatypeID];
-                    // console.log("\t" + "Characters datatype " + datatype );
+                    var datatypeC = void 0;
+                    if (prod.charactersDatatypeID === undefined || prod.charactersDatatypeID < 0) {
+                        // learned AT
+                        datatypeC = EXIEncoder.DEFAULT_SIMPLE_DATATYPE;
+                    }
+                    else {
+                        datatypeC = this.grammars.simpleDatatypes[prod.charactersDatatypeID];
+                    }
                     console.log("\t" + "CH");
                     this.decodeDatatypeValue(datatypeC, elementNamespaceID, elementLocalNameID, true);
+                    break;
+                case EventType.charactersGeneric:
+                    // console.log("\t" + "Characters datatype " + datatype );
+                    console.log("\t" + "CH_Generic");
+                    this.decodeDatatypeValue(EXIDecoder.DEFAULT_SIMPLE_DATATYPE, elementNamespaceID, elementLocalNameID, true);
+                    this.learnCharacters(grammar);
+                    nextGrammar = grammar.elementContent;
                     break;
                 default:
                     console.log("\t" + "Unknown event " + event_1);
@@ -1315,7 +1367,7 @@ var EXIDecoder = (function (_super) {
                 + this.grammars.grs.grammar.length);
             console.log("\t" + "Document grammar ID: "
                 + this.grammars.grs.documentGrammarID);
-            var docGr = this.grammars.grs.grammar[this.grammars.grs.documentGrammarID];
+            var docGr = this.getGrammar(this.grammars.grs.documentGrammarID);
             this.decodeElementContext(docGr, -1, -1);
         }
         return errn;
@@ -1848,26 +1900,34 @@ var EXIEncoder = (function (_super) {
         this.startElement(el.namespaceURI, el.localName);
         if (el.attributes != null && el.attributes.length > 0) {
             if (el.attributes.length > 1) {
-                // sorting
-                var atts = [];
-                for (var i = 0; i < el.attributes.length; i++) {
-                    // console.log(" AT " + el.attributes[i].nodeName + " == " +
-                    // el.attributes[i].nodeValue);
-                    var at = el.attributes.item(i);
-                    atts.push(at.localName);
-                }
-                // sort according localName
-                // TODO in case also for namespace URI
-                atts.sort();
-                // write in sorted order
-                for (var i = 0; i < atts.length; i++) {
-                    var at = el.getAttributeNode(atts[i]);
-                    if (at != null) {
-                        this.attribute(at.namespaceURI, at.localName, at.nodeValue);
+                if (this.grammars.isSchemaLess != undefined && this.grammars.isSchemaLess) {
+                    for (var i = 0; i < el.attributes.length; i++) {
+                        var ati = el.attributes.item(i);
+                        this.attribute(ati.namespaceURI, ati.localName, ati.nodeValue);
                     }
-                    else {
-                        // when does this happen, only for schemaLocations and
-                        // such?
+                }
+                else {
+                    // sorting
+                    var atts = [];
+                    for (var i = 0; i < el.attributes.length; i++) {
+                        // console.log(" AT " + el.attributes[i].nodeName + " == " +
+                        // el.attributes[i].nodeValue);
+                        var at = el.attributes.item(i);
+                        atts.push(at.localName);
+                    }
+                    // sort according localName
+                    // TODO in case also for namespace URI
+                    atts.sort();
+                    // write in sorted order
+                    for (var i = 0; i < atts.length; i++) {
+                        var at = el.getAttributeNode(atts[i]);
+                        if (at != null) {
+                            this.attribute(at.namespaceURI, at.localName, at.nodeValue);
+                        }
+                        else {
+                            // when does this happen, only for schemaLocations and
+                            // such?
+                        }
                     }
                 }
             }
@@ -1883,10 +1943,10 @@ var EXIEncoder = (function (_super) {
         var childNodes = el.childNodes;
         if (childNodes != null) {
             // console.log("\tchildNodes.length" + childNodes.length);
-            for (var i_3 = 0; i_3 < childNodes.length; i_3++) {
+            for (var i = 0; i < childNodes.length; i++) {
                 // Attributes (type 1)
                 // Text (type 3)
-                var cn = childNodes.item(i_3);
+                var cn = childNodes.item(i);
                 if (cn.nodeType === 3) {
                     var text = cn.nodeValue;
                     text = text.trim();
@@ -1925,7 +1985,7 @@ var EXIEncoder = (function (_super) {
             + this.grammars.grs.grammar.length);
         console.log("\t" + "Document grammar ID: "
             + this.grammars.grs.documentGrammarID);
-        var docGr = this.grammars.grs.grammar[this.grammars.grs.documentGrammarID];
+        var docGr = this.getGrammar(this.grammars.grs.documentGrammarID);
         var ec = -1;
         var prod;
         for (var i = 0; ec === -1 && i < docGr.production.length; i++) {
@@ -1942,7 +2002,7 @@ var EXIEncoder = (function (_super) {
             // console.log("\t" + "Event Code == " + ec );
             var codeLength = this.getCodeLengthForGrammar(docGr);
             this.bitStream.encodeNBitUnsignedInteger(ec, codeLength, this.isByteAligned);
-            var nextGrammar = this.grammars.grs.grammar[prod.nextGrammarID];
+            var nextGrammar = this.getGrammar(prod.nextGrammarID);
             this.elementContext.push(new ElementContextEntry(-1, -1, nextGrammar));
         }
         else {
@@ -2026,22 +2086,13 @@ var EXIEncoder = (function (_super) {
                 throw new Error("No startElement event found for " + localName);
             }
             // update current element context
-            var nextGrammar;
-            if (prod.nextGrammarID >= 0) {
-                // static grammars
-                nextGrammar = this.grammars.grs.grammar[prod.nextGrammarID];
-            }
-            else {
-                // runtime grammars
-                var rid = (prod.nextGrammarID + 1) * (-1);
-                nextGrammar = this.runtimeGrammars[rid];
-            }
+            var nextGrammar = this.getGrammar(prod.nextGrammarID);
             this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
             console.log("NextGrammar after SE/SE_NS " + localName + " is " + nextGrammar);
             // push new element context
             if (isSE) {
                 // SE(uri:localname)
-                startElementGrammar = this.grammars.grs.grammar[prod.startElementGrammarID];
+                startElementGrammar = this.getGrammar(prod.startElementGrammarID);
             }
             else if (isSE_NS) {
                 // SE(uri:*)
@@ -2173,12 +2224,10 @@ var EXIEncoder = (function (_super) {
                 this.bitStream.encodeNBitUnsignedInteger(grammar.production.length, codeLength1, this.isByteAligned);
                 // 2nd level
                 var codeLength2 = this.get2ndCodeLengthForGrammar(grammar);
-                var ec2 = this.get2ndEventCode(grammar, EventType.endElement);
+                var ec2 = this.get2ndEventCode(grammar, EventType.endElementGeneric);
                 this.bitStream.encodeNBitUnsignedInteger(ec2, codeLength2, this.isByteAligned);
                 // learn EE
-                var ngX = new Production(EventType.endElement, grammar.grammarID);
-                ngX.charactersDatatypeID = 0;
-                grammar.production.push(ngX);
+                this.learnEndElement(grammar);
                 // pop element stack
                 this.elementContext.pop();
             }
@@ -2229,7 +2278,7 @@ var EXIEncoder = (function (_super) {
                 }
                 this.encodeDatatypeValue(value, datatype, prod.attributeNamespaceID, prod.attributeLocalNameID);
                 // update current element context with revised grammar
-                var nextGrammar = this.grammars.grs.grammar[prod.nextGrammarID];
+                var nextGrammar = this.getGrammar(prod.nextGrammarID);
                 this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
             }
             else {
@@ -2282,7 +2331,7 @@ var EXIEncoder = (function (_super) {
             var elementContext = this.elementContext[this.elementContext.length - 1];
             this.encodeDatatypeValue(chars, datatype, elementContext.namespaceID, elementContext.localNameID);
             // update current element context with revised grammar
-            var nextGrammar = this.grammars.grs.grammar[prod.nextGrammarID];
+            var nextGrammar = this.getGrammar(prod.nextGrammarID);
             this.elementContext[this.elementContext.length - 1].grammar = nextGrammar;
         }
         else {
