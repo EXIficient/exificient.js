@@ -10,7 +10,7 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-Object.defineProperty(exports, "__esModule", { value: true });
+// Object.defineProperty(exports, "__esModule", { value: true });
 // export * from './exificient'
 var MAX_EXI_FLOAT_DIGITS = 6; // -1 indicates no rounding
 /*******************************************************************************
@@ -2059,6 +2059,7 @@ var EXIEncoder = (function (_super) {
         var qnameContext;
         for (var i = 0; ec === -1 && i < grammar.production.length; i++) {
             prod = grammar.production[i];
+            console.log("\t" + "Prod " + i + prod.event);
             if (prod.event === EventType.startElement) {
                 namespaceContext = this.grammars.qnames.namespaceContext[prod.startElementNamespaceID];
                 qnameContext = namespaceContext.qnameContext[prod.startElementLocalNameID];
@@ -2197,12 +2198,14 @@ var EXIEncoder = (function (_super) {
             qnameContext.uriID = namespaceContext.uriID;
             qnameContext.localNameID = namespaceContext.qnameContext.length;
             qnameContext.localName = localName;
-            console.log("QName length before: " + namespaceContext.qnameContext.length);
             // qnameContext = {"uriID": namespaceContext.uriID, "localNameID": namespaceContext.qnameContext.length, "localName": localName};
             console.log("create new runtime qnameContext for '" + localName + "', uriId=" + qnameContext.uriID + " and localNameID=" + qnameContext.localNameID);
             // this.runtimeQNameContexts.push(qnameContext);
-            console.log("QName length beforeb: " + namespaceContext.qnameContext.length);
+            console.log("QName length before: " + namespaceContext.qnameContext.length);
             namespaceContext.qnameContext.push(qnameContext);
+            for (var i = 0; i < namespaceContext.qnameContext.length; i++) {
+                console.log("\t" + i + "\t" + namespaceContext.qnameContext[i].localName);
+            }
             console.log("QName length after: " + namespaceContext.qnameContext.length);
         }
         else {
@@ -3185,14 +3188,14 @@ var EXI4JSON = (function () {
     };
     return EXI4JSON;
 }());
-exports.EXI4JSON = EXI4JSON;
+// exports.EXI4JSON = EXI4JSON;
 function exify(jsonObj) {
     var encoder = new EXI4JSONEncoder();
     encoder.encodeJsonObject(jsonObj);
     var uint8Array = encoder.getUint8Array();
     return uint8Array;
 }
-exports.exify = exify;
+// exports.exify = exify;
 function parse(uint8Array) {
     var decoder = new EXI4JSONDecoder();
     var jsonHandler = new JSONEventHandler();
@@ -3200,4 +3203,4 @@ function parse(uint8Array) {
     decoder.decode(uint8Array);
     return jsonHandler.getJSON();
 }
-exports.parse = parse;
+// exports.parse = parse;

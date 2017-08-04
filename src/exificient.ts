@@ -2268,8 +2268,9 @@ class EXIEncoder extends AbtractEXICoder {
 		let prod : Production;
 		let grammar : Grammar = this.elementContext[this.elementContext.length - 1].grammar;
 		let qnameContext : QNameContext;
-		for (var i = 0; ec === -1 && i < grammar.production.length; i++) {
+		for (let i = 0; ec === -1 && i < grammar.production.length; i++) {
 			prod = grammar.production[i];
+			// console.log("\t" + "Prod " + i + prod.event);
 			if (prod.event === EventType.startElement) {
 				namespaceContext = this.grammars.qnames.namespaceContext[prod.startElementNamespaceID];
 				qnameContext = namespaceContext.qnameContext[prod.startElementLocalNameID];
@@ -2421,13 +2422,20 @@ class EXIEncoder extends AbtractEXICoder {
 			qnameContext.uriID = namespaceContext.uriID;
 			qnameContext.localNameID = namespaceContext.qnameContext.length;
 			qnameContext.localName = localName;
-			console.log("QName length before: " + namespaceContext.qnameContext.length)
 			// qnameContext = {"uriID": namespaceContext.uriID, "localNameID": namespaceContext.qnameContext.length, "localName": localName};
 			console.log("create new runtime qnameContext for '" + localName + "', uriId=" + qnameContext.uriID + " and localNameID=" + qnameContext.localNameID );
 			// this.runtimeQNameContexts.push(qnameContext);
-			console.log("QName length beforeb: " + namespaceContext.qnameContext.length)
+			// NOTE: Java Nahsorn seems to add an "undefined" entry up-front!?
+			let qnameContextLengthBefore = namespaceContext.qnameContext.length;
+			// console.log("QName length before: " + qnameContextLengthBefore)
+			if(qnameContextLengthBefore == 0) {
+				namespaceContext.qnameContext = new Array();
+			}
 			namespaceContext.qnameContext.push(qnameContext);
-			console.log("QName length after: " + namespaceContext.qnameContext.length)
+			for(let i=0; i<namespaceContext.qnameContext.length; i++) {
+				console.log("\t" + i + "\t" + namespaceContext.qnameContext[i].localName)
+			}
+			// console.log("QName length after: " + namespaceContext.qnameContext.length);
 		} else {
 			// string value found in local partition
 			// ==> string value is represented as zero (0) encoded as an

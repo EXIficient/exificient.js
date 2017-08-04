@@ -238,9 +238,9 @@ public class TestXML extends XMLTestCase {
 		_testXMLDecode(xmlTest, xsdPath, CodingMode.BYTE_PACKED);
 		_testXMLDecode(xmlTest, xsdPath, CodingMode.BIT_PACKED);
 		// TODO schema-less coding
-		// _testXMLEncode(xmlTest, null, CodingMode.BYTE_PACKED);
-		// _testXMLEncode(xmlTest, null, CodingMode.BIT_PACKED);
-		// _testXMLDecode(xmlTest, null, CodingMode.BYTE_PACKED);
+//		_testXMLEncode(xmlTest, null, CodingMode.BYTE_PACKED);
+//		_testXMLEncode(xmlTest, null, CodingMode.BIT_PACKED);
+		//_testXMLDecode(xmlTest, null, CodingMode.BYTE_PACKED);
 		//_testXMLDecode(xmlTest, null, CodingMode.BIT_PACKED);
 	}
 
