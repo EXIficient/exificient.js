@@ -2862,7 +2862,7 @@ class EXIEncoder extends AbtractEXICoder {
 	}
 	
 	encodeDatatypeValueBoolean(value : string, namespaceID : number, localNameID : number) {
-		let b = new Boolean(value);
+		let b = Boolean(value);
 		if (b) { // == "true" || value == "1"
 			this.bitStream.encodeNBitUnsignedInteger(1, 1, this.isByteAligned);
 		} else {
@@ -3374,7 +3374,7 @@ class JSONEventHandler extends EventHandler {
 		} else if (top === "string") {
 			value = new String(this.chars);
 		} else if (top === "boolean") {
-			value = new Boolean(this.chars);
+			value = Boolean(this.chars);
 		} else if (top === "null") {
 			value = null;
 		}
