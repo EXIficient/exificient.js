@@ -1,16 +1,14 @@
 "use strict";
 /*! exificient.js v0.0.6-SNAPSHOT | (c) 2017 Siemens AG | The MIT License (MIT) */
-var __extends = (this && this.__extends) || (function () {
-    var extendStatics = Object.setPrototypeOf ||
-        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
-    return function (d, b) {
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(exports, "__esModule", { value: true });
+var __extends = (this && this.__extends) || function (d, b) 
+
+{
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : 
+
+(__.prototype = b.prototype, new __());
+};
 // export * from './exificient'
 var MAX_EXI_FLOAT_DIGITS = 6; // -1 indicates no rounding
 /*******************************************************************************
@@ -1082,9 +1080,7 @@ var EXIDecoder = /** @class */ (function (_super) {
         var year = 0, monthDay = 0, time = 0, fractionalSecs = 0;
         var presenceFractionalSecs = false;
         var sDatetime = "";
-        if (datetimeType === DatetimeType.date
-        // || datatype.datetimeType == "gYearMonth"
-        ) {
+        if (datetimeType === DatetimeType.date) {
             // YEAR_OFFSET = 2000
             // NUMBER_BITS_MONTHDAY = 9
             // MONTH_MULTIPLICATOR = 32
@@ -1293,8 +1289,6 @@ var EXIDecoder = /** @class */ (function (_super) {
                 default:
                     console.log("\t" + "Unknown event " + event_1);
                     throw new Error("Unknown event " + event_1);
-                // TODO error!
-                // popStack = true;
             }
             // console.log("\t" + "Event NextGrammarId " + prod.nextGrammarID);
             grammar = nextGrammar; // grammars.grs.grammar[prod.nextGrammarID];
@@ -1705,39 +1699,30 @@ var BitOutputStream = /** @class */ (function () {
         if (n < 128) {
             return 1;
         }
-        /* 14 bits */
         else if (n < 16384) {
             return 2;
         }
-        /* 21 bits */
         else if (n < 2097152) {
             return 3;
         }
-        /* 28 bits */
         else if (n < 268435456) {
             return 4;
         }
-        /* 35 bits */
         else if (n < 0x800000000) {
             return 5;
         }
-        /* 42 bits */
         else if (n < 0x40000000000) {
             return 6;
         }
-        /* 49 bits */
         else if (n < 0x2000000000000) {
             return 7;
         }
-        /* 56 bits */
         else if (n < 0x100000000000000) {
             return 8;
         }
-        /* 63 bits */
         else if (n < 0x8000000000000000) {
             return 9;
         }
-        /* 70 bits */
         else {
             // long, 64 bits
             return 10;
@@ -2630,7 +2615,7 @@ var EXIEncoder = /** @class */ (function (_super) {
     };
     EXIEncoder.prototype.encodeDatatypeValueBoolean = function (value, namespaceID, localNameID) {
         var b = (value == 'true');
-        if (b) { // == "true" || value == "1"
+        if (b) {
             this.bitStream.encodeNBitUnsignedInteger(1, 1, this.isByteAligned);
         }
         else {
@@ -2642,7 +2627,7 @@ var EXIEncoder = /** @class */ (function (_super) {
         var presenceFractionalSecs = false;
         var presenceTimezone = false;
         var sDatetime = "";
-        if (datetimeType === DatetimeType.date) { // // date: Year, MonthDay,
+        if (datetimeType === DatetimeType.date) {
             // [TimeZone]
             // YEAR_OFFSET = 2000
             // NUMBER_BITS_MONTHDAY = 9
