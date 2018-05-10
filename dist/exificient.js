@@ -10,7 +10,7 @@ var __extends = (this && this.__extends) || (function () {
         d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
     };
 })();
-// Object.defineProperty(exports, "__esModule", { value: true });
+Object.defineProperty(exports, "__esModule", { value: true });
 // export * from './exificient'
 var MAX_EXI_FLOAT_DIGITS = 6; // -1 indicates no rounding
 /*******************************************************************************
@@ -111,7 +111,7 @@ var SimpleDatatypeType;
     static LIST = new SimpleDatatypeType("LIST");
 }
 */
-var StringTableEntry = (function () {
+var StringTableEntry = /** @class */ (function () {
     function StringTableEntry(namespaceID, localNameID, value, globalValueID, localValueID) {
         this.namespaceID = namespaceID;
         this.localNameID = localNameID;
@@ -121,7 +121,7 @@ var StringTableEntry = (function () {
     }
     return StringTableEntry;
 }());
-var StringTable = (function () {
+var StringTable = /** @class */ (function () {
     function StringTable() {
         this.strings = new Array();
     }
@@ -169,29 +169,29 @@ var StringTable = (function () {
     };
     return StringTable;
 }());
-var QNameContext = (function () {
+var QNameContext = /** @class */ (function () {
     function QNameContext() {
     }
     return QNameContext;
 }());
-var NamespaceContext = (function () {
+var NamespaceContext = /** @class */ (function () {
     function NamespaceContext() {
     }
     return NamespaceContext;
 }());
-var QNames = (function () {
+var QNames = /** @class */ (function () {
     function QNames() {
     }
     return QNames;
 }());
-var Production = (function () {
+var Production = /** @class */ (function () {
     function Production(event, nextGrammarID) {
         this.event = event;
         this.nextGrammarID = nextGrammarID;
     }
     return Production;
 }());
-var Grammar = (function () {
+var Grammar = /** @class */ (function () {
     function Grammar(grammarID, type, production) {
         this.grammarID = grammarID;
         this.type = type;
@@ -205,12 +205,12 @@ var Grammar = (function () {
     };
     return Grammar;
 }());
-var Grs = (function () {
+var Grs = /** @class */ (function () {
     function Grs() {
     }
     return Grs;
 }());
-var SimpleDatatype = (function () {
+var SimpleDatatype = /** @class */ (function () {
     function SimpleDatatype(type) {
         this.type = type;
     }
@@ -222,7 +222,7 @@ class DatetimeDatatype extends SimpleDatatype {
 }
 */
 // export
-var Grammars = (function () {
+var Grammars = /** @class */ (function () {
     function Grammars() {
     }
     Grammars.fromJson = function (json) {
@@ -265,7 +265,7 @@ var Grammars = (function () {
     };
     return Grammars;
 }());
-var AbtractEXICoder = (function () {
+var AbtractEXICoder = /** @class */ (function () {
     function AbtractEXICoder(grammars, options) {
         this.grammars = grammars;
         // this.grammarsCopy = Object.create(grammars);
@@ -664,7 +664,7 @@ var AbtractEXICoder = (function () {
  * D E C O D E R - P A R T
  *
  ******************************************************************************/
-var BitInputStream = (function () {
+var BitInputStream = /** @class */ (function () {
     function BitInputStream(arrayBuffer) {
         // const
         this.ERROR_EOF = -3;
@@ -862,7 +862,7 @@ var BitInputStream = (function () {
     return BitInputStream;
 }());
 // export
-var EXIDecoder = (function (_super) {
+var EXIDecoder = /** @class */ (function (_super) {
     __extends(EXIDecoder, _super);
     function EXIDecoder(grammars, options) {
         var _this = _super.call(this, grammars, options) || this;
@@ -1082,7 +1082,9 @@ var EXIDecoder = (function (_super) {
         var year = 0, monthDay = 0, time = 0, fractionalSecs = 0;
         var presenceFractionalSecs = false;
         var sDatetime = "";
-        if (datetimeType === DatetimeType.date) {
+        if (datetimeType === DatetimeType.date
+        // || datatype.datetimeType == "gYearMonth"
+        ) {
             // YEAR_OFFSET = 2000
             // NUMBER_BITS_MONTHDAY = 9
             // MONTH_MULTIPLICATOR = 32
@@ -1291,6 +1293,8 @@ var EXIDecoder = (function (_super) {
                 default:
                     console.log("\t" + "Unknown event " + event_1);
                     throw new Error("Unknown event " + event_1);
+                // TODO error!
+                // popStack = true;
             }
             // console.log("\t" + "Event NextGrammarId " + prod.nextGrammarID);
             grammar = nextGrammar; // grammars.grs.grammar[prod.nextGrammarID];
@@ -1380,13 +1384,13 @@ var EXIDecoder = (function (_super) {
     return EXIDecoder;
 }(AbtractEXICoder));
 // export
-var EventHandler = (function () {
+var EventHandler = /** @class */ (function () {
     function EventHandler() {
     }
     return EventHandler;
 }());
 /* allows to retrieve XML by registering it as decoder handler */
-var PfxMapping = (function () {
+var PfxMapping = /** @class */ (function () {
     function PfxMapping(pfx, namespace) {
         this.pfx = pfx;
         this.namespace = namespace;
@@ -1410,7 +1414,7 @@ class Stack<T> {
     }
 }
 */
-var XMLEventHandler = (function (_super) {
+var XMLEventHandler = /** @class */ (function (_super) {
     __extends(XMLEventHandler, _super);
     function XMLEventHandler() {
         var _this = _super.call(this) || this;
@@ -1566,7 +1570,7 @@ var XMLEventHandler = (function (_super) {
  * E N C O D E R - P A R T
  *
  ******************************************************************************/
-var BitOutputStream = (function () {
+var BitOutputStream = /** @class */ (function () {
     function BitOutputStream() {
         /** array buffer */
         this.uint8Array = new Uint8Array(8); // initial size
@@ -1701,30 +1705,39 @@ var BitOutputStream = (function () {
         if (n < 128) {
             return 1;
         }
+        /* 14 bits */
         else if (n < 16384) {
             return 2;
         }
+        /* 21 bits */
         else if (n < 2097152) {
             return 3;
         }
+        /* 28 bits */
         else if (n < 268435456) {
             return 4;
         }
+        /* 35 bits */
         else if (n < 0x800000000) {
             return 5;
         }
+        /* 42 bits */
         else if (n < 0x40000000000) {
             return 6;
         }
+        /* 49 bits */
         else if (n < 0x2000000000000) {
             return 7;
         }
+        /* 56 bits */
         else if (n < 0x100000000000000) {
             return 8;
         }
+        /* 63 bits */
         else if (n < 0x8000000000000000) {
             return 9;
         }
+        /* 70 bits */
         else {
             // long, 64 bits
             return 10;
@@ -1824,7 +1837,7 @@ var BitOutputStream = (function () {
     };
     return BitOutputStream;
 }());
-var ElementContextEntry = (function () {
+var ElementContextEntry = /** @class */ (function () {
     function ElementContextEntry(namespaceID, localNameID, grammar) {
         this.namespaceID = namespaceID;
         this.localNameID = localNameID;
@@ -1832,7 +1845,7 @@ var ElementContextEntry = (function () {
     }
     return ElementContextEntry;
 }());
-var EXIFloat = (function () {
+var EXIFloat = /** @class */ (function () {
     function EXIFloat() {
         this.exponent = 0;
         this.mantissa = 0;
@@ -1840,14 +1853,14 @@ var EXIFloat = (function () {
     return EXIFloat;
 }());
 ;
-var DateTimeValue = (function () {
+var DateTimeValue = /** @class */ (function () {
     function DateTimeValue() {
         this.error = 0;
     }
     return DateTimeValue;
 }());
 // export
-var EXIEncoder = (function (_super) {
+var EXIEncoder = /** @class */ (function (_super) {
     __extends(EXIEncoder, _super);
     function EXIEncoder(grammars, options) {
         return _super.call(this, grammars, options) || this;
@@ -2059,7 +2072,7 @@ var EXIEncoder = (function (_super) {
         var qnameContext;
         for (var i = 0; ec === -1 && i < grammar.production.length; i++) {
             prod = grammar.production[i];
-            console.log("\t" + "Prod " + i + prod.event);
+            // console.log("\t" + "Prod " + i + prod.event);
             if (prod.event === EventType.startElement) {
                 namespaceContext = this.grammars.qnames.namespaceContext[prod.startElementNamespaceID];
                 qnameContext = namespaceContext.qnameContext[prod.startElementLocalNameID];
@@ -2201,12 +2214,17 @@ var EXIEncoder = (function (_super) {
             // qnameContext = {"uriID": namespaceContext.uriID, "localNameID": namespaceContext.qnameContext.length, "localName": localName};
             console.log("create new runtime qnameContext for '" + localName + "', uriId=" + qnameContext.uriID + " and localNameID=" + qnameContext.localNameID);
             // this.runtimeQNameContexts.push(qnameContext);
-            console.log("QName length before: " + namespaceContext.qnameContext.length);
+            // NOTE: Java Nahsorn seems to add an "undefined" entry up-front!?
+            var qnameContextLengthBefore = namespaceContext.qnameContext.length;
+            // console.log("QName length before: " + qnameContextLengthBefore)
+            if (qnameContextLengthBefore == 0) {
+                namespaceContext.qnameContext = new Array();
+            }
             namespaceContext.qnameContext.push(qnameContext);
             for (var i = 0; i < namespaceContext.qnameContext.length; i++) {
                 console.log("\t" + i + "\t" + namespaceContext.qnameContext[i].localName);
             }
-            console.log("QName length after: " + namespaceContext.qnameContext.length);
+            // console.log("QName length after: " + namespaceContext.qnameContext.length);
         }
         else {
             // string value found in local partition
@@ -2390,6 +2408,7 @@ var EXIEncoder = (function (_super) {
         return Math.max(0, 
         // Number of digits right of decimal point.
         (match[1] ? match[1].length : 0)
+            // Adjust for scientific notation.
             - (match[2] ? +match[2] : 0));
     };
     EXIEncoder.prototype.isInteger = function (value) {
@@ -2610,8 +2629,8 @@ var EXIEncoder = (function (_super) {
             + fl.exponent);
     };
     EXIEncoder.prototype.encodeDatatypeValueBoolean = function (value, namespaceID, localNameID) {
-        var b = new Boolean(value);
-        if (b) {
+        var b = (value == 'true');
+        if (b) { // == "true" || value == "1"
             this.bitStream.encodeNBitUnsignedInteger(1, 1, this.isByteAligned);
         }
         else {
@@ -2623,7 +2642,7 @@ var EXIEncoder = (function (_super) {
         var presenceFractionalSecs = false;
         var presenceTimezone = false;
         var sDatetime = "";
-        if (datetimeType === DatetimeType.date) {
+        if (datetimeType === DatetimeType.date) { // // date: Year, MonthDay,
             // [TimeZone]
             // YEAR_OFFSET = 2000
             // NUMBER_BITS_MONTHDAY = 9
@@ -2664,7 +2683,7 @@ var exiForJsonUri = "http://www.w3.org/2015/EXI/json";
 // Note: the idea would be to have this optimized (currently all schema information, even unnecessary stuff is there...)
 var jsonGrammars = '{"qnames":{"namespaceContext":[{"uriID":0,"uri":"","qnameContext":[]},{"uriID":1,"uri":"http://www.w3.org/XML/1998/namespace","qnameContext":[{"uriID":1,"localNameID":0,"localName":"base"},{"uriID":1,"localNameID":1,"localName":"id"},{"uriID":1,"localNameID":2,"localName":"lang"},{"uriID":1,"localNameID":3,"localName":"space"}]},{"uriID":2,"uri":"http://www.w3.org/2001/XMLSchema-instance","qnameContext":[{"uriID":2,"localNameID":0,"localName":"nil"},{"uriID":2,"localNameID":1,"localName":"type"}]},{"uriID":3,"uri":"http://www.w3.org/2001/XMLSchema","qnameContext":[{"uriID":3,"localNameID":0,"localName":"ENTITIES","globalTypeGrammarID":18},{"uriID":3,"localNameID":1,"localName":"ENTITY","globalTypeGrammarID":7},{"uriID":3,"localNameID":2,"localName":"ID","globalTypeGrammarID":7},{"uriID":3,"localNameID":3,"localName":"IDREF","globalTypeGrammarID":7},{"uriID":3,"localNameID":4,"localName":"IDREFS","globalTypeGrammarID":18},{"uriID":3,"localNameID":5,"localName":"NCName","globalTypeGrammarID":7},{"uriID":3,"localNameID":6,"localName":"NMTOKEN","globalTypeGrammarID":7},{"uriID":3,"localNameID":7,"localName":"NMTOKENS","globalTypeGrammarID":18},{"uriID":3,"localNameID":8,"localName":"NOTATION","globalTypeGrammarID":7},{"uriID":3,"localNameID":9,"localName":"Name","globalTypeGrammarID":7},{"uriID":3,"localNameID":10,"localName":"QName","globalTypeGrammarID":7},{"uriID":3,"localNameID":11,"localName":"anySimpleType","globalTypeGrammarID":7},{"uriID":3,"localNameID":12,"localName":"anyType","globalTypeGrammarID":19},{"uriID":3,"localNameID":13,"localName":"anyURI","globalTypeGrammarID":7},{"uriID":3,"localNameID":14,"localName":"base64Binary","globalTypeGrammarID":12},{"uriID":3,"localNameID":15,"localName":"boolean","globalTypeGrammarID":9},{"uriID":3,"localNameID":16,"localName":"byte","globalTypeGrammarID":20},{"uriID":3,"localNameID":17,"localName":"date","globalTypeGrammarID":15},{"uriID":3,"localNameID":18,"localName":"dateTime","globalTypeGrammarID":13},{"uriID":3,"localNameID":19,"localName":"decimal","globalTypeGrammarID":17},{"uriID":3,"localNameID":20,"localName":"double","globalTypeGrammarID":8},{"uriID":3,"localNameID":21,"localName":"duration","globalTypeGrammarID":7},{"uriID":3,"localNameID":22,"localName":"float","globalTypeGrammarID":8},{"uriID":3,"localNameID":23,"localName":"gDay","globalTypeGrammarID":21},{"uriID":3,"localNameID":24,"localName":"gMonth","globalTypeGrammarID":22},{"uriID":3,"localNameID":25,"localName":"gMonthDay","globalTypeGrammarID":23},{"uriID":3,"localNameID":26,"localName":"gYear","globalTypeGrammarID":24},{"uriID":3,"localNameID":27,"localName":"gYearMonth","globalTypeGrammarID":25},{"uriID":3,"localNameID":28,"localName":"hexBinary","globalTypeGrammarID":26},{"uriID":3,"localNameID":29,"localName":"int","globalTypeGrammarID":16},{"uriID":3,"localNameID":30,"localName":"integer","globalTypeGrammarID":16},{"uriID":3,"localNameID":31,"localName":"language","globalTypeGrammarID":7},{"uriID":3,"localNameID":32,"localName":"long","globalTypeGrammarID":16},{"uriID":3,"localNameID":33,"localName":"negativeInteger","globalTypeGrammarID":16},{"uriID":3,"localNameID":34,"localName":"nonNegativeInteger","globalTypeGrammarID":27},{"uriID":3,"localNameID":35,"localName":"nonPositiveInteger","globalTypeGrammarID":16},{"uriID":3,"localNameID":36,"localName":"normalizedString","globalTypeGrammarID":7},{"uriID":3,"localNameID":37,"localName":"positiveInteger","globalTypeGrammarID":27},{"uriID":3,"localNameID":38,"localName":"short","globalTypeGrammarID":16},{"uriID":3,"localNameID":39,"localName":"string","globalTypeGrammarID":7},{"uriID":3,"localNameID":40,"localName":"time","globalTypeGrammarID":14},{"uriID":3,"localNameID":41,"localName":"token","globalTypeGrammarID":7},{"uriID":3,"localNameID":42,"localName":"unsignedByte","globalTypeGrammarID":28},{"uriID":3,"localNameID":43,"localName":"unsignedInt","globalTypeGrammarID":27},{"uriID":3,"localNameID":44,"localName":"unsignedLong","globalTypeGrammarID":27},{"uriID":3,"localNameID":45,"localName":"unsignedShort","globalTypeGrammarID":27}]},{"uriID":4,"uri":"http://www.w3.org/2015/EXI/json","qnameContext":[{"uriID":4,"localNameID":0,"localName":"array","globalElementGrammarID":5},{"uriID":4,"localNameID":1,"localName":"arrayType","globalTypeGrammarID":5},{"uriID":4,"localNameID":2,"localName":"base64Binary"},{"uriID":4,"localNameID":3,"localName":"boolean","globalElementGrammarID":9},{"uriID":4,"localNameID":4,"localName":"booleanType","globalTypeGrammarID":9},{"uriID":4,"localNameID":5,"localName":"date"},{"uriID":4,"localNameID":6,"localName":"dateTime"},{"uriID":4,"localNameID":7,"localName":"decimal"},{"uriID":4,"localNameID":8,"localName":"integer"},{"uriID":4,"localNameID":9,"localName":"map","globalElementGrammarID":6},{"uriID":4,"localNameID":10,"localName":"mapType","globalTypeGrammarID":6},{"uriID":4,"localNameID":11,"localName":"null","globalElementGrammarID":10},{"uriID":4,"localNameID":12,"localName":"nullType","globalTypeGrammarID":10},{"uriID":4,"localNameID":13,"localName":"number","globalElementGrammarID":8},{"uriID":4,"localNameID":14,"localName":"numberType","globalTypeGrammarID":8},{"uriID":4,"localNameID":15,"localName":"other","globalElementGrammarID":11},{"uriID":4,"localNameID":16,"localName":"otherType","globalTypeGrammarID":11},{"uriID":4,"localNameID":17,"localName":"string","globalElementGrammarID":7},{"uriID":4,"localNameID":18,"localName":"stringType","globalTypeGrammarID":7},{"uriID":4,"localNameID":19,"localName":"time"}]}]},"simpleDatatypes":[{"simpleDatatypeID":0,"type":"STRING"},{"simpleDatatypeID":1,"type":"STRING"},{"simpleDatatypeID":2,"type":"FLOAT"},{"simpleDatatypeID":3,"type":"FLOAT"},{"simpleDatatypeID":4,"type":"BOOLEAN"},{"simpleDatatypeID":5,"type":"BOOLEAN"},{"simpleDatatypeID":6,"type":"BINARY_BASE64"},{"simpleDatatypeID":7,"type":"DATETIME","datetimeType":"dateTime"},{"simpleDatatypeID":8,"type":"DATETIME","datetimeType":"time"},{"simpleDatatypeID":9,"type":"DATETIME","datetimeType":"date"},{"simpleDatatypeID":10,"type":"INTEGER"},{"simpleDatatypeID":11,"type":"DECIMAL"},{"simpleDatatypeID":12,"type":"LIST","listType":"STRING"},{"simpleDatatypeID":13,"type":"LIST","listType":"STRING"},{"simpleDatatypeID":14,"type":"NBIT_UNSIGNED_INTEGER","lowerBound":-128,"upperBound":127},{"simpleDatatypeID":15,"type":"INTEGER"},{"simpleDatatypeID":16,"type":"DATETIME","datetimeType":"gDay"},{"simpleDatatypeID":17,"type":"STRING"},{"simpleDatatypeID":18,"type":"DATETIME","datetimeType":"gMonth"},{"simpleDatatypeID":19,"type":"DATETIME","datetimeType":"gMonthDay"},{"simpleDatatypeID":20,"type":"DATETIME","datetimeType":"gYear"},{"simpleDatatypeID":21,"type":"DATETIME","datetimeType":"gYearMonth"},{"simpleDatatypeID":22,"type":"BINARY_HEX"},{"simpleDatatypeID":23,"type":"UNSIGNED_INTEGER"},{"simpleDatatypeID":24,"type":"NBIT_UNSIGNED_INTEGER","lowerBound":0,"upperBound":255},{"simpleDatatypeID":25,"type":"UNSIGNED_INTEGER"}],"grs":{"documentGrammarID":0,"fragmentGrammarID":3,"grammar":[{"grammarID":"0","type":"document","production":[{"event":"startDocument","nextGrammarID":1}]},{"grammarID":"1","type":"docContent","production":[{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":0,"startElementGrammarID":5,"nextGrammarID":2},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":3,"startElementGrammarID":9,"nextGrammarID":2},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":9,"startElementGrammarID":6,"nextGrammarID":2},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":11,"startElementGrammarID":10,"nextGrammarID":2},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":13,"startElementGrammarID":8,"nextGrammarID":2},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":15,"startElementGrammarID":11,"nextGrammarID":2},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":17,"startElementGrammarID":7,"nextGrammarID":2},{"event":"startElementGeneric","nextGrammarID":2}]},{"grammarID":"2","type":"docEnd","production":[{"event":"endDocument","nextGrammarID":-1}]},{"grammarID":"3","type":"fragment","production":[{"event":"startDocument","nextGrammarID":4}]},{"grammarID":"4","type":"fragmentContent","production":[{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":0,"startElementGrammarID":5,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":2,"startElementGrammarID":12,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":3,"startElementGrammarID":9,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":5,"startElementGrammarID":15,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":6,"startElementGrammarID":13,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":7,"startElementGrammarID":17,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":8,"startElementGrammarID":16,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":9,"startElementGrammarID":6,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":11,"startElementGrammarID":10,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":13,"startElementGrammarID":8,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":15,"startElementGrammarID":11,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":17,"startElementGrammarID":7,"nextGrammarID":4},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":19,"startElementGrammarID":14,"nextGrammarID":4},{"event":"startElementGeneric","nextGrammarID":4},{"event":"endDocument","nextGrammarID":-1}]},{"grammarID":"5","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":9,"startElementGrammarID":6,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":0,"startElementGrammarID":5,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":17,"startElementGrammarID":7,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":13,"startElementGrammarID":8,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":3,"startElementGrammarID":9,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":11,"startElementGrammarID":10,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":15,"startElementGrammarID":11,"nextGrammarID":31},{"event":"endElement","nextGrammarID":-1}]},{"grammarID":"6","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"startElementNS","startElementNamespaceID":4,"nextGrammarID":29},{"event":"endElement","nextGrammarID":-1}]},{"grammarID":"7","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":0,"nextGrammarID":32}]},{"grammarID":"8","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":2,"nextGrammarID":32}]},{"grammarID":"9","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":4,"nextGrammarID":32}]},{"grammarID":"10","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"endElement","nextGrammarID":-1}]},{"grammarID":"11","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":2,"startElementGrammarID":12,"nextGrammarID":32},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":6,"startElementGrammarID":13,"nextGrammarID":32},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":19,"startElementGrammarID":14,"nextGrammarID":32},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":5,"startElementGrammarID":15,"nextGrammarID":32},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":8,"startElementGrammarID":16,"nextGrammarID":32},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":7,"startElementGrammarID":17,"nextGrammarID":32}]},{"grammarID":"12","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":6,"nextGrammarID":32}]},{"grammarID":"13","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":7,"nextGrammarID":32}]},{"grammarID":"14","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":8,"nextGrammarID":32}]},{"grammarID":"15","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":9,"nextGrammarID":32}]},{"grammarID":"16","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":10,"nextGrammarID":32}]},{"grammarID":"17","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":11,"nextGrammarID":32}]},{"grammarID":"18","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":12,"nextGrammarID":32}]},{"grammarID":"19","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"attributeGeneric","nextGrammarID":19},{"event":"startElementGeneric","nextGrammarID":33},{"event":"endElement","nextGrammarID":-1},{"event":"charactersGeneric","nextGrammarID":33}]},{"grammarID":"20","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":14,"nextGrammarID":32}]},{"grammarID":"21","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":16,"nextGrammarID":32}]},{"grammarID":"22","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":18,"nextGrammarID":32}]},{"grammarID":"23","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":19,"nextGrammarID":32}]},{"grammarID":"24","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":20,"nextGrammarID":32}]},{"grammarID":"25","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":21,"nextGrammarID":32}]},{"grammarID":"26","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":22,"nextGrammarID":32}]},{"grammarID":"27","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":23,"nextGrammarID":32}]},{"grammarID":"28","type":"firstStartTagContent","isTypeCastable":false,"isNillable":false,"production":[{"event":"characters","charactersDatatypeID":24,"nextGrammarID":32}]},{"grammarID":"29","type":"elementContent","production":[{"event":"startElementNS","startElementNamespaceID":4,"nextGrammarID":29},{"event":"endElement","nextGrammarID":-1}]},{"grammarID":"30","type":"elementContent","production":[]},{"grammarID":"31","type":"elementContent","production":[{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":9,"startElementGrammarID":6,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":0,"startElementGrammarID":5,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":17,"startElementGrammarID":7,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":13,"startElementGrammarID":8,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":3,"startElementGrammarID":9,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":11,"startElementGrammarID":10,"nextGrammarID":31},{"event":"startElement","startElementNamespaceID":4,"startElementLocalNameID":15,"startElementGrammarID":11,"nextGrammarID":31},{"event":"endElement","nextGrammarID":-1}]},{"grammarID":"32","type":"elementContent","production":[{"event":"endElement","nextGrammarID":-1}]},{"grammarID":"33","type":"elementContent","production":[{"event":"startElementGeneric","nextGrammarID":33},{"event":"endElement","nextGrammarID":-1},{"event":"charactersGeneric","nextGrammarID":33}]}]}}';
 var jsonGrammarsObject = Grammars.fromJson(JSON.parse(jsonGrammars));
-var EXI4JSONDecoder = (function (_super) {
+var EXI4JSONDecoder = /** @class */ (function (_super) {
     __extends(EXI4JSONDecoder, _super);
     function EXI4JSONDecoder() {
         // Note: JSON grammars (see variable jsonGrammarsObject) is implicit
@@ -2672,7 +2691,7 @@ var EXI4JSONDecoder = (function (_super) {
     }
     return EXI4JSONDecoder;
 }(EXIDecoder));
-var EXI4JSONEncoder = (function (_super) {
+var EXI4JSONEncoder = /** @class */ (function (_super) {
     __extends(EXI4JSONEncoder, _super);
     function EXI4JSONEncoder() {
         // Note: JSON grammars (see variable jsonGrammarsObject) is implicit
@@ -3019,7 +3038,7 @@ var EXI4JSONEncoder = (function (_super) {
     };
     return EXI4JSONEncoder;
 }(EXIEncoder));
-var JSONEventHandler = (function (_super) {
+var JSONEventHandler = /** @class */ (function (_super) {
     __extends(JSONEventHandler, _super);
     function JSONEventHandler() {
         var _this = _super.call(this) || this;
@@ -3134,7 +3153,7 @@ var JSONEventHandler = (function (_super) {
             value = new String(this.chars);
         }
         else if (top === "boolean") {
-            value = new Boolean(this.chars);
+            value = (this.chars == 'true');
         }
         else if (top === "null") {
             value = null;
@@ -3167,7 +3186,7 @@ var JSONEventHandler = (function (_super) {
     };
     return JSONEventHandler;
 }(EventHandler));
-var EXI4JSON = (function () {
+var EXI4JSON = /** @class */ (function () {
     function EXI4JSON() {
         this.encoder = new EXI4JSONEncoder();
         this.decoder = new EXI4JSONDecoder();
@@ -3188,14 +3207,14 @@ var EXI4JSON = (function () {
     };
     return EXI4JSON;
 }());
-// exports.EXI4JSON = EXI4JSON;
+exports.EXI4JSON = EXI4JSON;
 function exify(jsonObj) {
     var encoder = new EXI4JSONEncoder();
     encoder.encodeJsonObject(jsonObj);
     var uint8Array = encoder.getUint8Array();
     return uint8Array;
 }
-// exports.exify = exify;
+exports.exify = exify;
 function parse(uint8Array) {
     var decoder = new EXI4JSONDecoder();
     var jsonHandler = new JSONEventHandler();
@@ -3203,4 +3222,4 @@ function parse(uint8Array) {
     decoder.decode(uint8Array);
     return jsonHandler.getJSON();
 }
-// exports.parse = parse;
+exports.parse = parse;
