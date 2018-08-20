@@ -1,13 +1,9 @@
 "use strict";
-/*! exificient.js v0.0.6-SNAPSHOT | (c) 2017 Siemens AG | The MIT License (MIT) */
-var __extends = (this && this.__extends) || function (d, b) 
-
-{
+/*! exificient.js v0.0.7-SNAPSHOT | (c) 2018 Siemens AG | The MIT License (MIT) */
+var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : 
-
-(__.prototype = b.prototype, new __());
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 // export * from './exificient'
 var MAX_EXI_FLOAT_DIGITS = 6; // -1 indicates no rounding
@@ -87,6 +83,7 @@ var SimpleDatatypeType;
     SimpleDatatypeType[SimpleDatatypeType["BOOLEAN"] = 4] = "BOOLEAN";
     SimpleDatatypeType[SimpleDatatypeType["DATETIME"] = 5] = "DATETIME";
     SimpleDatatypeType[SimpleDatatypeType["LIST"] = 6] = "LIST";
+    SimpleDatatypeType[SimpleDatatypeType["ENUMERATION"] = 7] = "ENUMERATION";
 })(SimpleDatatypeType || (SimpleDatatypeType = {}));
 // type SimpleDatatypeType = {"STRING", "FLOAT", "UNSIGNED_INTEGER", "INTEGER", "BOOLEAN", "DATETIME"};
 /* class SimpleDatatypeType
@@ -953,6 +950,9 @@ var EXIDecoder = /** @class */ (function (_super) {
                 }
             }
         }
+        else if (datatype.type === SimpleDatatypeType.ENUMERATION) {
+            this.decodeDatatypeValueEnumeration(datatype.enumValues, namespaceID, localNameID, isCharactersEvent);
+        }
         else {
             throw new Error("Unsupported datatype: " + datatype.type);
         }
@@ -1073,6 +1073,22 @@ var EXIDecoder = /** @class */ (function (_super) {
                 var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
                 var qnameContext = namespaceContext.qnameContext[localNameID];
                 eh.attribute(namespaceContext.uri, qnameContext.localName, b + "");
+            }
+        }
+    };
+    EXIDecoder.prototype.decodeDatatypeValueEnumeration = function (enumValues, namespaceID, localNameID, isCharactersEvent) {
+        var index = this.bitStream.decodeNBitUnsignedInteger(this.getCodeLength(enumValues.length), this.isByteAligned);
+        var value = enumValues[index];
+        console.log("\t" + " enum = " + value);
+        for (var i = 0; i < this.eventHandler.length; i++) {
+            var eh = this.eventHandler[i];
+            if (isCharactersEvent) {
+                eh.characters(value);
+            }
+            else {
+                var namespaceContext = this.grammars.qnames.namespaceContext[namespaceID];
+                var qnameContext = namespaceContext.qnameContext[localNameID];
+                eh.attribute(namespaceContext.uri, qnameContext.localName, value);
             }
         }
     };
@@ -2558,6 +2574,9 @@ var EXIEncoder = /** @class */ (function (_super) {
                 }
             }
         }
+        else if (datatype.type === SimpleDatatypeType.ENUMERATION) {
+            this.encodeDatatypeValueEnumeration(value, datatype.enumValues, namespaceID, localNameID);
+        }
         else {
             throw new Error("Unsupported datatype: " + datatype.type + " for value " + value);
         }
@@ -2620,6 +2639,15 @@ var EXIEncoder = /** @class */ (function (_super) {
         }
         else {
             this.bitStream.encodeNBitUnsignedInteger(0, 1, this.isByteAligned);
+        }
+    };
+    EXIEncoder.prototype.encodeDatatypeValueEnumeration = function (value, enumValues, namespaceID, localNameID) {
+        var index;
+        if (enumValues && (index = enumValues.indexOf(value)) >= 0) {
+            this.bitStream.encodeNBitUnsignedInteger(index, this.getCodeLength(enumValues.length), this.isByteAligned);
+        }
+        else {
+            throw new Error("Unsupported enum value: " + value + " for possible enum values " + enumValues);
         }
     };
     EXIEncoder.prototype.encodeDatatypeValueDateTime = function (value, datetimeType, namespaceID, localNameID) {

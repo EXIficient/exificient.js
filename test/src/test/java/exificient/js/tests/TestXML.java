@@ -180,6 +180,16 @@ public class TestXML extends XMLTestCase {
 	}
 	
 	@Test
+	public void testEnumCar() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
+		String xmlPath = "./data/xml/enumCar.xml";
+		String xsdPath = "./data/xml/enumCar.xsd"; 
+		
+		String xmlTest = new String(Files.readAllBytes(Paths.get(xmlPath)));
+		
+		_testXMLCode(xmlTest, xsdPath);
+	}
+	
+	@Test
 	public void testJson0() throws IOException, ScriptException, NoSuchMethodException, EXIException, TransformerException, SAXException {
 		String xmlPath = "./data/xml/json0.xml";
 		String xsdPath = "../grammars/exi4json.xsd"; 
