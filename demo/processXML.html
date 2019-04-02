@@ -314,7 +314,7 @@ switchOptionsOnOff();
 	// autoformat
 	var totalLines = editorXML.lineCount();
     var totalChars = editorXML.getTextArea().value.length;
-	editorXML.autoFormatRange({line:0, ch:0}, {line:totalLines, ch:totalChars});
+	// editorXML.autoFormatRange({line:0, ch:0}, {line:totalLines, ch:totalChars});
 	// editorXML.autoFormatRange({line:0, ch:0}, {line:0, ch:0}); // re-set cursor ?
 	editorXML.setCursor(0, 0);
   }
