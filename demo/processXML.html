@@ -211,7 +211,7 @@ function readEXIFile() {
 
 <br />
 <input type="file" id="grammarsInput" />
-<label for="exiInput">Choose or drag a JSON grammars file (e.g., grammars/notebook.xsd.grs) <br />
+<label for="exiInput">Choose or drag a JSON grammars file (e.g., <a href="https://raw.githubusercontent.com/EXIficient/exificient.js/master/grammars/notebook.xsd.grs" target="_blank">grammars/notebook.xsd.grs</a>) <br />
 <span style="color:gray">
 // Note: the necessary grammars can be generated from XML schema using <br />
 // the project https://github.com/EXIficient/exificient-grammars <br />
@@ -314,7 +314,7 @@ switchOptionsOnOff();
 	// autoformat
 	var totalLines = editorXML.lineCount();
     var totalChars = editorXML.getTextArea().value.length;
-	// editorXML.autoFormatRange({line:0, ch:0}, {line:totalLines, ch:totalChars});
+	editorXML.autoFormatRange({line:0, ch:0}, {line:totalLines, ch:totalChars});
 	// editorXML.autoFormatRange({line:0, ch:0}, {line:0, ch:0}); // re-set cursor ?
 	editorXML.setCursor(0, 0);
   }
