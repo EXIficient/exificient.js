@@ -3,5 +3,7 @@ before_script:
 
 language: java
 jdk:
-  - oraclejdk8
+- openjdk8
+- openjdk11
+#- oraclejdk8
   
