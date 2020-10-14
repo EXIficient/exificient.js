@@ -30,13 +30,13 @@
 		<dependency>
 			<groupId>com.siemens.ct.exi</groupId>
 			<artifactId>exificient-for-json</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.5-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>com.siemens.ct.exi</groupId>
 			<artifactId>exificient-grammars</artifactId>
-			<version>1.0.0-SNAPSHOT</version>
+			<version>1.0.5-SNAPSHOT</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
