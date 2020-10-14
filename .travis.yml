@@ -5,5 +5,5 @@ language: java
 jdk:
 - openjdk8
 - openjdk11
-#- oraclejdk8
+# - oraclejdk8
   
